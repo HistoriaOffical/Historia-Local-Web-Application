@@ -1,0 +1,599 @@
+﻿@model HistWeb.Areas.Proposals.Models.ProposalViewModel;
+@using HistWeb.Helpers
+@{
+    ViewData["Title"] = @Model.CurrentModel.ProposalName + " - " + @Model.CurrentModel.ProposalSummary;
+}
+
+@section Styles
+{
+    <style>
+
+        /* selected btn css */
+        .btn-group-toggle .btn:not(:disabled):not(.disabled).active, .btn-group-toggle .btn:not(:disabled):not(.disabled):active, .show > .btn.dropdown-toggle {
+            color: #fff;
+            background-color: #2196F3;
+            border-color: #2196F3;
+        }
+
+        /* non selected btn css */
+        .btn-group-toggle .btn {
+            color: #fff;
+            background-color: #b7b7b7;
+            border-color: #6c757d;
+        }
+
+        .popover {
+            max-width: 760px !important;
+        }
+    </style>
+}
+
+
+<div class="text-left" style="margin-top:50px">
+    <div class="listing-container">
+        <div class="title text-left">
+
+            @if (Model.CurrentModel.Type == "1")
+            {<span class="ml-0" style="vertical-align:middle;"><b>Proposal</b></span>}
+            else if (Model.CurrentModel.Type == "4")
+            { <span class="ml-0" style="vertical-align:middle;"><b>Record</b></span>}
+            else if (Model.CurrentModel.Type == "5")
+            { <span class="ml-0" style="vertical-align:middle;"><b>Archive</b></span>}
+            <span id="time_@Model.CurrentModel.Id" class="ml-0" style="vertical-align:middle;">@Model.CurrentModel.ProposalDate</span>&nbsp;
+            <input type="hidden" id="timetemp_@Model.CurrentModel.Id" value="@Model.CurrentModel.ProposalDate">
+        </div>
+        <div class="w-clearfix" style="margin-top:5px;">
+            <h5 class="card-title">
+                <a href="/Proposals/Proposals/ProposalDetails?hash=@Model.CurrentModel.Hash" class="heading_news">@Model.CurrentModel.ProposalName</a>
+            </h5>
+            <p class="card-text">@Model.CurrentModel.ProposalSummary</p>
+            @if (@Model.CurrentModel.Expired == 0)
+            {
+                <iframe src="@Model.CurrentModel.ProposalDescriptionUrlRazor" style="width:100%;height:700px;" frameBorder="1"></iframe>
+            }
+            else
+            {
+                <iframe id="ProposalContainer" style="width:100%;height:700px;" frameBorder="1" srcdoc='@Model.CurrentModel.ProposalDescriptionUrlRazor'></iframe>
+            }
+        </div>
+        <div style="margin-top:5px; margin-bottom:10px;">
+            <div class="row mt-4">
+                <div class="col-4 mx-auto">
+                    <div class="text-center">
+                        @if (Model.CurrentModel.PastSuperBlock == 0)
+                        {
+                            <h4>Requested Payment:</h4>@Model.CurrentModel.PaymentAmount <label>HTA</label>
+                        }
+                        else
+                        {
+                            <h4>Requested Payment:</h4>@Model.CurrentModel.PaymentAmount <label>HTA</label>
+                        }
+                    </div>
+                </div>
+                <div class="col-4 mx-auto">
+                    <div class="text-center">
+
+                        @if (Model.CurrentModel.PastSuperBlock == 0)
+                        {
+                            <h4>Is Passing:</h4>
+
+                            @if (@Model.CurrentModel.CachedFunding == false)
+                            {
+                                @if (Model.CurrentModel.YesCount < 10)
+                                {
+                                    <label>Needs at least 10 yes votes</label>
+                                }
+                                else
+                                {
+                                    <label>Needs 10% more yes votes than no</label>
+                                }
+                            }
+                            else
+                            {
+                                @Model.CurrentModel.CachedFunding
+                            }
+                        }
+                        else
+                        {
+                            <h4>Status:</h4>
+                            @if (Model.CurrentModel.Type == "1")
+                            {
+                                @if (Model.CurrentModel.CachedFunding)
+                                {<label>Passed</label> }
+                                else
+                                { <label>Did not pass </label>}
+                            }
+                            else
+                            {
+                                @if (Model.CurrentModel.CachedLocked == true)
+                                {<label>Locked</label> }
+                                else
+                                { <label>Did not pass </label>}
+                            }
+                        }
+
+                    </div>
+                </div>
+                <div class="col-4 mx-auto">
+                    <div class="text-center">
+                        @if (Model.CurrentModel.PastSuperBlock == 0)
+                        {
+                            <h4>Days Left to Vote:</h4><label id="votingDeadline">Loading...</label>
+                        }
+                        else
+                        {
+                            <h4>Voting Cycle Status:</h4><label>Ended</label>
+                        }
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-bottom:45px;">
+            <div class="voting">
+                <div class="votingwrapper">
+                    <div class="votingdown">VOTING</div>
+                    @if (Model.CurrentModel.PastSuperBlock == 0)
+                    {
+
+                        @if (@Model.CurrentModel.sig == 1)
+                        {
+                            <img id="btnVoteYes_@Model.CurrentModel.Id" src="/images/up_arrow_small.svg" alt="" class="image-3 border border-secondary rounded" style="cursor: pointer;" data-toggle="popover" title="Previously Voted Yes" data-placement="top">
+                            <div class="votingdown">@Model.CurrentModel.YesCount</div>
+                        }
+                        else
+                        {
+                            <img id="btnVoteYes_@Model.CurrentModel.Id" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="Vote Yes" data-placement="top">
+                            <div class="votingdown">@Model.CurrentModel.YesCount</div>
+                        }
+
+                        @if (@Model.CurrentModel.sig == 2)
+                        {
+                            <img id="btnVoteNo_@Model.CurrentModel.Id" src="/images/down_arrow_small.svg" alt="" class="image-7 border border-secondary rounded" style="cursor: pointer;" data-toggle="popover" title="Previously Voted No" data-placement="top">
+                            <div class="votingdown">@Model.CurrentModel.NoCount</div>
+                        }
+                        else
+                        {
+                            <img id="btnVoteNo_@Model.CurrentModel.Id" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="Vote No" data-placement="top">
+                            <div class="votingdown">@Model.CurrentModel.NoCount</div>
+                        }
+
+                        @if (@Model.CurrentModel.sig == 3)
+                        {
+                            <img id="btnVoteAbstain_@Model.CurrentModel.Id" src="/images/vote_null.svg" alt="" class="image-3 border border-secondary rounded" style="cursor: pointer;" width="20px" data-toggle="popover" title="Previously Voted Abstain" data-placement="top">
+                            <div class="votingdown">@Model.CurrentModel.AbstainCount</div>
+
+                        }
+                        else
+                        {
+                            <img id="btnVoteAbstain_@Model.CurrentModel.Id" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="Previously Voted Abstain" data-placement="top">
+                            <div class="votingdown">@Model.CurrentModel.AbstainCount</div>
+                        }
+                        <img id="btnVoteManual_@Model.CurrentModel.Id" src="/images/manual.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-content="gobject vote-many @Model.CurrentModel.Hash funding <yes|no|abstain>" data-placement="top" data-toggle="popover" title="Manually vote on this proposal (HistoriaCore GUI - Tools - Debugconsole):">
+
+                    }
+                    else
+                    {
+                        @if (@Model.CurrentModel.Type == "4")
+                        {
+                            @if (@Model.CurrentModel.CachedLocked == true)
+                            {
+                                <p>Past Voting Cycle: Locked</p>
+                            }
+                            else
+                            {
+                                <p>Past Voting Cycle: This record did not pass and will be deleted</p>
+                            }
+                        }
+                        else
+                        {
+                            @if (@Model.CurrentModel.CachedLocked == true)
+                            {
+                                <p>Past Voting Cycle: Passed</p>
+                            }
+                            else
+                            {
+                                <p>Past Voting Cycle</p>
+                            }
+
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="usertabs">
+                <div class="social">
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <br /><br /><br />
+    <div class="modal fade" role="dialog" id="voteModal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form id="frmSubmitVote" class="needs-validation" role="form" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Vote</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="tbProposalId" />
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="col-form-label" for="tbMasterNodeName">Password: <span style="color:#f00">*</span> </label>
+                                        <input class="form-control" id="tbPassphrase" type="password" placeholder="" required />
+                                        <div class="invalid-feedback">Please enter your Password.</div>
+                                        <div class="invalid-feedback">Invalid Password. Can not submit vote</div>
+                                    </div>
+
+                                </div>
+
+                                <div class="col">
+                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                        <label class="btn btn-secondary">
+                                            <input type="radio" name="voteOptions" id="yes" autocomplete="off"> Vote YES
+                                        </label>
+                                        <label class="btn btn-secondary">
+                                            <input type="radio" name="voteOptions" id="no" autocomplete="off"> Vote NO
+                                        </label>
+                                        <label class="btn btn-secondary">
+                                            <input type="radio" name="voteOptions" id="abstain" autocomplete="off"> Vote ABS
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label>Proposal Voting Guidelines</label>
+                                        <ul>
+                                            <li>Does it add value to Historia?</li>
+                                            <li>Is the cost appropriate?</li>
+                                            <li>Is it nicely formatted?</li>
+                                            <li>Do you want this implemented?</li>
+                                        </ul>
+                                        <label>Record Voting Guidelines</label>
+                                        <ul>
+                                            <li>Should it be permanently added?</li>
+                                            <li>Is factual correct?</li>
+                                            <li>Is it nicely formatted?</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                     </div>
+                </form>
+                <div class="modal-footer">
+                    <button id="btnSubmitVote" class="btn btn-secondary" type="submit">Submit Vote</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+@section Scripts {
+    <script src="/lib/cryptojs/crypto-js.min.js"></script>
+    <script src="/lib/jsrassign/jsrsasign-all-min.js"></script>
+    <script type="text/javascript">
+
+        function hex2a(hexx) {
+            var hex = hexx.toString();//force conversion
+            var str = '';
+            for (var i = 0; (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            return str;
+        }
+
+        function getRandomInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        var UTC = new Date().getTime();
+
+        function localUTCDateC(id, date) {
+
+            // Get User local time
+            var n1 = new Date();
+            var n2 = n1.getTimezoneOffset();
+            var hoursOffset = n2 / 60;
+            // date in UTC from comment
+            var d = new Date(date);
+            const diffTime = Math.abs(d.getTime() - UTC);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            var diffHours = Math.abs(((d.getTime() - UTC) / 1000) / 3600);
+            diffHours = Math.abs(Math.round(diffHours));
+            diffHours = Math.abs(diffHours - hoursOffset);
+
+            var diffMonths;
+            var diffWeeks;
+
+            if (diffDays > 7) {
+                diffWeeks = Math.abs(Math.round(diffDays / 7));
+            }
+
+            if (diffDays > 30) {
+                diffMonths = Math.abs(Math.round(diffDays / 30));
+            }
+
+
+            if (diffDays > 180) {
+                //If greater than 90 days, then list short date.
+                console.log("DD90:" + diffDays);
+                $('#time_' + id).text(" — " + d.toDateString());
+            } else if (diffDays > 90 && diffDays < 180) {
+                //If greater than 90 days, then list short date.
+                console.log("DD90:" + diffDays);
+                $('#time_' + id).text(" — about " + diffMonths + " months ago");
+            } else if (diffDays > 30 && diffDays < 90) {
+                //If greater than 30 days less than 90 days, then list how many months since post.
+                console.log("DD30:" + diffMonths);
+                $('#time_' + id).text(" — about " + diffMonths + " months ago");
+            } else if (diffDays > 7 && diffDays < 30) {
+                //If greater than 7 days less than 30 days, then list how many weeks since post.
+                console.log("DD7/30:" + diffWeeks);
+                $('#time_' + id).text(" — about " + diffWeeks + " weeks ago");
+            } else if (diffHours > 24 && diffDays < 7) {
+                //If greater than 24 hours and less than 7 days, then list how many days since post.
+
+                console.log("DD24/7:" + diffDays);
+                $('#time_' + id).text(" — about " + diffDays + " days ago");
+            } else if (diffHours < 24) {
+                //If less than 24 hours, then list how many minutes or hours since post.
+                if (diffHours == 0) {
+                    $('#time_' + id).text(" — a few minutes ago");
+                } else if (diffHours == 1) {
+                    $('#time_' + id).text(" — " + diffHours + " hour ago");
+                } else {
+                    $('#time_' + id).text(" — " + diffHours + " hours ago");
+                }
+            }
+        }
+
+        var hasMN = false;
+
+        function GetMyMasternodes()
+        {
+            var test;
+            $.get('@Url.Action("GetMyMasternodes", "Masternode", new { Area = "Masternode" })', null, function (data) {
+                if (data.length == 0) {
+                    hasMN = false;
+                }
+            });
+            hasMN = true;
+        }
+
+        var votingProposalId = @Model.CurrentModel.Id;
+        var votingParentHash = null;
+
+        var vote = 'yes';
+
+
+        var hideAllPopovers = function () {
+            $('.popup-marker').each(function () {
+                $(this).popover('hide');
+            });
+        };
+
+        $(document).on('click', function (e) {
+            hideAllPopovers();
+        });
+
+        $(document).ready(function () {
+
+            $('body').on('click', function (e) {
+                if ($(e.target).data('toggle') !== 'popover'
+                    && $(e.target).parents('[data-toggle="popover"]').length === 0
+                    && $(e.target).parents('.popover.in').length === 0) {
+                    $('[data-toggle="popover"]').popover('hide');
+                }
+            });
+            var dd1 = $('#timetemp_@(Model.CurrentModel.Id)').val();
+
+            localUTCDateC(@Model.CurrentModel.Id, dd1);
+
+            $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
+                result = JSON.parse(result);
+                _currentSuperBlock = result.result.currentBlock;
+                _nextSuperBlock = result.result.nextsuperblock;
+                var delta = _nextSuperBlock - _currentSuperBlock;
+                daysToSuperBlock = (((delta * 2.5) / 60) / 24);
+
+                var votingDeadline = 0;
+                if (daysToSuperBlock < 2) {
+                    $('#votingDeadline').html("Past Cycle - In Processing");
+                } else {
+                    daysToSuperBlock = daysToSuperBlock - 2;
+                    $('#votingDeadline').html(daysToSuperBlock.toPrecision(4));
+                }
+
+            });
+
+
+            var url = /(https?:\/\/[^\s]+)/g;
+
+            var oldurltmp = "";
+            var urltmp = "";
+            var output = "";
+
+            GetMyMasternodes();
+            $('#btnVoteManual_' + @(Model.CurrentModel.Id)).popover('enable');
+
+            $('#btnVoteYes_@Model.CurrentModel.Id').on('click', function () {
+                if (hasMN == true) {
+                    $('#voteYes').parent().addClass('active').siblings().removeClass('active');
+                    $('#voteYes').prop("checked", true);
+                    $('#voteModal').appendTo("body").modal('show');
+                    votingProposalId = @Model.CurrentModel.Id;
+                    votingParentHash = '@Model.CurrentModel.Hash';
+                    vote = 'yes';
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'You do not have any nodes registered to vote with. Add you voting keys on the My Masternodes page',
+                        type: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+            $('#btnVoteNo_@Model.CurrentModel.Id').on('click', function () {
+                if (hasMN == true) {
+                    $('#voteYes').parent().addClass('active').siblings().removeClass('active');
+                    $('#voteYes').prop("checked", true);
+                    $('#voteModal').appendTo("body").modal('show');
+                    votingProposalId = @Model.CurrentModel.Id;
+                    votingParentHash = '@Model.CurrentModel.Hash';
+                    vote = 'no';
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'You do not have any nodes registered to vote with. Add you voting keys on the My Masternodes page.',
+                        type: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+            $('#btnVoteAbstain_@Model.CurrentModel.Id').on('click', function () {
+                if (hasMN == true) {
+                    $('#voteYes').parent().addClass('active').siblings().removeClass('active');
+                    $('#voteYes').prop("checked", true);
+                    $('#voteModal').appendTo("body").modal('show');
+                    votingProposalId = @Model.CurrentModel.Id;
+                    votingParentHash = '@Model.CurrentModel.Hash';
+                    vote = 'abstain';
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'You do not have any nodes registered to vote with. Add you voting keys on the My Masternodes page.',
+                        type: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+
+ 
+            $('#btnDialog_@Model.CurrentModel.Id').popover({
+                html: true,
+                content: function () {
+                    return $('#popover-content').html();
+                }
+            });
+
+
+
+            $('input[name="voteOptions"]').change(function (evt) {
+                    console.log('voteYes clicked', evt.target.id);
+                    vote = evt.target.id;
+            });
+
+        });
+
+        $('#btnSubmitVote').on('click', function (evt) {
+            evt.stopPropagation();
+
+            var form = $('#frmSubmitVote');
+            if (form[0].checkValidity() === false) {
+                form.addClass('was-validated');
+                return false;
+            }
+            else
+            form.removeClass('was-validated');
+
+            $('#tbProposalId').val(votingProposalId);
+            $.getJSON('@(Url.Action("GetMasternodePrivKey", "Masternode", new { area = "Masternode" }))', function (data) {
+
+                data.forEach(function (data) {
+
+                    var passPhrase = $('#tbPassphrase').val();
+                    var decrypted;
+                    if (data.privateKey) {
+                        decrypted = hex2a(CryptoJS.AES.decrypt(data.privateKey, passPhrase));
+                        console.log('decrypted priv key: ' + hex2a(decrypted))
+                    } else {
+                        decrypted = data.subscriberPrivateKey;
+                        console.log('decrypted sub priv key: ' + decrypted);
+                    }
+                    var voteOutcome = 3;
+                    var voteSanitized = 'abstain';
+
+                    if (vote == 'yes') {
+                        voteOutcome = 1;
+                        voteSanitized = 'yes';
+                    } else if (vote == 'no') {
+                        voteOutcome = 2;
+                        voteSanitized = 'no';
+                    }
+
+                    var d = new Date();
+                    var seconds = Math.round(d.getTime() / 1000);
+
+                    var vinMasternode = data.collateralHash + '-' + data.collateralIndex; 
+                    var voteSignal = 1; 
+                    var message = vinMasternode + '|' + votingParentHash + '|' + voteSignal + '|' + voteOutcome + '|' + seconds;
+
+                    $.getJSON('@Url.Action("SignMessage", "Masternode", new { area = "Masternode" })', { message: message, privateKey: decrypted.toString()}, function (signData) {
+                        console.log('signData: ' + JSON.stringify(signData));
+                        try {
+                            var signature = signData.result;
+                            var voteData = { "vinMasternode": data.collateralHash, "collateralIndex": data.collateralIndex, "parentHash": votingParentHash, "voteSignal": voteSignal, "voteOutcome": voteOutcome, "time": seconds, "signature": signature };
+
+                            if (typeof signature === 'undefined') {
+                                console.log("signature is undefined");
+                                Swal.fire({
+                                    title: 'Failure!',
+                                    text: 'Something went wrong. Probably incorrect passphrase!',
+                                    type: 'error',
+                                    confirmButtonText: 'Ok'
+                                });
+
+                            } else {
+
+                                $.post('@Url.Action("SubmitMasternodeVote", "Masternode", new { area = "Masternode" })', { voteData: JSON.stringify(voteData) }, function (data) {
+                                    console.log(data.success);
+                                    if (data.success) {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: 'Your vote has been submitted to the network!',
+                                            type: 'success',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            title: 'Failure!',
+                                            text: data.message,
+                                            type: 'error',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                        catch (err) {
+
+                        }
+                    });
+                })
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+            });
+        });
+
+
+    </script>
+
+}
+
+
+
+
+

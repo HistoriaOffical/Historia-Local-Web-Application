@@ -1,0 +1,204 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using HistWeb.Helpers
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - Historia Network</title>
+    @Html.Raw(ViewBag.LoadMetaTag)
+    <environment include="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    </environment>
+    <link rel="stylesheet" href="~/css/datatables/datatables.min.css" />
+    <link rel="stylesheet" href="~/lib/sweetalert2/sweetalert2.min.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="icon" type="image/png" href="~/images/favicon.png" />
+    @if (IsSectionDefined("Styles"))
+    {
+        @RenderSection("Styles", required: false)
+    }
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <div class="d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img src="~/images/logoblue.svg" width="175" />
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                                <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Index">Home</a>
+                                <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Wallets">Wallets & Software</a>
+                                <a class="dropdown-item" href="/Home/About">About / Dev Log</a>
+                                <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Whitepaper">White Paper</a>
+                                <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Team">Team / Partners / Social</a>
+
+                                <hr />
+                                <h5 class="dropdown-item" style="font-weight: bold;">External Links</h5>
+                                <a class="dropdown-item" href="https://blockexplorer.historia.network/" target="_blank">Block Explorer #1</a>
+                                <a class="dropdown-item" href="https://openchains.info/coin/historia/blocks" target="_blank">Block Explorer #2</a>
+                                <a class="dropdown-item" href="https://docs.historia.network/en/latest/" target="_blank">Technical Documentation</a>
+                                <a class="dropdown-item" href="https://github.com/HistoriaOffical/historia" target="_blank">Github</a>
+                                <a class="dropdown-item" href="https://blog.historia.network/" target="_blank">Blog</a>
+
+                            </div>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Masternodes
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" asp-area="Masternode" asp-controller="Masternode" asp-action="Registration">My Masternodes</a>
+                                <a class="dropdown-item" asp-area="Masternode" asp-controller="Masternode" asp-action="Index">Masternodes</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <!-- FUTURE RELEASE
+                     <a class="nav-link text-dark" asp-area="Proposals" asp-controller="Proposals" asp-action="Create">Create</a>
+                -->
+                        </li>
+
+                    </ul>
+                </div>
+
+
+                <div class="d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item dropdown" title="Number of days left in the current voting cycle">
+                            <span class="nav-link"><label id="rotate">Loading...</label></span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fas fa-cog fa-2x" role="button" aria-pressed="true" asp-area="Home" asp-controller="Home" asp-action="Settings"></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </nav>
+    </header>
+    <div class="container">
+        <!-- <partial name="_CookieConsentPartial" />-->
+        <partial name="_About" />
+        <main role="main" class="pb-3">
+            <div class="wrapper">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted fixed-bottom">
+        <div class="container">
+            <div class="row">
+                <div class="col-11">
+                    &copy; 2022 - Historia - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+                </div>
+                <div class="col-1 pull-right">
+                    <a href="https://twitter.com/historiasys?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Follow historiasys</a>
+                    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <environment include="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery"
+                crossorigin="anonymous"
+                integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=">
+        </script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal"
+                crossorigin="anonymous"
+                integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o">
+        </script>
+    </environment>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/js/datatables/datatables.min.js" asp-append-version="true"></script>
+    <script src="~/lib/moment/moment.js" asp-append-version="true"></script>
+    <script src="~/lib/sweetalert2/sweetalert2.all.min.js" asp-append-version="true"></script>
+    <script src="~/lib/loadingoverlay/loadingoverlay.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script type="text/javascript">
+
+        var _nextSuperBlock = 0;
+        var _currentSuperBlock = 0;
+        var _daysleft = 0;
+
+        $(document).ready(function () {
+
+             $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
+                console.log('superblock data: ', result);
+                result = JSON.parse(result);
+                console.log('superblock data: ' + result.result.lastsuperblock, result.nextsuperblock);
+                _currentSuperBlock = result.result.currentBlock;
+                _nextSuperBlock = result.result.nextsuperblock;
+                _circulatingSupply = result.result.cSupply;
+                var delta = _nextSuperBlock - _currentSuperBlock;
+                daysToSuperBlock = (((delta * 2.5) / 60) / 24);
+                console.log("DAYS: " + daysToSuperBlock + "nextSuperBlock " + _nextSuperBlock + "currentSuperBlock" + _currentSuperBlock);
+                if (daysToSuperBlock <= 2) {
+                    $('#nextSuperBlock').html(Math.round(daysToSuperBlock));
+                    console.log('votingDeadline2:' + Math.round(daysToSuperBlock));
+                    //_daysleft = Math.round(daysToSuperBlock);
+                    _daysleft = Math.round(daysToSuperBlock);
+                } else {
+                    $('#nextSuperBlock').html(Math.round(daysToSuperBlock - 2));
+                    console.log('votingDeadline3:' + Math.round(daysToSuperBlock - 2));
+                    _daysleft = Math.round(daysToSuperBlock - 2);
+                }
+                $('#currentBlock').html(result.result.currentBlock);
+                var i = 0;
+                (function rotate() {
+                    if (i == 0) {
+                        i = 1;
+                        if (_daysleft <= 1) {
+                            $('#rotate').html("New Cycle Tomorrow");
+                        } else if (_daysleft <= 2) {
+                            $('#rotate').html("New Cycle in Days: " + _daysleft);
+                        } else {
+                            $('#rotate').html("Voting Days Left: " + _daysleft);
+                        }
+                    } else if (i == 1) {
+                        $('#rotate').html("Current Block: " + _currentSuperBlock);
+                        i = 2;
+                    } else if (i == 2) {
+                        $('#rotate').html("Next Superblock:  " + _nextSuperBlock);
+                        i = 3;
+                    } else if (i == 3) {
+                        var fixedSupply = _circulatingSupply.toFixed(2);
+                        $('#rotate').html("Circulating Supply:  " + fixedSupply);
+                        i = 0;
+                    }
+                    setTimeout(rotate, 10000);
+                 })();
+             });
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+
+
+</body>
+</html>
+

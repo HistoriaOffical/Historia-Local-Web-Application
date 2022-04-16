@@ -1,0 +1,484 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    font-size: 14px;
+    height: 100%
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+.wrapper {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden
+}
+    .wrapper.ng-leave {
+        display: none
+    }
+    .wrapper.section-container {
+        position: relative;
+        height: 100%;
+        margin-left: 0;
+        z-index: 111;
+        background-color: #f5f7fa;
+        margin-bottom: 60px !important
+    }
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+    font-size: 1rem;
+    line-height: inherit;
+}
+
+
+@font-face {
+    font-family: 'Fa brands 400';
+    src: url('../fonts/fa-brands-400.woff2') format('woff2'), url('../fonts/fa-brands-400.woff') format('woff'), url('../fonts/fa-brands-400.ttf') format('truetype'), url('../fonts/fa-brands-400.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Avenirltstd book';
+    src: url('../fonts/AvenirLTStd-Book.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Avenirltstd';
+    src: url('../fonts/AvenirLTStd-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Avenirltstd';
+    src: url('../fonts/AvenirLTStd-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Avenirltstd';
+    src: url('../fonts/AvenirLTStd-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Avenirltstd roman';
+    src: url('../fonts/AvenirLTStd-Roman.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Fa 400';
+    src: url('../fonts/fa-regular-400.woff') format('woff'), url('../fonts/fa-regular-400.ttf') format('truetype'), url('../fonts/fa-regular-400.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Fa solid 900';
+    src: url('../fonts/fa-solid-900.ttf') format('truetype'), url('../fonts/fa-solid-900.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    /* Margin bottom by footer height */
+    /*margin-bottom: 60px;*/
+}
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    height: 50px;
+    line-height: 50px; /* Vertically center the text there */
+    background-color: #fafbfc
+}
+
+.content-heading {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    line-height: 1.1;
+    color: #929292;
+    margin: -15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    font-weight: 400;
+    background-color: #fafbfc;
+    border-bottom: 1px solid #cfdbe2
+}
+
+.content-wrapper.content-heading small {
+    display: block;
+    font-size: 12px;
+    color: #909fa7
+}
+
+.content-wrapper {
+    padding: 15px;
+    width: 100%;
+    border-top: 1px solid rgba(0, 0, 0, .15);
+    margin-top: -1px
+}
+
+    .content-wrapper.unwrap {
+        margin: -15px
+    }
+
+@media(min-width: 768px) {
+    .content-wrapper.unwrap {
+        margin: -20px
+    }
+}
+
+.content-wrapper.content-heading {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    line-height: 1.1;
+    color: #929292;
+    margin: -15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    font-weight: 400;
+    background-color: #fafbfc;
+    border-bottom: 1px solid #cfdbe2
+}
+
+    .content-wrapper.content-heading small {
+        display: block;
+        font-size: 12px;
+        color: #909fa7
+    }
+
+.content-wrapper.container, .content-wrapper.container-fluid {
+    padding-left: 0;
+    padding-right: 0
+}
+
+@media(min-width: 768px) {
+    .content-wrapper {
+        padding: 20px
+    }
+
+        .content-wrapper.content-heading {
+            margin: -20px;
+            margin-bottom: 20px;
+            padding: 20px
+        }
+
+            .content-wrapper.content-heading.btn,
+            .content-wrapper.content-heading button {
+                margin: 0
+            }
+}
+@media(min-width: 768px) {
+    body {
+        min-height: 100%
+    }
+
+    .wrapper.footer-container,
+    .wrapper.section-container {
+        margin-left: 220px
+    }
+}
+
+/*Proposal Card styles*/
+
+
+.heading_news {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-size: 30px;
+    line-height: 31px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.listing-container {
+    position: relative;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: auto;
+    margin-top: 30px;
+    padding: 30px 35px 70px;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    background-color: #fff;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    /*background-image: radial-gradient(circle farthest-corner at 0% 0%, #fff, #ebebeb);*/
+}
+
+.author {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding-left: 10px;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: row;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -webkit-box-pack: start;
+    -webkit-justify-content: flex-start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-align-self: flex-start;
+    -ms-flex-item-align: start;
+    align-self: flex-start;
+}
+
+.author-p {
+    display: inline-block;
+    width: auto;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 0px;
+    float: none;
+    clear: none;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-align-self: center;
+    -ms-flex-item-align: center;
+    -ms-grid-row-align: center;
+    align-self: center;
+    color: #bfbfbf;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 300;
+    text-align: left;
+}
+
+.article-text {
+    display: block;
+    overflow: scroll;
+    height: auto;
+    clear: none;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-align-self: auto;
+    -ms-flex-item-align: auto;
+    -ms-grid-row-align: auto;
+    align-self: auto;
+    -webkit-box-ordinal-group: 1;
+    -webkit-order: 0;
+    -ms-flex-order: 0;
+    order: 0;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+}
+
+.votingwrapper {
+    position: absolute;
+    left: 0%;
+    top: auto;
+    right: auto;
+    bottom: 0%;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    margin-bottom: 25px;
+    margin-left: 35px;
+    -webkit-box-pack: start;
+    -webkit-justify-content: flex-start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    color: #a6a6a6;
+}
+
+.usertabs {
+    position: absolute;
+    left: auto;
+    top: auto;
+    right: 0%;
+    bottom: 0%;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    margin-top: 0px;
+    margin-right: 35px;
+    margin-bottom: 20px;
+    -webkit-box-pack: end;
+    -webkit-justify-content: flex-end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    -webkit-flex-wrap: nowrap;
+    -ms-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.social {
+    margin-left: 14px;
+    font-family: 'Fa solid 900', sans-serif;
+    color: #b5b5b5;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+    .social:hover {
+        color: hsla(187.125, 65.57%, 47.84%, 1.00);
+    }
+
+    .social.brands {
+        font-family: 'Fa brands 400', sans-serif;
+    }
+
+.icon {
+    font-size: 20px;
+    text-align: center;
+    text-decoration: none;
+    text-indent: 20px;
+}
+
+.votingdown {
+    margin-right: 20px;
+    margin-left: 5px;
+    font-weight: 900;
+}
+
+@media (max-width: 479px) {
+    .author {
+        margin-top: 20px;
+    }
+
+    .author-p {
+        margin-top: 3px;
+        font-size: 10px;
+        line-height: 13px;
+    }
+
+    .article-text {
+        overflow: auto;
+    }
+    .articleh {
+        font-size: 24px;
+        line-height: 26px;
+    }
+    .usertabs {
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: row;
+        -ms-flex-direction: row;
+        flex-direction: row;
+    }
+
+    .social {
+        font-size: 18px;
+    }
+
+    .icon {
+        padding-right: 2px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .author {
+        margin-top: 20px;
+    }
+
+    .author-p {
+        margin-top: 6px;
+    }
+
+    .article-text {
+        height: auto;
+        margin-bottom: 15px;
+    }
+
+    .articleh {
+        line-height: 32px;
+    }
+
+    .votingwrapper {
+        position: static;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        margin-left: 0px;
+        padding-left: 5px;
+        -webkit-box-pack: center;
+        -webkit-justify-content: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -webkit-align-items: center;
+        -ms-flex-align: center;
+        align-items: center;
+    }
+
+    .votingdown {
+        margin-left: 0px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 991px) {
+    .usertabs {
+        margin-bottom: 25px;
+    }
+}

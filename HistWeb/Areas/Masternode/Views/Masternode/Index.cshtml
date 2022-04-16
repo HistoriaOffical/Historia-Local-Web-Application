@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Masternodes";
+}
+
+    <div class="text-center" style="margin-top:50px;">
+        <div class="card">
+            <div class="card-header">
+                <h3>Masternodes</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-striped my-5 w-100" id="masternodesTable">
+                            <thead>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                    <th>Payee</th>
+
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@section Scripts {
+
+    <script type="text/javascript">
+    $(document).ready(function () {
+
+		var masternodesTable = $('#masternodesTable').DataTable({
+			data: null,
+			info: false,
+			fixedHeader: false,
+			lengthChange: false,
+			autoWidth: false,
+			responsive: false,
+			columns: [
+				{ data: "ipAddress" },
+				{ data: "status" },
+				{ data: "payee" },
+
+			],
+		});
+
+		$.getJSON( '@Url.Action("GetMasterNodes", "Masternode", new { Area = "Masternode" })', function( tableData ) {
+            console.log('masternode data: ' + JSON.stringify(JSON.parse(tableData)));
+
+			var jsonRet = [];
+			for (var prop in tableData.result) {
+                var pval = tableData.result[prop].trim().split(/\s+/);
+				var masterNode = {};
+				masterNode.status = pval[0];
+				masterNode.payee = pval[1];
+				var d = new Date(pval[2] * 1000);
+				masterNode.ipAddress = pval[4];
+				jsonRet.push(masterNode);
+			}
+
+            var masternodesTable = $('#masternodesTable').DataTable({
+                destroy: true,
+                data: JSON.parse(tableData),
+				info: false,
+				fixedHeader: false,
+				lengthChange: false,
+				autoWidth: false,
+				responsive: true,
+				columns: [
+                    { data: "IPAddress" },
+					{ data: "Status" },
+					{ data: "Payee" },
+				],
+			});
+        });
+    });
+
+    </script>
+}

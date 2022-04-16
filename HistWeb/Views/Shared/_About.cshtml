@@ -1,0 +1,15 @@
+﻿@using Microsoft.AspNetCore.Http.Features
+
+@{
+    var showBanner = true;
+}
+
+@if (showBanner)
+{
+
+    <div id="cookieConsent" class="alert alert-info alert-dismissible fade show" role="alert">
+        This is beta software, please add bug reports <a href="https://github.com/HistoriaOffical/Historia-Local-Web-Application" style="text-decoration: underline">here</a>. Learn what Historia Network is, what this website is, and current development updates <a asp-area="" asp-controller="Home" asp-action="About" style="text-decoration: underline">here</a>.
+    </div>
+   
+
+}

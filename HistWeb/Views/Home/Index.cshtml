@@ -1,0 +1,386 @@
+﻿@model HistWeb.Home.Models.HomeViewModel;
+@using HistWeb.Helpers
+
+@{
+    ViewData["Title"] = "Historia";
+}
+
+@section Styles
+{
+    <style>
+
+        /* selected btn css */
+        .btn-group-toggle .btn:not(:disabled):not(.disabled).active, .btn-group-toggle .btn:not(:disabled):not(.disabled):active, .show > .btn.dropdown-toggle {
+            color: #fff;
+            background-color: #2196F3;
+            border-color: #2196F3;
+        }
+
+        /* non selected btn css */
+        .btn-group-toggle .btn {
+            color: #fff;
+            background-color: #b7b7b7;
+            border-color: #6c757d;
+        }
+
+        .popover {
+            max-width: 760px !important;
+        }
+    </style>
+}
+
+<div class="text-center">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12">
+                <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                    <li class="nav-item"><a href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
+                    <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase " onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
+                    <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase " onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
+
+                </ul>
+                <div class="tab-content">
+                    <div id="all" class="tab-pane fade show active">
+                        <div id="allloadingdiv" style="text-align:center;margin-bottom:20px;">
+                            Loading...
+                        </div>
+                        <div id="allRecordsContainer">
+                        </div>
+                        <div class="row mt-4" id="allRecordsNoRecordMsg" style="display:none">
+                            <div class="col-12 mx-auto">
+                                <h4>Is Historia Core Client Setup and Running?</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="proposals" class="tab-pane fade show">
+                        <div id="proposalloadingdiv" style="text-align:center;margin-bottom:20px;">
+                            Loading...
+                        </div>
+                        <div id="proposalsContainer">
+                        </div>
+                        <div class="row mt-4" id="proposalsNoRecordMsg" style="display:none">
+                            <div class="col-12 mx-auto">
+                                <h4>Please wait while the Historia client syncs</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="records" class="tab-pane fade show">
+                        <div id="recordsloadingdiv" style="text-align:center;margin-bottom:20px;">
+                            Loading...
+                        </div>
+                        <div id="recordsContainer">
+                        </div>
+                        <div class="row mt-4" id="recordsNoRecordMsg" style="display:none">
+                            <div class="col-12 mx-auto">
+                                <h4>Please wait while the Historia client syncs</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <br /><br />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="recordTemplate" class="record" style="display:none">
+    <div class="listing-container position-relative">
+        <div class="title text-left">
+            <span id="recordType" class="ml-0" style="vertical-align:middle;"></span>
+            <span id="recordTime" class="ml-0" style="vertical-align:middle;"></span>&nbsp;<br />
+            <input type="hidden" id="timetemp_" value="">
+            <h5 class="card-title"><a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a></h5>
+        </div>
+ 
+        <div class="w-clearfix text-left" style="transform: rotate(0);">
+            <p id="proposalSummary" class="card-text">ProposalSummary</p>
+        </div>
+
+        <div style="margin-top:20px; margin-bottom:10px;">
+            <div class="voting">
+                <div class="votingwrapper">
+                    <p id="pastVotingCycle"></p>
+                </div>
+                <div class="votingwrapper" style="margin-top:30px">
+                    <div id="votingSection" class="votingwrappermain" style="display:none">
+                        <div class="votingdown">VOTING</div>
+                        <a href="#">
+                            <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
+                        </a>
+                        <div id="yesCount" class="votingdown"></div>
+                        <a href="#">
+                            <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
+                        </a>
+                        <div id="noCount" class="votingdown"></div>
+                        <a href="#">
+                            <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
+                        </a>
+                        <div id="abstainCount" class="votingdown"></div>
+                        <a id="proposalNameVote" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a>
+                    </div>
+                </div>
+
+                <div class="votingwrapper" style="margin-top:30px">
+                    <span id="expired" class="ml-0"></span>
+                </div>
+            </div>
+            <div class="usertabs">
+                <div class="socialmain">
+                </div>
+            </div>
+        </div>
+        <hr />
+     </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.js"></script>
+    <script src="/lib/cryptojs/crypto-js.min.js"></script>
+    <script src="/lib/jsrassign/jsrsasign-all-min.js"></script>
+
+    <script type="text/javascript">
+        let pageIndex = 0;
+
+        function hex2a(hexx) {
+            var hex = hexx.toString();//force conversion
+            var str = '';
+            for (var i = 0; (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            return str;
+        }
+
+        function getRandomInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        function clearRecords() {
+            $('#allRecordsContainer').empty();
+            $('#proposalsContainer').empty();
+            $('#recordsContainer').empty();
+            pageIndex = 0;
+        }
+
+        //TODO: Move this into a separate file
+        function lazyLoadAll(type, pageIndex) {
+            $("#allloadingdiv").show();
+            $("#proposalloadingdiv").show();
+            $("#recordsloadingdiv").show();
+            $.ajax({
+                type: 'GET',
+                url: '/Home/LoadRecords',
+                contentType: 'application/json; charset=utf-8',
+                data: { recordType: type, pageIndex: pageIndex },
+                dataType: 'json',
+                success: function (result, status, xhr) {
+
+                    pageindex = pageIndex + 1;
+                    result.records && result.records.length > 0 && result.records.map((record, idx) =>
+                    {
+
+                        let template = $('#recordTemplate').clone().show();
+                        template.attr('id', `record_${record.hash}`);
+
+                        template.find('#proposedByUserName').text(record.proposedByUserName);
+                        template.find('#proposalSummary').text(record.proposalSummary);
+                        template.find('#proposalName').text(record.proposalName);
+
+                        template.find('#recordTime').attr('id', `recordTime_${record.hash}`);
+                        template.find(`#recordTime_${record.hash}`).attr('class', `time_${record.hash}`);
+                        localUTCDateC(template.find(`#recordTime_${record.hash}`), record.proposalDate);
+
+                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
+                        template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
+
+
+                        if (record.type === '1') {
+                            template.find('#recordType').html('<b>Proposal</b>');
+                        }
+                        else if (record.type === '4') {
+                            template.find('#recordType').html('<b>Record</b>');
+                        }
+                        else if (record.type === '5') {
+                            template.find('#recordType').html('<b>Archive</b>');
+                        }
+
+                        if (record.pastSuperBlock === 0) {
+                           // if (record.voting) {
+                                template.find('#votingSection').show();
+  
+                                template.find('#yesCount').text(record.yesCount);
+                                template.find('#noCount').text(record.noCount);
+                                template.find('#abstainCount').text(record.abstainCount);
+                           // }
+                        }
+                        else {
+                            if (record.type === '4') {
+                                if (record.cachedLocked) {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                                else {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                            }
+                            else {
+                                if (record.cachedLocked) {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                                else {
+                                    //template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                            }
+                        }
+
+                        if (type === 'all') {
+                            console.log('all result: ', `#record_${record.hash}`, $('#allRecordsContainer').find(`#record_${record.id}`));
+                            if ($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#allRecordsContainer").append(template);
+                        }
+                        else if (type === 'proposals') {
+                            console.log('proposals result: ', `#record_${record.hash}`, $('#allRecordsContainer').find(`#record_${record.id}`));
+
+                            if ($('#proposalsContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#proposalsContainer").append(template);
+                        }
+                        else if (type === 'records') {
+                            console.log('records result: ', `#record_${record.hash}`, $('#allRecordsContainer').find(`#record_${record.id}`));
+
+                            if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#recordsContainer").append(template);
+                        }
+                    });
+
+                    if (result.records && result.records.length > 0) {
+                        if (type === 'all')
+                            $('#allRecordsNoRecordMsg').hide();
+                        else if (type === 'proposals')
+                            $('#proposalsNoRecordMsg').hide();
+                        else
+                            $('#recordsNoRecordMsg').hide();
+                    }
+                    else {
+                        if (type === 'all' && $("#allRecordsContainer").children().length === 0)
+                            $('#allRecordsNoRecordMsg').show();
+                        else if (type === 'proposals' && $("#proposalsContainer").children().length === 0)
+                            $('#proposalsNoRecordMsg').show();
+                        else if ($("#recordsContainer").children().length === 0)
+                            $('#recordsNoRecordMsg').show();
+                    }
+
+                    $("#allloadingdiv").hide();
+                    $("#proposalloadingdiv").hide();
+                    $("#recordsloadingdiv").hide();
+                    inProgress = false;
+                },
+
+                error: function (xhr, status, error) {
+
+                }
+            });
+        }
+
+
+
+
+        function localUTCDateC(id, date) {
+
+            // Get User local time
+            var n1 = new Date();
+            var n2 = n1.getTimezoneOffset();
+            var hoursOffset = n2 / 60;
+            // date in UTC from comment
+            var d = new Date(date);
+            var UTC = new Date().getTime();
+            //console.log("NOW: " + UTC + " UTC COMMENT TIME:" + d.getTime() + " UTC DIFFERENCE:" + n2);
+            const diffTime = Math.abs(d.getTime() - UTC);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            var diffHours = Math.abs(((d.getTime() - UTC) / 1000) / 3600);
+            diffHours = Math.abs(Math.round(diffHours));
+            diffHours = Math.abs(diffHours - hoursOffset);
+
+            var diffMonths;
+            var diffWeeks;
+
+            if (diffDays > 7) {
+                diffWeeks = Math.abs(Math.round(diffDays / 7));
+            }
+
+            if (diffDays > 30) {
+                diffMonths = Math.abs(Math.round(diffDays / 30));
+            }
+
+
+            if (diffDays > 180) {
+                //If greater than 90 days, then list short date.
+                //console.log("DD180:" + diffDays);
+                $(id).text(" — " + d.toDateString());
+            } else if (diffDays > 90 && diffDays < 180) {
+                //If greater than 90 days, then list short date.
+                //console.log("DD90:" + diffDays);
+                $(id).text(" — about " + diffMonths + " months ago");
+            } else if (diffDays > 30 && diffDays < 90) {
+                //If greater than 30 days less than 90 days, then list how many months since post.
+                $(id).text(" — about " + diffMonths + " months ago");
+                //console.log("DD30:" + diffMonths);
+                //$('.time_' + id).each(function () {
+                //    $(this).text(" — about " + diffMonths + " months ago");
+                //});
+            } else if (diffDays > 7 && diffDays < 30) {
+                //If greater than 7 days less than 30 days, then list how many weeks since post.
+                $(id).text(" — about " + diffWeeks + " weeks ago");
+                //console.log("DD7/30:" + diffWeeks);
+
+
+            } else if (diffHours > 24 && diffDays < 7) {
+                //If greater than 24 hours and less than 7 days, then list how many days since post.
+                $(id).text(" — about " + diffDays + " days ago");
+                //console.log("DD24/7:" + diffDays);
+
+
+            } else if (diffHours < 24) {
+                //If less than 24 hours, then list how many hours since post.
+                if (diffHours <= 1) {
+                    $(id).text(" — a few minutes ago");
+
+                    //console.log("DDHOURS:MIN");
+                } else if (diffHours => 1) {
+                    $(id).text(" — " + diffHours + " hour ago");
+                    //console.log("DDHOURS:>1");
+
+                }
+                //console.log("DDHOURSTEMP:" + diffHours);
+            }
+        }
+        let selectedType = 'all';
+
+        $(document).ready(function () {
+            let inProgress = false;
+
+            $(window).on("scroll", function() {
+                var docHeight = $(document).height();
+                var winScrolled = $(window).height() + $(window).scrollTop();
+                if ((docHeight - winScrolled) < 1) {
+                    inProgress = true;
+                    lazyLoadAll(selectedType, pageIndex);
+                    pageIndex = pageIndex + 1;
+
+                }
+            });
+            lazyLoadAll(selectedType, pageIndex);
+
+        });
+
+
+        function renderRecord() {
+
+}
+    </script>
+
+}
+
+

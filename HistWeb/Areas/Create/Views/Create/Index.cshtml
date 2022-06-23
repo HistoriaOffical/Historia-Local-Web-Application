@@ -1,0 +1,164 @@
+﻿@{
+    ViewData["Title"] = "Create";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3>Create</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <button id="create" class="btn btn-secondary btn-lg active" aria-pressed="true">Create</button>
+                        <table class="table table-striped my-4 w-100" id="draftsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Summary</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+    @section Scripts {
+
+        <script type="text/javascript">
+        var url = "";
+        $(document).ready(function () {
+
+            $.getJSON('@Url.Action("GetDrafts", "Create", new { Area = "Create" })', function (tableData) {
+                console.log('draft data: ' + JSON.stringify(tableData));
+
+                var draftsTable = $('#draftsTable').DataTable({
+                    data: tableData,
+                    info: false,
+                    fixedHeader: false,
+                    lengthChange: false,
+                    autoWidth: true,
+                    responsive: true,
+                    columnDefs: [
+                        { "width": "10%", "targets": 2 }
+                    ],
+                    columns: [
+
+                        { data: "draftName" },
+                        { data: "draftSummary" },
+                        {
+                            data: "id",
+                    	    render: function(data, type, full, meta)
+						    {
+                                var url = "/Create/Create/CreateBuilder?Id=" + data;
+                  
+                                return '<a href="' + url + '" class="btn btn-secondary btn active" role="button" aria-pressed="true">Resume</a>';
+
+                            }
+                        },
+                    ],
+                });
+            });
+
+        });
+
+
+            $('#create').off().on('click', function (evt) {
+
+                (async () => {
+
+                    const { value: type } = await Swal.fire({
+                        title: 'Select Create Type',
+                        input: 'select',
+                        inputOptions: {
+                            proposal: 'Proposal',
+                            record: 'Record',
+                            archive: 'Archive',
+                        },
+                        inputPlaceholder: 'Select a type',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            return new Promise((resolve) => {
+                                if (value === 'proposal' || value === 'record' || value === 'archive') {
+                                    resolve()
+                                } else {
+                                    resolve('You need to select a type :)')
+                                }
+                            })
+                        }
+                    })
+
+                    if (type === "proposal") {
+                        const { value: template } = await Swal.fire({
+                            title: 'Select Template',
+                            input: 'select',
+                            inputOptions: {
+                                none: 'None',
+                                proposal: 'Proposal',
+                            },
+                            inputPlaceholder: 'Select a template',
+                            showCancelButton: true,
+                            inputValidator: (value) => {
+                                return new Promise((resolve) => {
+                                    if (value === 'none' || value === 'proposal') {
+                                        resolve()
+                                    } else {
+                                        resolve('You need to select a template')
+                                    }
+                                })
+                            }
+
+                        })
+                        if (template === "none") {
+                            window.location = '/Create/Create/CreateBuilder?Id=0&Type=1&Template=none';
+                        } else if (template === "proposal") {
+                            window.location = '/Create/Create/CreateBuilder?Id=0&Type=1&Template=proposal';
+                        }
+                    } else if (type === "record") {
+                        const { value: template } = await Swal.fire({
+                            title: 'Select Template',
+                            input: 'select',
+                            inputOptions: {
+                                none: 'None',
+                                news: 'Article #1'
+                                //wiki: 'Wiki'
+                            },
+                            inputPlaceholder: 'Select a template',
+                            showCancelButton: true,
+                            inputValidator: (value) => {
+                                return new Promise((resolve) => {
+                                    if (value === 'none' || value === 'news' || value === 'wiki') {
+                                        resolve()
+                                    } else {
+                                        resolve('You need to select a template')
+                                    }
+                                })
+                            }
+                        });
+                        console.log("TEMPLATE: " + template);
+                        if (template === "none") {
+                            window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=none';
+                        } else if (template === "news") {
+                            window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=news';
+                        } else if (template === "wiki") {
+                            window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=wiki';
+                            
+                        }
+
+                    } else if (type === "archive") {
+                        window.location = '/Create/Create/CreateBuilder?Id=0&Type=5';
+                    }
+
+                })()
+
+                return false;
+            });
+        </script>
+    }

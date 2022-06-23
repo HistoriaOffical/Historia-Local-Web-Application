@@ -23,6 +23,10 @@
     <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="icon" type="image/png" href="~/images/favicon.png" />
+    <link href="~/lib/grapejs/dist/css/grapes.min.css" rel="stylesheet" />
+    <link href="~/lib/grapejs-present/dist/grapesjs-preset-webpage.min.css" rel="stylesheet" />
+    <script src="~/lib/grapejs/dist/grapes.min.js"></script>
+    <script src="~/lib/grapejs-present/dist/grapesjs-preset-webpage.min.js"></script>
     @if (IsSectionDefined("Styles"))
     {
         @RenderSection("Styles", required: false)
@@ -67,9 +71,7 @@
                             </div>
                         </li>
                         <li class="nav-item">
-                            <!-- FUTURE RELEASE
-                     <a class="nav-link text-dark" asp-area="Proposals" asp-controller="Proposals" asp-action="Create">Create</a>
-                -->
+                                <a class="nav-link text-dark" asp-area="Create" asp-controller="Create" asp-action="Index">Create</a>
                         </li>
 
                     </ul>
@@ -145,15 +147,26 @@
         var _currentSuperBlock = 0;
         var _daysleft = 0;
 
+        function formatDate(date) {
+            return (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+        }
+
+        function addDays(date, days) {
+            var result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
         $(document).ready(function () {
 
              $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
                 console.log('superblock data: ', result);
                 result = JSON.parse(result);
-                console.log('superblock data: ' + result.result.lastsuperblock, result.nextsuperblock);
                 _currentSuperBlock = result.result.currentBlock;
                 _nextSuperBlock = result.result.nextsuperblock;
-                _circulatingSupply = result.result.cSupply;
+                 _circulatingSupply = result.result.cSupply;
+                 _totalCoins = result.result.totalBudget;
+                 _totalPassingCoins = result.result.totalPassingCoins;
                 var delta = _nextSuperBlock - _currentSuperBlock;
                 daysToSuperBlock = (((delta * 2.5) / 60) / 24);
                 console.log("DAYS: " + daysToSuperBlock + "nextSuperBlock " + _nextSuperBlock + "currentSuperBlock" + _currentSuperBlock);
@@ -166,7 +179,42 @@
                     $('#nextSuperBlock').html(Math.round(daysToSuperBlock - 2));
                     console.log('votingDeadline3:' + Math.round(daysToSuperBlock - 2));
                     _daysleft = Math.round(daysToSuperBlock - 2);
-                }
+                 }
+                 $('#daysToSuperBlock').html(Math.round(daysToSuperBlock));
+                 console.log('daysToSuper:' + Math.round(daysToSuperBlock));
+                 var votingDeadline = 0;
+                 if (daysToSuperBlock < 2) {
+                     $('#votingDeadline').html(Math.round(daysToSuperBlock));
+                     console.log('votingDeadline2:' + Math.round(daysToSuperBlock));
+                 } else {
+                     $('#votingDeadline').html(Math.round(daysToSuperBlock - 2));
+                     console.log('votingDeadline2:' + Math.round(daysToSuperBlock - 2));
+                 }
+                 var todaydd = new Date();
+                 var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock + 2)));
+                 $("#EndCycleDate").html(correctDate);
+                
+                 $('#totalCoins').html(Math.floor(_totalCoins));
+                 $('#totalPassingCoins').html(_totalPassingCoins);
+
+                 //if (delta < 576 * 2) // Prod
+                 if (delta > 576 * 2) // Test
+                 {
+                     var path = window.location.pathname;
+                     if (path === "/Create/Create/CreateBuilder") {
+                         Swal.fire({
+                             title: 'Error!',
+                             text: 'Proposal Creation is currently disabled for the last 2 days of the cycle.',
+                             type: 'error',
+                             confirmButtonText: 'Ok'
+                         });
+                     }
+                 }
+                 else {
+                     $('#submit').removeClass('disabled');
+                     $('#submit').removeAttr('disabled');
+                 }
+
                 $('#currentBlock').html(result.result.currentBlock);
                 var i = 0;
                 (function rotate() {

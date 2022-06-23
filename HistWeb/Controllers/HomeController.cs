@@ -49,7 +49,6 @@ namespace HistWeb.Controllers
         private string _userName = ApplicationSettings.HistoriaRPCUserName;
         private string _password = ApplicationSettings.HistoriaRPCPassword;
         private string _ipfsUrl = ApplicationSettings.IPFSHost;
-        private string _ipfsApiPort = "5001";
         private string _ipfsWebPort = ApplicationSettings.IPFSPort.ToString();
         private readonly IHostingEnvironment _hostingEnvironment;
         private IConfiguration _configuration = null;
@@ -117,7 +116,7 @@ namespace HistWeb.Controllers
                         pm.DataString = record.Value.DataString;
                         pm.Hostname = hostname;
                         pm.IPFSUrl = _ipfsUrl;
-                        pm.IPFSApiPort = _ipfsApiPort;
+
                         pm.IPFSWebPort = _ipfsWebPort;
                         pm.Hash = record.Value.Hash;
                         pm.ProposalName = HttpUtility.HtmlEncode(proposal1.summary.name.ToString());
@@ -176,6 +175,12 @@ namespace HistWeb.Controllers
             return View(model);
         }
 
+
+        public IActionResult Test()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();
@@ -207,7 +212,7 @@ namespace HistWeb.Controllers
 
             model.IPFSHost = ApplicationSettings.IPFSHost;
             model.IPFSPort = ApplicationSettings.IPFSPort;
-            model.IPFSApiHost = ApplicationSettings.IPFSHost;
+            model.IPFSApiHost = ApplicationSettings.IPFSApiHost;
             model.IPFSApiPort = ApplicationSettings.IPFSApiPort;
             model.HistoriaClientIPAddress = ApplicationSettings.HistoriaClientIPAddress;
             model.HistoriaRPCPort= ApplicationSettings.HistoriaRPCPort;
@@ -253,6 +258,22 @@ namespace HistWeb.Controllers
                 Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"https://{settings.IPFSHost}:{settings.IPFSPort}");
                 Dictionary<string, string> res = await client.VersionAsync();
                 return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TestIPFSAPI([FromBody] SettingsParams settings)
+        {
+            try
+            {
+                Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{settings.IPFSApiHost}:{settings.IPFSApiPort}/api/v0/swarm/peers");
+                Dictionary<string, string> res = await client.VersionAsync();
+                return Json(new { success = true });
+
             }
             catch (Exception ex)
             {
@@ -322,4 +343,5 @@ namespace HistWeb.Controllers
         }
 
     }
+ 
 }

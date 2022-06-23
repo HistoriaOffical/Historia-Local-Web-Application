@@ -103,6 +103,7 @@ namespace HistWeb.Controllers
                 }
 
                 //Get Current Supply
+                
                 HttpWebRequest webRequest1 = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
                 webRequest1.Credentials = new NetworkCredential(_userName, _password);
                 webRequest1.ContentType = "application/json-rpc";
@@ -136,7 +137,8 @@ namespace HistWeb.Controllers
                             break;
                     }
                 }
-
+                
+                
                 //Get Current Block
                 HttpWebRequest webRequest2 = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
                 webRequest2.Credentials = new NetworkCredential(_userName, _password);
@@ -172,12 +174,56 @@ namespace HistWeb.Controllers
                     }
                 }
 
+                //Get Total Budget aka getsuperblockbudget blocknum
+                webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"getsuperblockbudget\", \"params\": [" + nextsuperblock +"] }";
+                byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                dataStream = webRequest.GetRequestStream();
 
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+                webResponse = webRequest.GetResponse();
+                sr = new StreamReader(webResponse.GetResponseStream());
+                getResp = sr.ReadToEnd();
+
+                expConverter = new ExpandoObjectConverter();
+                json = JsonConvert.DeserializeObject<ExpandoObject>(getResp, expConverter);
+
+                var totalBudget = json.result;
+
+                //Get Passing Budget aka gobject list funding
+                //Get Total Budget aka getsuperblockbudget blocknum
+                webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"funding\"] }";
+                byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+                webResponse = webRequest.GetResponse();
+                sr = new StreamReader(webResponse.GetResponseStream());
+                getResp = sr.ReadToEnd();
+                expConverter = new ExpandoObjectConverter();
+                json = JsonConvert.DeserializeObject<ExpandoObject>(getResp, expConverter);
+                //string totalPassingBudget = json.result.ToString();
+                //if (string.IsNullOrEmpty(totalPassingBudget))
+                //{
+                  string  totalPassingBudget = "0";
+                //} 
 
                 var res = "";
                 res = "{ \"result\": { \"currentBlock\": " + currentBlock +
                          ", \"nextsuperblock\": " + nextsuperblock +
                          ", \"cSupply\": " + cSupply +
+                         ", \"totalBudget\": " + totalBudget +
+                         ", \"totalPassingCoins\": " + totalPassingBudget +
                          "} }";
                 return Json(res);
 

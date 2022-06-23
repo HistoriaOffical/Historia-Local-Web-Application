@@ -31,17 +31,17 @@ html {
     min-height: 100%;
     overflow-x: hidden
 }
-    .wrapper.ng-leave {
-        display: none
-    }
-    .wrapper.section-container {
-        position: relative;
-        height: 100%;
-        margin-left: 0;
-        z-index: 111;
-        background-color: #f5f7fa;
-        margin-bottom: 60px !important
-    }
+.wrapper.ng-leave {
+    display: none
+}
+.wrapper.section-container {
+    position: relative;
+    height: 100%;
+    margin-left: 0;
+    z-index: 111;
+    background-color: #f5f7fa;
+    margin-bottom: 60px !important
+}
 .border-top {
     border-top: 1px solid #e5e5e5;
 }
@@ -58,10 +58,17 @@ button.accept-policy {
     line-height: inherit;
 }
 
+
 a {
     color: #000000;
     text-decoration: none;
     background-color: transparent;
+}
+
+.createuppertab {
+    background-color: #463A3C;
+    color: white;
+    padding-bottom: 10px
 }
 
 @font-face {

@@ -167,6 +167,8 @@
                  _circulatingSupply = result.result.cSupply;
                  _totalCoins = result.result.totalBudget;
                  _totalPassingCoins = result.result.totalPassingCoins;
+
+                 internationalNumberFormat = new Intl.NumberFormat('en-US');
                 var delta = _nextSuperBlock - _currentSuperBlock;
                 daysToSuperBlock = (((delta * 2.5) / 60) / 24);
                 console.log("DAYS: " + daysToSuperBlock + "nextSuperBlock " + _nextSuperBlock + "currentSuperBlock" + _currentSuperBlock);
@@ -194,11 +196,11 @@
                  var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock + 2)));
                  $("#EndCycleDate").html(correctDate);
                 
-                 $('#totalCoins').html(Math.floor(_totalCoins));
-                 $('#totalPassingCoins').html(_totalPassingCoins);
+                 $('#totalCoins').html(internationalNumberFormat.format(Math.floor(_totalCoins)));
+                 $('#totalPassingCoins').html(internationalNumberFormat.format(_totalPassingCoins));
 
-                 //if (delta < 576 * 2) // Prod
-                 if (delta > 576 * 2) // Test
+                 if (delta < 576 * 2) // Prod
+                 //if (delta > 576 * 2) // Test
                  {
                      var path = window.location.pathname;
                      if (path === "/Create/Create/CreateBuilder") {
@@ -228,17 +230,17 @@
                             $('#rotate').html("Voting Days Left: " + _daysleft);
                         }
                     } else if (i == 1) {
-                        $('#rotate').html("Current Block: " + _currentSuperBlock);
+                        $('#rotate').html("Current Block: " + internationalNumberFormat.format(_currentSuperBlock));
                         i = 2;
                     } else if (i == 2) {
-                        $('#rotate').html("Next Superblock:  " + _nextSuperBlock);
+                        $('#rotate').html("Next Superblock:  " + internationalNumberFormat.format(_nextSuperBlock));
                         i = 3;
                     } else if (i == 3) {
                         var fixedSupply = _circulatingSupply.toFixed(2);
-                        $('#rotate').html("Circulating Supply:  " + fixedSupply);
+                        $('#rotate').html("Circulating Supply:  " + internationalNumberFormat.format(fixedSupply));
                         i = 0;
                     }
-                    setTimeout(rotate, 10000);
+                    setTimeout(rotate, 5000);
                  })();
              });
         });

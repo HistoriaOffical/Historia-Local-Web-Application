@@ -710,7 +710,7 @@ namespace HistWeb.Controllers
                 "<!DOCTYPE html><html lang = \"en-US\" ><head><title>" + title + "</title><meta name = \"description\" content = \"" + description + "\" />" +
                 "<meta name = \"keywords\" content = \"Historia, History, blockchain, cryptocurrency, HTA\" />" +
                 "<meta name =\"robots\" content = \"index, follow\" ><meta http-equiv = \"Content-Type\" content = \"text/html; charset=utf-8\" />" +
-                "< meta name = \"viewport\" content = \"width=device-width, initial-scale=1\" /><meta http-equiv = \"X-UA-Compatible\" " +
+                "<meta name = \"viewport\" content = \"width=device-width, initial-scale=1\" /><meta http-equiv = \"X-UA-Compatible\" " +
                 "content = \"IE=edge\" ><style>" + css + "</style></head>" + html + "</html>";
             }
             return htmlRet;

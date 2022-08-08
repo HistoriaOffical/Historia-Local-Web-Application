@@ -10,8 +10,13 @@
             </div>
             <div class="card-body">
                 <div class="row">
+                    <div class="col-2"><button id="create" class="btn btn-secondary btn-lg active" aria-pressed="true">Create</button></div>
+                    <div class="col-10 text-right">
+                        <label><small>Don't know where to start? Read <a asp-area="" asp-controller="Home" asp-action="HowTo" style="text-decoration: underline">here</a>.</small></label>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="col-12">
-                        <button id="create" class="btn btn-secondary btn-lg active" aria-pressed="true">Create</button>
                         <table class="table table-striped my-4 w-100" id="draftsTable">
                             <thead>
                                 <tr>

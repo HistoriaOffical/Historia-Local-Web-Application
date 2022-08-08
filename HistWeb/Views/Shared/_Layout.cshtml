@@ -193,7 +193,7 @@
                      console.log('votingDeadline2:' + Math.round(daysToSuperBlock - 2));
                  }
                  var todaydd = new Date();
-                 var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock + 2)));
+                 var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock)));
                  $("#EndCycleDate").html(correctDate);
                 
                  $('#totalCoins').html(internationalNumberFormat.format(Math.floor(_totalCoins)));
@@ -211,10 +211,20 @@
                              confirmButtonText: 'Ok'
                          });
                      }
+                     $('#submit').addClass('disabled');
+                     $('#submit').attr('disabled');
+                     $('#submit').hide();
+                     $('#submitArchive').addClass('disabled');
+                     $('#submitArchive').attr('disabled');
+                     $('#submitArchive').hide();
                  }
                  else {
                      $('#submit').removeClass('disabled');
                      $('#submit').removeAttr('disabled');
+                     $('#submit').show();
+                     $('#submitArchive').removeClass('disabled');
+                     $('#submitArchive').removeAttr('disabled');
+                     $('#submitArchive').show();
                  }
 
                 $('#currentBlock').html(result.result.currentBlock);

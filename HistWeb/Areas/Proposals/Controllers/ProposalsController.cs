@@ -70,6 +70,401 @@ namespace HistWeb.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+        public List<ProposalModel> LoadAllRecords()
+        {
+            List<ProposalModel> records = new List<ProposalModel>();
+
+            try
+            {
+                string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
+
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                webRequest.Timeout = 5000;
+                string jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\"] }}");
+
+                // serialize json for the request
+                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                Stream dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+                WebResponse webResponse = webRequest.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                if (!String.IsNullOrEmpty(getResp))
+                {
+                    dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
+                    foreach (var record in response.result)
+                    {
+                        ProposalModel pm = new ProposalModel();
+
+                        //Get Datastring Info
+                        var ds = record.Value.DataString;
+                        string p1 = ds;
+                        dynamic proposal1 = JObject.Parse(p1);
+
+                        string hostname = _ipfsUrl;
+                        pm.DataString = record.Value.DataString;
+                        pm.Hostname = hostname;
+                        pm.IPFSUrl = _ipfsUrl;
+
+                        pm.IPFSWebPort = _ipfsWebPort;
+                        pm.Hash = record.Value.Hash;
+                        pm.ProposalName = HttpUtility.HtmlEncode(proposal1.summary.name.ToString());
+                        pm.ProposalSummary = HttpUtility.HtmlEncode(proposal1.summary.description.ToString());
+
+                        pm.ProposalDescriptionUrl = proposal1.ipfscid.ToString();
+                        pm.PaymentAddress = proposal1.payment_address.ToString();
+                        pm.YesCount = long.Parse(record.Value.YesCount.ToString());
+                        pm.NoCount = long.Parse(record.Value.NoCount.ToString());
+                        pm.AbstainCount = long.Parse(record.Value.AbstainCount.ToString());
+                        pm.CachedLocked = bool.Parse(record.Value.fCachedLocked.ToString());
+
+                        pm.CachedFunding = bool.Parse(record.Value.fCachedFunding.ToString());
+                        pm.PaymentAmount = decimal.Parse(proposal1.payment_amount.ToString());
+                        pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposal1.start_epoch.ToString())).ToString("MM/dd/yyyy");
+                        DateTime EndDateTemp = UnixTimeStampToDateTime(double.Parse(proposal1.end_epoch.ToString()));
+                        pm.PaymentEndDate = EndDateTemp.AddDays(-2);
+                        pm.ProposalDate = pm.PaymentDate;
+
+                        pm.PermLocked = bool.Parse(record.Value.fPermLocked.ToString());
+
+                        pm.ProposalDescriptionUrlRazor = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
+                        pm.Type = proposal1.type.ToString();
+
+                        if (pm.PermLocked)
+                        {
+                            pm.PastSuperBlock = 1;
+                        }
+                        else
+                        {
+                            pm.PastSuperBlock = 0;
+                        }
+                        pm.ParentIPFSCID = string.IsNullOrEmpty(proposal1.ipfspid.ToString()) ? "" : proposal1.ipfspid.ToString();
+                        if (!string.IsNullOrEmpty(pm.ParentIPFSCID))
+                        {
+
+                            if (string.IsNullOrEmpty(proposal1.ipfscidtype?.ToString()))
+                            {
+                                pm.cidtype = "0";
+                            }
+                            else
+                            {
+                                pm.cidtype = proposal1.ipfscidtype.ToString();
+                            }
+
+                            if (pm.PermLocked)
+                            {
+                                pm.IsUpdate = "0";
+                            }
+                            else
+                            {
+                                pm.IsUpdate = "1";
+                            }
+                        }
+                        else
+                        {
+                            if (string.IsNullOrEmpty(proposal1.ipfscidtype?.ToString()))
+                            {
+                                pm.cidtype = "0";
+                            }
+                            else
+                            {
+                                pm.cidtype = proposal1.ipfscidtype.ToString();
+                            }
+                            if (pm.PermLocked)
+                            {
+                                pm.IsUpdate = "0";
+                            }
+                            else
+                            {
+                                pm.IsUpdate = "1";
+                            }
+                        }
+                        records.Add(pm);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("ProposalDescription Error: " + ex.ToString());
+            }
+
+            //sort descending based on DataString.name
+            List<ProposalModel> sortedRecords = records.OrderByDescending(o => ((dynamic)JObject.Parse(o.DataString)).name).ToList();
+            return sortedRecords;
+        }
+
+        public JsonResult GetVersions(string IpfsPid)
+        {
+            List<ProposalModel> AllRecords = LoadAllRecords();
+            string IPFSHash = "";
+            string ParentIPFSCid = "", url = "";
+            List<PreviousVersionsModel> previousVersions = new List<PreviousVersionsModel>();
+
+            foreach (var record in AllRecords)
+            {
+                if(record.cidtype == "0")
+                {
+                    //Get current record from All Records
+                    if (record.Hash == IpfsPid)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        if (string.IsNullOrEmpty(previousVersion.IPFSHash))
+                        {
+                            IPFSHash = record.ProposalDescriptionUrl;
+                        }
+                        else
+                        {
+                            IPFSHash = previousVersion.IPFSHash;
+                        }
+
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "0")
+                {
+                    //Find other records that ParentIPFSCID == URL
+                    if (record.ProposalDescriptionUrl == IPFSHash)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "0")
+                {
+                    //Find other records that ParentIPFSCID == URL
+                    if (record.ParentIPFSCID == IPFSHash)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            if (previousVersions.Count > 0)
+            {
+                //Dedup.
+                List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
+                AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+                AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
+                //Sort
+                if (AllVersions != null && AllVersions.Count > 0)
+                    AllVersions = AllVersions.OrderBy(p => p.DateAdded).ToList();
+
+                return Json(JsonConvert.SerializeObject(AllVersions));
+            }
+
+            //return Json(JsonConvert.SerializeObject(previousVersions));
+            dynamic prepBadRespJson1 = JObject.Parse("{success: false}");
+            return Json(prepBadRespJson1);
+        }
+
+        public JsonResult GetEvidence(string IpfsPid)
+        {
+            List<ProposalModel> AllRecords = LoadAllRecords();
+            string IPFSHash = "";
+            string ParentIPFSCid = "", url = "";
+            List<PreviousVersionsModel> previousVersions = new List<PreviousVersionsModel>();
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "1")
+                {
+                    //Get current record from All Records
+                    if (record.Hash == IpfsPid)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        if (string.IsNullOrEmpty(previousVersion.IPFSHash))
+                        {
+                            IPFSHash = record.ProposalDescriptionUrl;
+                        }
+                        else
+                        {
+                            IPFSHash = previousVersion.IPFSHash;
+                        }
+
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "1")
+                {
+                    //Find other records that ParentIPFSCID == URL
+                    if (record.ProposalDescriptionUrl == IPFSHash)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "1")
+                {
+                    //Find other records that ParentIPFSCID == URL
+                    if (record.ParentIPFSCID == IPFSHash)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            if (previousVersions.Count > 0)
+            {
+                //Dedup.
+                List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
+                AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+                AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
+                //Sort
+                if (AllVersions != null && AllVersions.Count > 0)
+                    AllVersions = AllVersions.OrderBy(p => p.DateAdded).ToList();
+
+                return Json(JsonConvert.SerializeObject(AllVersions));
+            }
+
+            //return Json(JsonConvert.SerializeObject(previousVersions));
+            dynamic prepBadRespJson1 = JObject.Parse("{success: false}");
+            return Json(prepBadRespJson1);
+
+        }
+
+        public JsonResult GetTopics(string IpfsPid)
+        {
+            List<ProposalModel> AllRecords = LoadAllRecords();
+            string IPFSHash = "";
+            string ParentIPFSCid = "", url = "";
+            List<PreviousVersionsModel> previousVersions = new List<PreviousVersionsModel>();
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "2")
+                {
+                    //Get current record from All Records
+                    if (record.Hash == IpfsPid)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        if (string.IsNullOrEmpty(previousVersion.IPFSHash))
+                        {
+                            IPFSHash = record.ProposalDescriptionUrl;
+                        }
+                        else
+                        {
+                            IPFSHash = previousVersion.IPFSHash;
+                        }
+
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "2")
+                {
+                    //Find other records that ParentIPFSCID == URL
+                    if (record.ProposalDescriptionUrl == IPFSHash)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            foreach (var record in AllRecords)
+            {
+                if (record.cidtype == "2")
+                {
+                    //Find other records that ParentIPFSCID == URL
+                    if (record.ParentIPFSCID == IPFSHash)
+                    {
+                        PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+                        previousVersion.IPFSHash = record.ParentIPFSCID;
+                        previousVersion.Name = record.ProposalName;
+                        previousVersion.DateAdded = record.ProposalDate;
+                        previousVersion.ProposalHash = record.Hash;
+                        previousVersion.cidtype = record.cidtype;
+                        previousVersions.Add(previousVersion);  //Add to list
+                    }
+                }
+            }
+
+            if (previousVersions.Count > 0)
+            {
+                //Dedup.
+                List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
+                AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+                AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
+                //Sort
+                if (AllVersions != null && AllVersions.Count > 0)
+                    AllVersions = AllVersions.OrderBy(p => p.DateAdded).ToList();
+
+                return Json(JsonConvert.SerializeObject(AllVersions));
+            }
+
+            //return Json(JsonConvert.SerializeObject(previousVersions));
+            dynamic prepBadRespJson1 = JObject.Parse("{success: false}");
+            return Json(prepBadRespJson1);
+
+        }
+
+
         public async Task<IActionResult> ProposalDetails(string hash, string sort, string cid)
         {
 
@@ -137,10 +532,43 @@ namespace HistWeb.Controllers
                 pm.ProposalDate = pm.PaymentDate;
 
                 pm.PermLocked = bool.Parse(proposals.result.fPermLocked.ToString());
-                
+                pm.ParentIPFSCID = string.IsNullOrEmpty(proposal1.ipfspid.ToString()) ? "" : proposal1.ipfspid.ToString();
+
+                if (!string.IsNullOrEmpty(pm.ParentIPFSCID))
+                {
+                    if (string.IsNullOrEmpty(proposal1.ipfscidtype?.ToString()))
+                    {
+                        pm.cidtype = "0";
+                    }
+                    else
+                    {
+                        pm.cidtype = proposal1.ipfscidtype.ToString();
+                    }
+                    if (pm.PermLocked)
+                    {
+                        pm.IsUpdate = "0";
+                    }
+                    else
+                    {
+                        pm.IsUpdate = "1";
+                    }
+                }
+                else
+                {
+                    pm.cidtype = "1";
+                    if (pm.PermLocked)
+                    {
+                        pm.IsUpdate = "0";
+                    }
+                    else
+                    {
+                        pm.IsUpdate = "1";
+                    }
+                }
+
                 pm.ProposalDescriptionUrlRazor = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
                 pm.Type = proposal1.type.ToString();
-  
+
                 if (pm.PermLocked)
                 {
                     pm.PastSuperBlock = 1;

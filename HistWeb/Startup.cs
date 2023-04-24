@@ -85,6 +85,8 @@ namespace HistWeb
                                                     Summary TEXT NOT NULL,
                                                     html TEXT NOT NULL,
                                                     css TEXT NOT NULL,
+                                                    cidtype INTEGER NOT NULL,
+                                                    proposalhash TEXT,
                                                     PaymentAddress TEXT NOT NULL,
                                                     PaymentAmount TEXT NOT NULL,
                                                     IsDraft INTEGER NOT NULL,

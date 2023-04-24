@@ -72,7 +72,7 @@ namespace HistWeb.Controllers
         {
 
             int? dbRecordType = null;
-            switch(recordType)
+            switch (recordType)
             {
                 case "proposals": dbRecordType = 1; break;
                 case "records": dbRecordType = 4; break;
@@ -103,7 +103,7 @@ namespace HistWeb.Controllers
                 if (!String.IsNullOrEmpty(getResp))
                 {
                     dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
-                    foreach(var record in response.result)
+                    foreach (var record in response.result)
                     {
                         ProposalRecordModel pm = new ProposalRecordModel();
 
@@ -137,7 +137,7 @@ namespace HistWeb.Controllers
                         pm.ProposalDate = pm.PaymentDate;
 
                         pm.PermLocked = bool.Parse(record.Value.fPermLocked.ToString());
-                        
+
                         pm.ProposalDescriptionUrlRazor = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
                         pm.Type = proposal1.type.ToString();
 
@@ -149,12 +149,47 @@ namespace HistWeb.Controllers
                         {
                             pm.PastSuperBlock = 0;
                         }
+                        pm.ParentIPFSCID = string.IsNullOrEmpty(proposal1.ipfspid.ToString()) ? "" : proposal1.ipfspid.ToString();
+                        if (!string.IsNullOrEmpty(pm.ParentIPFSCID))
+                        {
+
+                            if (string.IsNullOrEmpty(proposal1.ipfscidtype?.ToString()))
+                            {
+                                pm.cidtype = "0";
+                            }
+                            else
+                            {
+                                pm.cidtype = proposal1.ipfscidtype.ToString();
+                            }
+
+                            if (pm.PermLocked)
+                            {
+                                pm.IsUpdate = "0";
+                            }
+                            else
+                            {
+                                pm.IsUpdate = "1";
+                            }
+                        }
+                        else
+                        {
+                            pm.cidtype = "1";
+                            if (pm.PermLocked)
+                            {
+                                pm.IsUpdate = "0";
+                            }
+                            else
+                            {
+                                pm.IsUpdate = "1";
+                            }
+                        }
                         records.Add(pm);
                     }
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogCritical("ProposalDescription Error: " + ex.ToString());
             }
 
             //sort descending based on DataString.name
@@ -168,7 +203,7 @@ namespace HistWeb.Controllers
         public IActionResult Index()
         {
             HomeViewModel model = new HomeViewModel();
-            if(String.IsNullOrEmpty(ApplicationSettings.IPFSHost))
+            if (String.IsNullOrEmpty(ApplicationSettings.IPFSHost))
             {
                 return Redirect("/Home/Settings");
             }
@@ -215,7 +250,7 @@ namespace HistWeb.Controllers
             model.IPFSApiHost = ApplicationSettings.IPFSApiHost;
             model.IPFSApiPort = ApplicationSettings.IPFSApiPort;
             model.HistoriaClientIPAddress = ApplicationSettings.HistoriaClientIPAddress;
-            model.HistoriaRPCPort= ApplicationSettings.HistoriaRPCPort;
+            model.HistoriaRPCPort = ApplicationSettings.HistoriaRPCPort;
             model.HistoriaRPCUserName = ApplicationSettings.HistoriaRPCUserName;
             model.HistoriaRPCPassword = ApplicationSettings.HistoriaRPCPassword;
             return View(model);
@@ -270,9 +305,33 @@ namespace HistWeb.Controllers
         {
             try
             {
-                Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{settings.IPFSApiHost}:{settings.IPFSApiPort}/api/v0/swarm/peers");
-                Dictionary<string, string> res = await client.VersionAsync();
-                return Json(new { success = true });
+
+                Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{settings.IPFSApiHost}:{settings.IPFSApiPort}");
+
+                string HtmlTest = "<html><body>Test Connection to IPFS API1</body></html>";
+                string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", ""));
+                Directory.CreateDirectory(tempDirectory);
+
+                var filePath = tempDirectory;
+                using (var stream = new FileStream(Path.Combine(filePath, "index.html"), FileMode.Create))
+                {
+                    byte[] info = new UTF8Encoding(true).GetBytes(HtmlTest);
+                    stream.Write(info, 0, info.Length);
+                }
+
+                //Add test file/directory to IPFS API.
+                Ipfs.CoreApi.AddFileOptions options = new Ipfs.CoreApi.AddFileOptions() { Pin = true };
+                Ipfs.IFileSystemNode ret = await client.FileSystem.AddFileAsync(filePath + "/index.html", options);
+
+                string IpfsCid = ret.Id.Hash.ToString();
+                if (!string.IsNullOrEmpty(IpfsCid))
+                {
+                    return Json(new { success = true });
+                }
+                else
+                {
+                    return Json(new { success = false });
+                }
 
             }
             catch (Exception ex)
@@ -343,5 +402,5 @@ namespace HistWeb.Controllers
         }
 
     }
- 
+
 }

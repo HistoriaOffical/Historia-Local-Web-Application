@@ -91,11 +91,12 @@
     <div class="listing-container position-relative">
         <div class="title text-left">
             <span id="recordType" class="ml-0" style="vertical-align:middle;"></span>
-            <span id="recordTime" class="ml-0" style="vertical-align:middle;"></span>&nbsp;<br />
+
             <input type="hidden" id="timetemp_" value="">
-            <h5 class="card-title"><a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a></h5>
+            <h5 class="card-title" style="display: inline-block;"><a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a></h5>
+            <span id="recordTime" style="line-height: normal;" class="ml-0"></span>&nbsp;<br />
         </div>
- 
+
         <div class="w-clearfix text-left" style="transform: rotate(0);">
             <p id="proposalSummary" class="card-text">ProposalSummary</p>
         </div>
@@ -134,7 +135,7 @@
             </div>
         </div>
         <hr />
-     </div>
+    </div>
 </div>
 
 
@@ -156,7 +157,7 @@
         }
 
         function getRandomInt(min, max) {
-          return Math.floor(Math.random() * (max - min + 1) + min);
+            return Math.floor(Math.random() * (max - min + 1) + min);
         }
 
         function clearRecords() {
@@ -180,8 +181,7 @@
                 success: function (result, status, xhr) {
 
                     pageindex = pageIndex + 1;
-                    result.records && result.records.length > 0 && result.records.map((record, idx) =>
-                    {
+                    result.records && result.records.length > 0 && result.records.map((record, idx) => {
 
                         let template = $('#recordTemplate').clone().show();
                         template.attr('id', `record_${record.hash}`);
@@ -199,23 +199,64 @@
 
 
                         if (record.type === '1') {
-                            template.find('#recordType').html('<b>Proposal</b>');
+                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>');
                         }
                         else if (record.type === '4') {
-                            template.find('#recordType').html('<b>Record</b>');
+                            if (record.isUpdate === "1") {
+                                if (record.pastSuperBlock === 0) {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Record Update</button></span>');
+                                    }
+                                } else {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Record Update</button></span>');
+                                    }
+                                }
+                            } else {
+                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>');
+                            }
                         }
                         else if (record.type === '5') {
-                            template.find('#recordType').html('<b>Archive</b>');
+                            if (record.isUpdate === "1") {
+                                if (record.pastSuperBlock === 0) {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Suggested Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Update</button></span>');
+                                    }
+                                } else {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Update</button></span>');
+                                    }
+                                }
+
+                            } else {
+                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>');
+                            }
                         }
 
                         if (record.pastSuperBlock === 0) {
-                           // if (record.voting) {
-                                template.find('#votingSection').show();
-  
-                                template.find('#yesCount').text(record.yesCount);
-                                template.find('#noCount').text(record.noCount);
-                                template.find('#abstainCount').text(record.abstainCount);
-                           // }
+                            // if (record.voting) {
+                            template.find('#votingSection').show();
+
+                            template.find('#yesCount').text(record.yesCount);
+                            template.find('#noCount').text(record.noCount);
+                            template.find('#abstainCount').text(record.abstainCount);
+                            // }
                         }
                         else {
                             if (record.type === '4') {
@@ -287,81 +328,64 @@
 
 
 
-        function localUTCDateC(id, date) {
 
-            // Get User local time
-            var n1 = new Date();
-            var n2 = n1.getTimezoneOffset();
-            var hoursOffset = n2 / 60;
-            // date in UTC from comment
-            var d = new Date(date);
-            var UTC = new Date().getTime();
-            //console.log("NOW: " + UTC + " UTC COMMENT TIME:" + d.getTime() + " UTC DIFFERENCE:" + n2);
-            const diffTime = Math.abs(d.getTime() - UTC);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            var diffHours = Math.abs(((d.getTime() - UTC) / 1000) / 3600);
-            diffHours = Math.abs(Math.round(diffHours));
-            diffHours = Math.abs(diffHours - hoursOffset);
+        function localUTCDateC(id, submittedAt) {
+            const now = new Date();
+            const submitted = new Date(submittedAt);
 
-            var diffMonths;
-            var diffWeeks;
+            const userTimezoneOffset = submitted.getTimezoneOffset(); // get user's timezone offset in minutes
+            const timezoneOffsetMs = userTimezoneOffset * 60 * 1000; // convert minutes to milliseconds
+            const adjustedSubmitted = new Date(submitted.getTime() + timezoneOffsetMs);
 
-            if (diffDays > 7) {
-                diffWeeks = Math.abs(Math.round(diffDays / 7));
-            }
+            const elapsed = now.getTime() - adjustedSubmitted.getTime(); // elapsed time in milliseconds
 
-            if (diffDays > 30) {
-                diffMonths = Math.abs(Math.round(diffDays / 30));
-            }
+            const elapsedSeconds = Math.floor(elapsed / 1000);
+            const elapsedMinutes = Math.floor(elapsed / (1000 * 60));
+            const elapsedHours = Math.floor(elapsed / (1000 * 60 * 60));
+            const elapsedDays = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+            const elapsedWeeks = Math.floor(elapsed / (1000 * 60 * 60 * 24 * 7));
 
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentDay = now.getDate();
+            const submittedYear = adjustedSubmitted.getFullYear();
+            const submittedMonth = adjustedSubmitted.getMonth();
+            const submittedDay = adjustedSubmitted.getDate();
 
-            if (diffDays > 180) {
-                //If greater than 90 days, then list short date.
-                //console.log("DD180:" + diffDays);
-                $(id).text(" — " + d.toDateString());
-            } else if (diffDays > 90 && diffDays < 180) {
-                //If greater than 90 days, then list short date.
-                //console.log("DD90:" + diffDays);
-                $(id).text(" — about " + diffMonths + " months ago");
-            } else if (diffDays > 30 && diffDays < 90) {
-                //If greater than 30 days less than 90 days, then list how many months since post.
-                $(id).text(" — about " + diffMonths + " months ago");
-                //console.log("DD30:" + diffMonths);
-                //$('.time_' + id).each(function () {
-                //    $(this).text(" — about " + diffMonths + " months ago");
-                //});
-            } else if (diffDays > 7 && diffDays < 30) {
-                //If greater than 7 days less than 30 days, then list how many weeks since post.
-                $(id).text(" — about " + diffWeeks + " weeks ago");
-                //console.log("DD7/30:" + diffWeeks);
+            let elapsedMonths = (currentYear - submittedYear) * 12;
+            elapsedMonths -= submittedMonth;
+            elapsedMonths += currentMonth;
+            elapsedMonths = elapsedMonths <= 0 ? 0 : elapsedMonths;
 
-
-            } else if (diffHours > 24 && diffDays < 7) {
-                //If greater than 24 hours and less than 7 days, then list how many days since post.
-                $(id).text(" — about " + diffDays + " days ago");
-                //console.log("DD24/7:" + diffDays);
-
-
-            } else if (diffHours < 24) {
-                //If less than 24 hours, then list how many hours since post.
-                if (diffHours <= 1) {
-                    $(id).text(" — a few minutes ago");
-
-                    //console.log("DDHOURS:MIN");
-                } else if (diffHours => 1) {
-                    $(id).text(" — " + diffHours + " hour ago");
-                    //console.log("DDHOURS:>1");
-
-                }
-                //console.log("DDHOURSTEMP:" + diffHours);
+            if (elapsedSeconds < 60) {
+                $(id).text(" — " + `${elapsedSeconds} seconds ago`);
+            } else if (elapsedMinutes < 60) {
+                $(id).text(" — " + `${elapsedMinutes} minutes ago`);
+            } else if (elapsedHours < 24) {
+                $(id).text(" — " + `${elapsedHours} hours ago`);
+            } else if (elapsedDays < 7) {
+                $(id).text(" — " + `${elapsedDays} days ago`);
+            } else if (elapsedWeeks < 4) {
+                $(id).text(" — " + `${elapsedWeeks} weeks ago`);
+            } else if (elapsedMonths < 1 && elapsedMonths > 2) {
+                $(id).text(" — " + '1 month ago');
+            } else if (elapsedMonths < 2 && elapsedMonths > 3) {
+                $(id).text(" — " + '2 months ago');
+            } else if (elapsedMonths < 3 && elapsedMonths > 4) {
+                $(id).text(" — " + '3 months ago');
+            } else {
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                $(id).text(" — " + adjustedSubmitted.toLocaleDateString(undefined, options));
             }
         }
+
+
         let selectedType = 'all';
 
         $(document).ready(function () {
             let inProgress = false;
 
-            $(window).on("scroll", function() {
+            $(window).on("scroll", function () {
                 var docHeight = $(document).height();
                 var winScrolled = $(window).height() + $(window).scrollTop();
                 if ((docHeight - winScrolled) < 1) {
@@ -378,7 +402,7 @@
 
         function renderRecord() {
 
-}
+        }
     </script>
 
 }

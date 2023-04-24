@@ -1,0 +1,1201 @@
+﻿@using HistWeb.Helpers
+@{
+    ViewData["Title"] = "Create Builder";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<form id="formStep1" class="" novalidate enctype="multipart/form-data">
+    <div class="card" style="margin-bottom:10px" id="step1Card">
+        <div class="card-body">
+            <div class="row" style="max-width:1500px">
+                <div class="col-6">
+                    <h2 id="type"></h2>
+                </div>
+                <div class="col-6 text-right">
+                    <h4>Current Cycle Ends: <label id="EndCycleDate"></label></h4>
+                    <label><small>Don't know where to start? Read <a asp-area="" asp-controller="Home" asp-action="HowTo" style="text-decoration: underline">here</a>.</small></label>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body border border-info btn-secondary rounded">
+                    <div class="row">
+                        <div class="col-3">
+                            <b>Next Payment Date in: <label id="daysToSuperBlock">Loading...</label> days</b>
+                        </div>
+                        <div class="col-3">
+                            <b>Voting Deadling in: <label id="votingDeadline">Loading...</label> days</b>
+                        </div>
+                        <div class="col-3">
+                            <b>Currently Passing: <label id="totalPassingCoins">Loading...</label> HTA</b>
+                        </div>
+                        <div class="col-3">
+                            <b>Total Available Budget: <label id="totalCoins">Loading...</label></b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr />
+
+            <div class="row" style="max-width:1500px">
+                <div class="col-3 createuppertab">
+                    <label class="col-form-label" for="tbName">Name: <span style="color:#f00">*</span> <span id="tbNameCnt">0</span>/50</label>
+                    <input class="form-control" id="tbName" type="text" placeholder="" required maxlength="50" />
+                </div>
+                <div class="col-3 createuppertab">
+                    <label class="col-form-label" for="tbSummary">Summary: <span style="color:#f00">*</span>  <span id="tbSummaryCnt">0</span>/150 </label>
+                    <input class="form-control" id="tbSummary" type="text" placeholder="" required maxlength="150" />
+                </div>
+                <div class="col-3 createuppertab">
+                    <label class="col-form-label" for="tbAddress">Reward Address: <span style="color:#f00">*</span> </label>
+                    <input class="form-control" id="tbAddress" type="text" placeholder="" onchange="validatePaymentAddress();" required maxlength="255" />
+                </div>
+                <div class="col-3 createuppertab">
+                    <label class="col-form-label" for="tbReward">Reward Amount Requested: <span style="color:#f00">*</span> </label>
+                    <input class="form-control" id="tbReward" type="text" placeholder="" onchange="validatePaymentAmount();" required maxlength="10" />
+                </div>
+            </div>
+            <div class="row" style="max-width:1500px">
+                <div class="col-12 createuppertab">
+                    <label class="col-form-label" for="tbParentIPFSCID">Parent: <span style="" id="tbParentIPFSCID"><u><a href="" style="color: white;"></a></u></span> </label>
+                </div>
+            </div>
+            <div class="row" style="max-width:1500px">
+                <div id="gjs"></div>
+                <div class="card-body">
+                    <div id="preview" style="display: none;">
+                        <div class="row">
+                            <div class="col-12"><h4>Preview:</h4></div>
+                        </div>
+                        <hr />
+                    </div>
+                </div>
+                <div id="archiveDiv" style="display: none; width:100%; height:100%;"></div>
+                <input class="form-control" id="oglinkid" type="hidden" value="" />
+            </div>
+            <div class="row" style="max-width:1500px">
+                <div class="card-body">
+                    <div class="row" style="max-width:1500px">
+                        <div class="col-6">
+                            <label>Total Size:&nbsp;<label id="totalSize">0</label>&nbsp;MB</label>
+                        </div>
+                        <div class="col-6">
+                            <a href="https://www.youtube.com/results?search_query=grapesjs+tutorial" target="_blank" id="tutorial" name="tutorial" class="btn float-right btn-secondary float-left">Editor Tutorials</a>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row" style="max-width:1500px">
+                        <div class="col-6">
+                            <button name="saveDraft" id="saveDraft" class="btn btn-secondary float-left mr-1">Save Draft</button> &nbsp;
+                            <button name="deleteDraft" id="deleteDraft" class="btn btn-secondary float-left">Delete Draft</button>
+                        </div>
+                        <div class="col-6">
+                            <button name="submitRec" id="submitRec" class="btn btn-secondary float-right" disabled style="display: none;">Submit</button>&nbsp;
+                            <button name="submitArchive" id="submitArchive" class="btn btn-secondary float-right" disabled style="display: none;">Submit Archive</button>&nbsp;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/lib/qrcode/qrcode.min.js"></script>
+    <script type="text/javascript">
+        function getsearchParams() {
+            var array = new Array();
+            searchParams = new URLSearchParams(window.location.search);
+            array[0] = searchParams.get('Id');
+            array[1] = searchParams.get('Type');
+            array[2] = searchParams.get('Template');
+            array[3] = searchParams.get('Pid');
+            array[4] = searchParams.get('CidType');
+            array[5] = searchParams.get('ipfs');
+            array[6] = searchParams.get('isDraft');
+            return array;
+        }
+        let timerInterval;
+        var LandingPage = {
+            html: null,
+            css: null,
+            components: null,
+            style: null,
+        };
+        var editor = {};
+
+        var searchParams;
+
+        var votingProposalId = null;
+        var votingParentHash = null;
+
+        var params;
+        var paramArr = new Array();
+        paramArr = getsearchParams();
+        var id = paramArr[0];
+        var type = paramArr[1];
+        var template = paramArr[2];
+        var pid = paramArr[3];
+        var cidtype = paramArr[4];
+        var ipfspid = paramArr[5];
+        var isdraft = paramArr[6];
+        console.log("id:" + id);
+        console.log("type:" + type);
+        console.log("template:" + template);
+        console.log("pid:" + pid);
+        console.log("cidtype:" + cidtype);
+        console.log("ipfspid:" + ipfspid);
+        console.log("isdraft:" + isdraft);
+        if (paramArr[1] == 1) {
+            $('#type').text("Proposal");
+            $('#submitRec').show();
+        } else if (paramArr[1] == 4) {
+            $('#type').text("Record");
+            $('#submitRec').show();
+        } else if (paramArr[1] == 5) {
+            $('#type').text("Archive");
+            $('#tutorial').hide();
+            $('#submitRec').hide();
+
+        }
+
+
+
+        function validatePaymentAmount() {
+
+            if (/\d/.test($('#tbReward').val())) {
+
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Reward Amount is not a number.',
+                    type: 'error',
+                    confirmButtonColor: "#48B5C4",
+                    confirmButtonText: 'Ok'
+                });
+            }
+            if ($('#tbReward').val() > $('#totalCoins').text()) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Reward Amount is more than total available budget.',
+                    type: 'error',
+                    confirmButtonColor: "#48B5C4",
+                    confirmButtonText: 'Ok'
+                });
+            }
+            if ($('#tbReward').val() > ($('#totalCoins').text() - $('#totalPassingCoins').text())   ) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Reward Amount is more that available budget. (Reward Amount Requested > (Total Available Budget - Currently Passing))',
+                    type: 'error',
+                    confirmButtonColor: "#48B5C4",
+                    confirmButtonText: 'Ok'
+                });
+            }
+        }
+
+        function validateAddress() {
+            var dfrdResponse = $.Deferred();
+            var data = new FormData(document.getElementById('formStep1'));
+            data.append('rewardPaymentAddress', $('#tbAddress').val());
+            $.ajax({
+                url: '@Url.Action("ValidateAddress", "Create", new { Area = "Create" })',
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                data: data
+            }).done(function (result) {
+               dfrdResponse.resolve(result);
+            });
+            return dfrdResponse.promise();
+        }
+
+        function validatePaymentAddress() {
+            validateAddress().then((result) => {
+                if (result) {
+                }
+                else {
+                    Swal.fire({
+                        title: 'Invalid address',
+                        text: 'Payment Address is not valid.',
+                        type: 'error',
+                        confirmButtonColor: "#48B5C4",
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+        }
+
+        function UpdateProposalNameCnt() {
+            var cs = $(this).val().length;
+            $('#tbNameCnt').text(cs);
+        }
+
+        function ProposalNameCnt() {
+            var cs = $(this).val().length;
+            $('#tbNameCnt').text(cs);
+        }
+
+        function UpdateProposalSummaryCnt() {
+            var cs = $(this).val().length;
+            $('#tbSummaryCnt').text(cs);
+        }
+
+        function ProposalSummaryCnt() {
+            var cs = $(this).val().length;
+            $('#tbSummaryCnt').text(cs);
+        }
+
+        function UpdateGrapeCnt() {
+            var html = editor.getHtml();
+            var css = editor.getCss();
+            var size = parseFloat((html.length + css.length) / 1000000).toFixed(2);
+            $('#totalSize').text(size);
+            return size;
+        }
+
+        function CreateBuilderLoad() {
+            $.getJSON('@Url.Action("CreateBuilderLoad", "Create", new { area = "Create" })', { id: id }, function (result) {
+
+            }).done(function (result) {
+
+                if (result.id == 0) {
+                    editor = grapesjs.init({
+                        container: '#gjs',
+                        plugins: ['gjs-preset-webpage'],
+                        pluginsOpts: {
+                            'gjs-preset-webpage': {
+                                // options
+                            }
+                        },
+                        fromElement: false,
+                        storageManager: {
+                            autoload: false
+                        },
+                    });
+                } else {
+                    LandingPage = {
+                        html: result[0].html,
+                        css: result[0].css,
+                        components: null,
+                        style: null,
+                    };
+
+                    editor = grapesjs.init({
+                        container: '#gjs',
+                        plugins: ['gjs-preset-webpage'],
+                        pluginsOpts: {
+                            'gjs-preset-webpage': {
+                                // options
+                            }
+                        },
+
+                        fromElement: false,
+                        components: LandingPage.html,
+                        style: LandingPage.css,
+                        storageManager: {
+                            autoload: false
+                        },
+
+                    });
+
+                    $('#tbName').val(result[0].name);
+                    $('#tbSummary').val(result[0].summary);
+
+                    $('#tbAddress').val(result[0].paymentAddress);
+                    $('#tbReward').val(result[0].paymentAmount);
+                    //$('#tbIsDraft').val(result[0].IsDraft);
+                    $('#tbPaymentDate').val("Today");
+
+
+                }
+
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+				console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+            });
+        }
+
+        function PollForPayment(Address, uid) {
+            var dfrdResponse = $.Deferred();
+            $.getJSON('@Url.Action("PollForPayment", "Create", new { area = "Create" })', { Address: Address, uid: uid }, function (result) {
+
+            }).done(function (result) {
+                dfrdResponse.resolve(result.success);
+
+
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+                return false;
+            });
+            return dfrdResponse.promise();
+
+        }
+
+        function CreateBuilderLoadTemplate(template, id) {
+            $.getJSON('@Url.Action("CreateBuilderLoadTemplate", "Create", new { area = "Create" })', { id: 0, template: template }, function (result) {
+
+
+            }).done(function (result) {
+                LandingPage = {
+                    html: result[0].html,
+                    css: result[0].css,
+                    components: null,
+                    style: null,
+                };
+
+                editor = grapesjs.init({
+                    container: '#gjs',
+                    plugins: ['gjs-preset-webpage'],
+                    pluginsOpts: {
+                        'gjs-preset-webpage': {
+                            // options
+                        }
+                    },
+                    fromElement: false,
+                    components: LandingPage.html,
+                    style: LandingPage.css,
+                    storageManager: {
+                        autoload: false
+                    },
+                });
+                size = UpdateGrapeCnt();
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+				console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+            });
+        }
+
+        function CreateBuilderLoadArchiveURL() {
+            var ext;
+            if (document.cookie.indexOf('historiasinglefile') != -1) {
+                ext = 1;
+            } else {
+                ext = 0;
+            }
+            if (ext == 1) {
+                $.getJSON('@Url.Action("CreateBuilderLoadArchiveURL", "Create", new { area = "Create" })', { id: 0 }, function (result) {
+
+                }).done(function (result) {
+
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+                });
+
+                $.ajax({
+                    url: '@Url.Action("PollForArchive", "Create", new { Area = "Create" })',
+                    type: 'GET',
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function () {
+                        Swal.fire({
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            backdrop: true,
+                            title: 'Waiting For Archive Import',
+                            html:
+                                '<div align="left">Instructions:' +
+                                '<br>1. Open new tab with page you would like to archive' +
+                                '<br>2. Right click on the page, then Send Page to Historia Network (Local)' +
+                                '<br>3. Come back to this tab and wait for import' +
+                                '<br>4. Do not leave this page until you receive success or failure message!</div>',
+
+                            didOpen: () => {
+                                const content = Swal.getHtmlContainer()
+                                const $ = content.querySelector.bind(content)
+                                Swal.showLoading()
+                            }
+                        })
+                    },
+                }).done(function (result) {
+                    swal.close();
+                    $('#archiveDiv').show();
+                    $('#preview').show();
+                    $('#submitArchive').show();
+                    $('#submitArchive').prop('disabled', false);
+                    $("#archiveDiv").html(result[0].template);
+                    $("#oglinkid").val(result[0].oglinkid);
+                    var size = parseFloat(result[0].totalSize / 1000000).toFixed(2);
+
+                    if (size > 10) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'The webpage or file you have created exceeds the maximum size limit of 10MB.',
+                            type: 'error',
+                            confirmButtonColor: "#48B5C4",
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                    $("#totalSize").html(size);
+                }).always(function (result) {
+
+                });
+            } else {
+                Swal.fire({
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    closeOnClickOutside: false,
+                    backdrop: true,
+                    title: 'Historia Browser Extension Not Installed',
+                    html:
+                        '<div align="left">' +
+                        'To use the Archive feature, you must have the Historia Browser Extension installed.</div>' +
+                        '<br><div align="center"><a href="/Home/Wallets?area=Home" class="btn btn-secondary btn-lg active" role="button">Wallets & Software</a>.' +
+                        '</div><br>',
+
+                    didOpen: () => {
+                        const content = Swal.getHtmlContainer()
+                        const $ = content.querySelector.bind(content)
+                    }
+                })
+            }
+            var paramArr = new Array();
+            paramArr = getsearchParams();
+            var pid = paramArr[3]; // Pid
+            var cidtype = paramArr[4]; // cidtype
+            var ipfsurl = paramArr[5]; // ipfsurl
+
+            $('#tbParentIPFSCID').html("<u><a href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + ipfsurl+ "</a></u>");
+            if (cidtype == 0) {
+                $('#type').text("Archive - Suggest an Edit");
+            } else if (cidtype == 1) {
+                $('#type').text("Archive - Add Additional Evidence");
+            } else if (cidtype == 2) {
+                $('#type').text("Archive - Add To Topic");
+            } else if (cidtype == 3) {
+                $('#type').text("Archive - Add Translation");
+            }
+
+        }
+
+        function sleep(ms) {
+            var start = new Date().getTime();
+            for (var i = 0; i < 1e7; i++) {
+                if ((new Date().getTime() - start) > ms) {
+                    break;
+                }
+            }
+        }
+
+        function submit(data) {
+
+            $.ajax({
+                url: '@Url.Action("Submit", "Create", new { Area = "Create" })',
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                data: data,
+                beforeSend: function () {
+                    Swal.fire({
+                        showConfirmButton: false,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        closeOnClickOutside: false,
+                        backdrop: true,
+                        title: 'Processing Your Document.',
+                        html:
+                            'Payment received. Attempting to submit your document to the blockchain.' +
+                            '<br><br><b>Estimated Time: 10-30 minutes</b><br>' +
+                            '<br>Do not leave this page until you receive success or failure message!',
+
+                        didOpen: () => {
+                            const content = Swal.getHtmlContainer()
+                            const $ = content.querySelector.bind(content)
+                            Swal.showLoading()
+                        }
+                    })
+                },
+                complete: function (data) {
+                }
+
+            }).done(function (result) {
+                swal.close();
+                if (result.success) {
+                    $('#submitArchive').hide();
+                    $('#submitArchive').prop('disabled', true);
+                    Swal.fire({
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        closeOnClickOutside: false,
+                        confirmButtonColor: "#48B5C4",
+                        backdrop: true,
+                        title: 'Success!',
+                        text: 'Your document has been submitted.',
+                        type: 'success',
+                        confirmButtonText: 'Ok'
+                    }).then(function () {
+                        window.location.replace = "https://historia.network/";
+                    });
+                }
+                else {
+                    Swal.fire({
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        closeOnClickOutside: false,
+                        backdrop: true,
+                        confirmButtonColor: "#48B5C4",
+                        title: 'Error!',
+                        text: result.error,
+                        type: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            }).always(function (result) {
+
+            });
+
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function CreateBuilderLoadEdit(id, type, template, pid, cidtype, isdraft) {
+
+            $.getJSON('@Url.Action("CreateBuilderLoadEdit", "Create", new { area = "Create" })', { id: id, type: type, template: template, pid: pid, cidtype: cidtype, isdraft: isdraft }, function (result) {
+
+            }).done(function (result) {
+
+                if (result.pid == 0) {
+                    console.log("CBLE1:" + id + " " + type + " " + template + " " + pid + " " + cidtype + " " + isdraft)
+                    editor = grapesjs.init({
+                        container: '#gjs',
+                        plugins: ['gjs-preset-webpage'],
+                        pluginsOpts: {
+                            'gjs-preset-webpage': {
+                                // options
+                            }
+                        },
+                        fromElement: false,
+                        storageManager: {
+                            autoload: false
+                        },
+                    });
+                } else {
+                    console.log("CBLE2:" + id + " " + type + " " + template + " " + pid + " " + cidtype + " " + isdraft)
+                    LandingPage = {
+                        html: result[0].html,
+                        css: result[0].css,
+                        components: null,
+                        style: null,
+                    };
+
+                    editor = grapesjs.init({
+                        container: '#gjs',
+                        plugins: ['gjs-preset-webpage'],
+                        pluginsOpts: {
+                            'gjs-preset-webpage': {
+                                // options
+                            }
+                        },
+
+                        fromElement: false,
+                        components: LandingPage.html,
+                        style: LandingPage.css,
+                        storageManager: {
+                            autoload: false
+                        },
+
+                    });
+
+                    $('#tbName').val(result[0].name);
+                    $('#tbSummary').val(result[0].summary);
+                    //$('#tbIsDraft').val(result[0].IsDraft);
+                    $('#tbPaymentDate').val("Today");
+                    $('#tbParentIPFSCID').html("<u><a href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + result[0].ipfsPid + "</a></u>");
+                    if (result[0].cidType == 0) {
+                        $('#type').text("Record - Suggest an Edit");
+                    } else if (result[0].cidType == 1) {
+                        $('#type').text("Record - Add Additional Evidence");
+                    } else if (result[0].cidType == 2) {
+                        $('#type').text("Record - Add To Topic");
+                    } else if (result[0].cidType == 3) {
+                        $('#type').text("Record - Add Translation");
+                    }
+
+                }
+
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+				console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+            });
+        }
+
+        function generateUUID() { // Public Domain/MIT
+            var d = new Date().getTime();
+            if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+                d += performance.now(); //use high-precision timer if available
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
+
+
+
+        $(document).ready(function () {
+            var paramArr = new Array();
+            paramArr = getsearchParams();
+            var id = paramArr[0];
+            var type = paramArr[1];
+            var template = paramArr[2];
+            var pid = paramArr[3];
+            var cidtype = paramArr[4];
+            var isdraft = paramArr[6];
+            console.log("EDIT");
+            if (template === "proposal" || template === "news" || template === "wiki") {
+ //               CreateBuilderLoadTemplate(template);
+                $('#submitRec').show();
+                $('#submitRec').prop('disabled', false);
+                $('#submitArchive').hide();
+                $('#submitArchive').prop('disabled', true);
+
+            } else if (type == 5) {
+               
+                CreateBuilderLoadArchiveURL();
+                $('#submitRec').hide();
+                $('#saveDraft').hide();
+                $('#deleteDraft').hide();
+                $('#submitArchive').show();
+                $('#submitArchive').prop('disabled', false);
+
+            } else {
+                console.log("TYPE OTHER");
+                CreateBuilderLoadEdit(id, type, template, pid, cidtype, isdraft);
+                $('#submitRec').show();
+                $('#submitRec').prop('disabled', false);
+                $('#submitArchive').hide();
+                $('#submitArchive').prop('disabled', true);
+
+            }
+
+
+            $('#tbName').keyup(UpdateProposalNameCnt);
+            $('#tbName').keydown(UpdateProposalNameCnt);
+            $('#tbSummary').keyup(UpdateProposalSummaryCnt);
+            $('#tbSummary').keydown(UpdateProposalSummaryCnt);
+
+
+        });
+
+        $(window).on('pageshow', function () {
+            var NameCnt = $("#tbName").val().length;
+            var SummaryCnt = $("#tbSummary").val().length;
+            $('#tbNameCnt').text(NameCnt);
+            $('#tbSummaryCnt').text(SummaryCnt);
+        });
+
+        $('#saveDraft').off().on('click', function (evt) {
+
+            var form = $('#formStep1');
+            var html = editor.getHtml();
+            var css = editor.getCss(); //get css content of document
+            var data = new FormData(document.getElementById('formStep1'));
+            var paramArr = new Array();
+            paramArr = getsearchParams();
+            var id = paramArr[0]; // ID
+            var type = paramArr[1]; // Type
+            var pid = paramArr[3]; // Pid
+            var cidtype = paramArr[4]; // cidType
+            var isdraft = paramArr[6]; // isdraft
+            if ($('#tbName').val().length === 0) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Unable to save draft. Please add a "Name"',
+                    type: 'error',
+                    confirmButtonColor: "#48B5C4",
+                    confirmButtonText: 'Ok'
+                });
+                return false;
+            }
+
+            data.append('id', id);
+            data.append('Type', type);
+            data.append('Name', $('#tbName').val());
+            data.append('Summary', $('#tbSummary').val());
+            data.append('html', html);
+            data.append('css', css);
+            data.append('PaymentAddress', $('#tbAddress').val());
+            data.append('PaymentAmount', $('#tbReward').val());
+            data.append('IsDraft', 1);
+            data.append('IPFSPID', $('#tbParentIPFSCID').text());
+            data.append('paymentDate', $('#tbPaymentDate').val());
+            data.append('cidtype', cidtype);
+            data.append('pid', pid);
+            data.append('formData', form.serialize());
+
+
+            $.ajax({
+                url: '@Url.Action("SaveCreateDraft", "Create", new { Area = "Create" })',
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                data: data,
+            }).done(function (result) {
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'You draft has been saved.',
+                        type: 'success',
+                        confirmButtonColor: "#48B5C4",
+                        confirmButtonText: 'Ok'
+                    });
+                }
+                else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to save draft. Your file is probably too big, otherwise try again later.',
+                        type: 'error',
+                        confirmButtonColor: "#48B5C4",
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+
+            return false;
+
+        });
+
+        $('#deleteDraft').off().on('click', function (evt) {
+
+            var paramArr = new Array();
+            paramArr = getsearchParams();
+            var id = paramArr[0]; // ID
+
+            var form = $('#formStep1');
+            var data = new FormData(document.getElementById('formStep1'));
+            data.append('id', id);
+            data.append('formData', form.serialize());
+
+            Swal.fire({
+                title: "Are you sure you want to delete this draft?",
+                text: "You can not recover this!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, delete this draft!",
+                cancelButtonText: "No, don't delete it!",
+                closeOnConfirm: true,
+                closeOnCancel: true
+            }).then((confirm) => {
+                if (confirm.dismiss !== 'cancel') {
+                   $.ajax({
+                        url: '@Url.Action("DeleteCreateDraft", "Create", new { Area = "Create" })',
+                        type: 'POST',
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                    }).done(function (result) {
+
+                        if (result.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'You draft has been deleted.',
+                                type: 'success',
+                                confirmButtonColor: "#48B5C4",
+                                confirmButtonText: 'Ok'
+                            });
+                        }
+                        else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Unable to delete draft. Please try again later',
+                                type: 'error',
+                                confirmButtonColor: "#48B5C4",
+                                confirmButtonText: 'Ok'
+                            });
+                        }
+                    });
+                }
+            });
+
+            return false;
+
+        });
+
+        $('#submitRec').off().on('click', function (evt) {
+
+            size = UpdateGrapeCnt();
+
+            if (size > 10) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'The web page or file you have created exceeds the maximum size limit of 10MB.',
+                    type: 'error',
+                    confirmButtonColor: "#545B62",
+                    confirmButtonText: 'Ok'
+                });
+                return false;
+            }
+
+            evt.preventDefault();
+            evt.stopPropagation();
+            var passphrase;
+            Swal.fire({
+                title: "Are you sure you want to continue?",
+                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If you wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, submit this document!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (!confirm.value) {
+                    Swal.fire({
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        closeOnClickOutside: false,
+                        backdrop: true,
+                        confirmButtonColor: "#545B62",
+                        title: 'Cancelled!',
+                        text: 'Your document has not been submitted.',
+                        type: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                var form = $('#formStep1');
+                var html = editor.getHtml();
+                var css = editor.getCss(); //get css content of document
+                var data = new FormData(document.getElementById('formStep1'));
+                let searchParams = new URLSearchParams(window.location.search)
+                var id = searchParams.get('Id');
+                var type = searchParams.get('Type');
+                var template = searchParams.get('Template');
+
+                if ($('#tbName').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Name"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                if ($('#tbSummary').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Summary"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                if ($('#tbAddress').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Reward Address"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                if ($('#tbReward').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Reward Amount"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                data.append('id', id);
+                data.append('Type', type);
+                data.append('Name', $('#tbName').val());
+                data.append('Summary', $('#tbSummary').val());
+                data.append('html', html);
+                data.append('css', css);
+                data.append('PaymentAddress', $('#tbAddress').val());
+                data.append('PaymentAmount', $('#tbReward').val());
+                data.append('IsDraft', 1);
+                data.append('PaymentDate', $('#EndCycleDate').html());
+                data.append('passphrase', passphrase);
+
+                data.append('IPFSPID', $('#tbParentIPFSCID').text());
+                data.append('oglinkid', $('#oglinkid').val());
+                var uid = generateUUID();
+                data.append('uniqueId', uid);
+                data.append('cidtype', cidtype);
+                data.append('formData', form.serialize());
+
+                $.ajax({
+                    url: '@Url.Action("Submit", "Create", new { Area = "Create" })',
+                    type: 'POST',
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    beforeSend: function () {
+                        Swal.fire({
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            backdrop: true,
+                            title: 'Processing Your Document.',
+                            html:
+                                'Attempting to submit your document to the blockchain.' +
+                                '<br><br><b>Estimated Time:10-30 minutes</b><br>' +
+                                '<br>Do not leave this page until you receive success or failure message!',
+
+                            didOpen: () => {
+                                const content = Swal.getHtmlContainer()
+                                const $ = content.querySelector.bind(content)
+                                Swal.showLoading()
+                            }
+                        })
+                    },
+                    complete: function (data) {
+                    }
+
+                }).done(function (result) {
+                    swal.close();
+                    if (result.success) {
+                        Swal.fire({
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            confirmButtonColor: "#545B62",
+                            backdrop: true,
+                            title: 'Success!',
+                            text: 'You document has been submitted.',
+                            type: 'success',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                    else {
+                        Swal.fire({
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            backdrop: true,
+                            confirmButtonColor: "#545B62",
+                            title: 'Error!',
+                            text: result.error,
+                            type: 'error',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                }).always(function (result) {
+
+                });
+
+                return false;
+            });
+            return false;
+        });
+
+        $('#submitArchive').off().on('click', function (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+
+            size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
+            console.log("SIZE: " + size);
+            if (size > 10) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'The web page or file you have created exceeds the maximum size limit of 10MB.',
+                    type: 'error',
+                    confirmButtonColor: "#545B62",
+                    confirmButtonText: 'Ok'
+                });
+                return false;
+            }
+
+
+            var passphrase;
+            Swal.fire({
+                title: "Are you sure you want to continue?",
+                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If you wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, submit this document!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (!confirm.value) {
+                    Swal.fire({
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        closeOnClickOutside: false,
+                        backdrop: true,
+                        confirmButtonColor: "#545B62",
+                        title: 'Cancelled!',
+                        text: 'Your document has not been submitted.',
+                        type: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                var form = $('#formStep1');
+                var data = new FormData(document.getElementById('formStep1'));
+                let searchParams = new URLSearchParams(window.location.search)
+                var id = searchParams.get('Id');
+                var type = searchParams.get('Type');
+                var template = searchParams.get('Template');
+
+                if ($('#tbName').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Name"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                if ($('#tbSummary').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Summary"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                if ($('#tbAddress').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Reward Address"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                if ($('#tbReward').val().length === 0) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Unable to Process. Please add a "Reward Amount"',
+                        type: 'error',
+                        confirmButtonColor: "#545B62",
+                        confirmButtonText: 'Ok'
+                    });
+                    return false;
+                }
+
+                data.append('id', id);
+                data.append('Type', type);
+                data.append('Name', $('#tbName').val());
+                data.append('Summary', $('#tbSummary').val());
+                data.append('html', $('#archiveDiv').html());
+                console.log("HTML: " + $('#archiveDiv').html());
+                data.append('isArchive', 1);
+                data.append('PaymentAddress', $('#tbAddress').val());
+                data.append('PaymentAmount', $('#tbReward').val());
+                data.append('IsDraft', 1);
+                data.append('PaymentDate', $('#EndCycleDate').html());
+                data.append('passphrase', passphrase);
+                data.append('IPFSPID', $('#tbParentIPFSCID').text());
+                data.append('oglinkid', $('#oglinkid').val());
+                var uid = generateUUID();
+                data.append('uniqueId', uid);
+                data.append('cidtype', cidtype);
+                data.append('formData', form.serialize());
+
+                $.ajax({
+                    url: '@Url.Action("Submit", "Create", new { Area = "Create" })',
+                    type: 'POST',
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    beforeSend: function () {
+                        Swal.fire({
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            backdrop: true,
+                            title: 'Processing Your Document.',
+                            html:
+                                'Attempting to submit your document to the blockchain.' +
+                                '<br><br><b>Estimated Time:10-30 minutes</b><br>' +
+                                '<br>Do not leave this page until you receive success or failure message!',
+
+                            didOpen: () => {
+                                const content = Swal.getHtmlContainer()
+                                const $ = content.querySelector.bind(content)
+                                Swal.showLoading()
+                            }
+                        })
+                    },
+                    complete: function (data) {
+                    }
+
+                }).done(function (result) {
+                    swal.close();
+                    if (result.success) {
+                        Swal.fire({
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            confirmButtonColor: "#545B62",
+                            backdrop: true,
+                            title: 'Success!',
+                            text: 'You document has been submitted.',
+                            type: 'success',
+                            confirmButtonText: 'Ok'
+                        });
+                        $('#submitArchive').hide();
+                        $('#submitArchive').prop('disabled', true);
+                    }
+                    else {
+                        Swal.fire({
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            closeOnClickOutside: false,
+                            backdrop: true,
+                            confirmButtonColor: "#545B62",
+                            title: 'Error!',
+                            text: result.error,
+                            type: 'error',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                }).always(function (result) {
+
+                });
+
+                return false;
+            });
+            return false;
+        });
+
+    </script>
+}

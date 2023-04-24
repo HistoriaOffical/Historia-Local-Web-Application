@@ -46,7 +46,7 @@ namespace HistWeb.Home.Models
         [Display(Name = "Description Text")]
         [DataType(DataType.MultilineText)]
         public string ProposalSummary { get; set; }
-        
+
         [Required]
         [Display(Name = "Description")]
         [DataType(DataType.MultilineText)]
@@ -120,7 +120,9 @@ namespace HistWeb.Home.Models
         public int sig { get; set; }
 
         public bool PermLocked { get; set; }
+        public string ParentIPFSCID { get; set; }
+        public string cidtype { get; set; }
+        public string IsUpdate { get; set; }
 
-
-   }
+    }
 }

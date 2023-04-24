@@ -17,7 +17,7 @@ namespace HistWeb.Areas.Proposals.Models
         public string IPFSApiPort { get; set; }
         [Key]
         public int Id { get; set; }
-
+        public string DataString { get; set; }
         public List<SelectListItem> ProposalTypes { get; set; }
         public List<SelectListItem> PaymentDates { get; set; }
 
@@ -45,6 +45,10 @@ namespace HistWeb.Areas.Proposals.Models
         [Required]
         [Display(Name = "Project URL")]
         public string ProposalDescriptionUrl { get; set; }
+
+        public string ParentIPFSCID { get; set; }
+        public string cidtype { get; set; }
+        public string IsUpdate { get; set; }
 
         public string ProposalDescriptionUrlRazor { get; set; }
 
@@ -86,6 +90,23 @@ namespace HistWeb.Areas.Proposals.Models
        
         public int sig { get; set; }
         public bool PermLocked { get; set; }
+    }
+    public class PreviousVersionsModel
+    {
+        public string cidtype;
+
+        public string Name { get; set; }
+
+        public string ParentIPFSCid { get; set; }
+
+        public string IPFSHash { get; set; }
+
+        public string url { get; set; }
+
+        public string DateAdded { get; set; }
+
+        public string ProposalHash { get; set; }
+
     }
 
 }

@@ -82,7 +82,7 @@
                             <button name="deleteDraft" id="deleteDraft" class="btn btn-secondary float-left">Delete Draft</button>
                         </div>
                         <div class="col-6">
-                            <button name="submit" id="submit" class="btn btn-secondary float-right" disabled>Submit</button>&nbsp;
+                            <button name="submitRec" id="submitRec" class="btn btn-secondary float-right" disabled style="display: none;">Submit</button>&nbsp;
                             <button name="submitArchive" id="submitArchive" class="btn btn-secondary float-right" disabled style="display: none;">Submit Archive</button>&nbsp;
                         </div>
                     </div>
@@ -110,11 +110,15 @@
 
         if (type == 1) {
             $('#type').text("Proposal");
+            $('#submitRec').show();
         } else if (type == 4) {
             $('#type').text("Record");
+            $('#submitRec').show();
         } else if (type == 5) {
             $('#type').text("Archive");
             $('#tutorial').hide();
+            $('#submitRec').hide();
+
             
         }
 
@@ -347,28 +351,33 @@
         }
 
         $(document).ready(function () {
-
+            console.log("BUILD");
             if (template === "proposal" || template === "news" || template === "wiki") {
                 CreateBuilderLoadTemplate(template);
-                console.log("JSON Template: " + template)
+                $('#submitRec').show();
+                $('#submitRec').prop('disabled', false);
+                $('#submitArchive').hide();
+                $('#submitArchive').prop('disabled', true);
             } else if (type == 5) {
                 CreateBuilderLoadArchiveURL();
                 $('#saveDraft').hide();
                 $('#deleteDraft').hide();
-                $('#submit').hide();
+                $('#submitRec').hide();
                 $('#submitArchive').show();
                 $('#submitArchive').prop('disabled', false);
                 
             } else {
                 CreateBuilderLoad();
+                $('#submitRec').show();
+                $('#submitRec').prop('disabled', false);
+                $('#submitArchive').hide();
+                $('#submitArchive').prop('disabled', true);
             }
 
             $('#tbName').keyup(UpdateProposalNameCnt);
             $('#tbName').keydown(UpdateProposalNameCnt);
             $('#tbSummary').keyup(UpdateProposalSummaryCnt);
             $('#tbSummary').keydown(UpdateProposalSummaryCnt);
-
-            $('#submit').prop('disabled', false);
 
         });
 
@@ -495,8 +504,9 @@
 
         });
 
-        $('#submit').off().on('click', function (evt) {
-
+        $('#submitRec').off().on('click', function (evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
             size = UpdateGrapeCnt();
 
             if (size > 10) {

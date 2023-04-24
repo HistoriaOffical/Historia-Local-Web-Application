@@ -34,18 +34,97 @@
         <div class="title text-left">
 
             @if (Model.CurrentModel.Type == "1")
-            {<span class="ml-0" style="vertical-align:middle;"><b>Proposal</b></span>}
+            {
+                <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>
+            }
             else if (Model.CurrentModel.Type == "4")
-            { <span class="ml-0" style="vertical-align:middle;"><b>Record</b></span>}
-            else if (Model.CurrentModel.Type == "5")
-            { <span class="ml-0" style="vertical-align:middle;"><b>Archive</b></span>}
-            <span id="time_@Model.CurrentModel.Id" class="ml-0" style="vertical-align:middle;">@Model.CurrentModel.ProposalDate</span>&nbsp;
+            { @if (@Model.CurrentModel.ParentIPFSCID == "")
+                {
+                    <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>
+                }
+                else
+                {
+                    @if (Model.CurrentModel.PastSuperBlock == 0)
+                    {
+                        if (@Model.CurrentModel.cidtype == "1")
+                        {
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>
+                        }
+                        else if (@Model.CurrentModel.cidtype == "2")
+                        {
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSTU" class="btn btn-outline-dark float-right btn-sm">Suggested Topic Update</button></span>
+                        }
+                        else
+                        {
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSRU" class="btn btn-outline-dark float-right btn-sm">Suggested Record Update</button></span>
+                        }
+                    }
+                    else
+                    {
+                        if (@Model.CurrentModel.cidtype == "1")
+                        {
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>
+                        }
+                        else if (@Model.CurrentModel.cidtype == "2")
+                        {
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSTU" class="btn btn-outline-dark float-right btn-sm">Topic Update</button></span>
+                        }
+                        else
+                        {
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSRU" class="btn btn-outline-dark float-right btn-sm">Record Update</button></span>
+                        }
+                    }
+
+                }
+
+        }
+        else if (Model.CurrentModel.Type == "5")
+        { @if (@Model.CurrentModel.ParentIPFSCID == "")
+            {
+                <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>
+            }
+            else
+            {
+                @if (Model.CurrentModel.PastSuperBlock == 0)
+                {
+                    if (@Model.CurrentModel.cidtype == "1")
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAEU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Evidence Update</button></span>
+                    }
+                    else if (@Model.CurrentModel.cidtype == "2")
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSATU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Topic Update</button></span>
+                    }
+                    else
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Record Update</button></span>
+                    }
+                }
+                else
+                {
+                    if (@Model.CurrentModel.cidtype == "1")
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAEU" class="btn btn-outline-dark float-right btn-sm">Archive - Evidence Update</button></span>
+                    }
+                    else if (@Model.CurrentModel.cidtype == "2")
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSATU" class="btn btn-outline-dark float-right btn-sm">Archive - Topic Update</button></span>
+                    }
+                    else
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAU" class="btn btn-outline-dark float-right btn-sm">Archive - Record Update</button></span>
+                    }
+                }
+            }
+    }
+
             <input type="hidden" id="timetemp_@Model.CurrentModel.Id" value="@Model.CurrentModel.ProposalDate">
         </div>
         <div class="w-clearfix" style="margin-top:5px;">
             <h5 class="card-title">
                 <a href="/Proposals/Proposals/ProposalDetails?hash=@Model.CurrentModel.Hash" class="heading_news">@Model.CurrentModel.ProposalName</a>
             </h5>
+
             <p class="card-text">@Model.CurrentModel.ProposalSummary</p>
             @if (@Model.CurrentModel.Expired == 0)
             {
@@ -55,6 +134,10 @@
             {
                 <iframe id="ProposalContainer" style="width:100%;height:700px;" frameBorder="1" srcdoc='@Model.CurrentModel.ProposalDescriptionUrlRazor'></iframe>
             }
+            <div class="title text-left">
+                <span id="time_@Model.CurrentModel.Id" class="ml-0 float-right" style="line-height: normal;">@Model.CurrentModel.ProposalDate</span>&nbsp;
+                <span id="recordTime" style="line-height: normal;" class="ml-0 float-right"></span>&nbsp;<br />
+            </div>
         </div>
         <div style="margin-top:5px; margin-bottom:10px;">
             <div class="row mt-4">
@@ -203,14 +286,127 @@
 
             <div class="usertabs">
                 <div class="social">
+                    <span id="btnEdit_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Suggest Edit" data-placement="top"><i class="fa fa-pencil fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
+                    <span id="btnEvidence_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Add Additional Evidence" data-placement="top"><i class="fa fa-lightbulb fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
+                    <span id="btnTopic_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Add to Topic" data-placement="top"><i class="fa fa-hashtag fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
+                    <span id="btnTranslation_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Add Translation - COMING SOON" data-placement="top"><i class="fa fa-language fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
                 </div>
             </div>
 
 
         </div>
 
-    </div>
 
+
+        <div class="text-center">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                            <li class="nav-item"><a href="#versions" data-target="#versions" data-toggle="tab" role="tab" class="nav-link small text-uppercase active">Versions</a></li>
+                            <li class="nav-item"><a href="#evidence" data-target="#evidence" data-toggle="tab" role="tab" class="nav-link small text-uppercase">Evidence</a></li>
+                            <li class="nav-item"><a href="#topics" data-target="#topics" data-toggle="tab" role="tab" class="nav-link small text-uppercase">Topics</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="versions" class="tab-pane fade show active">
+                                <div id="accordionV" class="verison-button-details">
+                                    <div class="card">
+                                        <div class="card-header" id="headingOne">
+                                            <h5 class="mb-0">
+                                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                    Verisons
+                                                </button>
+                                            </h5>
+                                        </div>
+
+                                        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionV">
+
+                                            <div class="list-group">
+                                                <table class="table table-striped w-100" id="versionsTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date Added</th>
+                                                            <th>Name</th>
+                                                            <th>IPFS</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="evidence" class="tab-pane fade show">
+                                <div id="accordionE" class="evidence-button-details">
+                                    <div class="card">
+                                        <div class="card-header" id="headingOne">
+                                            <h5 class="mb-0">
+                                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                    Evidence
+                                                </button>
+                                            </h5>
+                                        </div>
+
+                                        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionE">
+
+                                            <div class="list-group">
+                                                <table class="table table-striped w-100" id="evidenceTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date Added</th>
+                                                            <th>Name</th>
+                                                            <th>IPFS</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="topics" class="tab-pane fade show">
+                                <div id="accordionT" class="topic-button-details">
+                                    <div class="card">
+                                        <div class="card-header" id="headingOne">
+                                            <h5 class="mb-0">
+                                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                    Topics
+                                                </button>
+                                            </h5>
+                                        </div>
+
+                                        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionT">
+
+                                            <div class="list-group">
+                                                <table class="table table-striped w-100" id="topicsTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date Added</th>
+                                                            <th>Name</th>
+                                                            <th>IPFS</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <br /><br />
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <br /><br /><br />
     <div class="modal fade" role="dialog" id="voteModal" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -225,52 +421,52 @@
                     <div class="modal-body">
                         @Html.AntiForgeryToken()
                         <input type="hidden" id="tbProposalId" />
-                            <div class="row">
-                                <div class="col">
-                                    <div class="form-group">
-                                        <label class="col-form-label" for="tbMasterNodeName">Password: <span style="color:#f00">*</span> </label>
-                                        <input class="form-control" id="tbPassphrase" type="password" placeholder="" required />
-                                        <div class="invalid-feedback">Please enter your Password.</div>
-                                        <div class="invalid-feedback">Invalid Password. Can not submit vote</div>
-                                    </div>
-
-                                </div>
-
-                                <div class="col">
-                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                        <label class="btn btn-secondary">
-                                            <input type="radio" name="voteOptions" id="yes" autocomplete="off"> Vote YES
-                                        </label>
-                                        <label class="btn btn-secondary">
-                                            <input type="radio" name="voteOptions" id="no" autocomplete="off"> Vote NO
-                                        </label>
-                                        <label class="btn btn-secondary">
-                                            <input type="radio" name="voteOptions" id="abstain" autocomplete="off"> Vote ABS
-                                        </label>
-                                    </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label class="col-form-label" for="tbMasterNodeName">Password: <span style="color:#f00">*</span> </label>
+                                    <input class="form-control" id="tbPassphrase" type="password" placeholder="" required />
+                                    <div class="invalid-feedback">Please enter your Password.</div>
+                                    <div class="invalid-feedback">Invalid Password. Can not submit vote</div>
                                 </div>
 
                             </div>
-                            <div class="row">
-                                <div class="col">
-                                    <div class="form-group">
-                                        <label>Proposal Voting Guidelines</label>
-                                        <ul>
-                                            <li>Does it add value to Historia?</li>
-                                            <li>Is the cost appropriate?</li>
-                                            <li>Is it nicely formatted?</li>
-                                            <li>Do you want this implemented?</li>
-                                        </ul>
-                                        <label>Record Voting Guidelines</label>
-                                        <ul>
-                                            <li>Should it be permanently added?</li>
-                                            <li>Is factual correct?</li>
-                                            <li>Is it nicely formatted?</li>
-                                        </ul>
-                                    </div>
+
+                            <div class="col">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    <label class="btn btn-secondary">
+                                        <input type="radio" name="voteOptions" id="yes" autocomplete="off"> Vote YES
+                                    </label>
+                                    <label class="btn btn-secondary">
+                                        <input type="radio" name="voteOptions" id="no" autocomplete="off"> Vote NO
+                                    </label>
+                                    <label class="btn btn-secondary">
+                                        <input type="radio" name="voteOptions" id="abstain" autocomplete="off"> Vote ABS
+                                    </label>
                                 </div>
                             </div>
-                     </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label>Proposal Voting Guidelines</label>
+                                    <ul>
+                                        <li>Does it add value to Historia?</li>
+                                        <li>Is the cost appropriate?</li>
+                                        <li>Is it nicely formatted?</li>
+                                        <li>Do you want this implemented?</li>
+                                    </ul>
+                                    <label>Record Voting Guidelines</label>
+                                    <ul>
+                                        <li>Should it be permanently added?</li>
+                                        <li>Is factual correct?</li>
+                                        <li>Is it nicely formatted?</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
                 <div class="modal-footer">
                     <button id="btnSubmitVote" class="btn btn-secondary" type="submit">Submit Vote</button>
@@ -300,63 +496,53 @@
         }
 
         var UTC = new Date().getTime();
+        function localUTCDateC(id, submittedAt) {
+            const now = new Date();
+            const submitted = new Date(submittedAt);
 
-        function localUTCDateC(id, date) {
+            const userTimezoneOffset = submitted.getTimezoneOffset(); // get user's timezone offset in minutes
+            const timezoneOffsetMs = userTimezoneOffset * 60 * 1000; // convert minutes to milliseconds
+            const adjustedSubmitted = new Date(submitted.getTime() + timezoneOffsetMs);
 
-            // Get User local time
-            var n1 = new Date();
-            var n2 = n1.getTimezoneOffset();
-            var hoursOffset = n2 / 60;
-            // date in UTC from comment
-            var d = new Date(date);
-            const diffTime = Math.abs(d.getTime() - UTC);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            var diffHours = Math.abs(((d.getTime() - UTC) / 1000) / 3600);
-            diffHours = Math.abs(Math.round(diffHours));
-            diffHours = Math.abs(diffHours - hoursOffset);
+            const elapsed = now.getTime() - adjustedSubmitted.getTime(); // elapsed time in milliseconds
 
-            var diffMonths;
-            var diffWeeks;
+            const elapsedSeconds = Math.floor(elapsed / 1000);
+            const elapsedMinutes = Math.floor(elapsed / (1000 * 60));
+            const elapsedHours = Math.floor(elapsed / (1000 * 60 * 60));
+            const elapsedDays = Math.floor(elapsed / (1000 * 60 * 60 * 24));
+            const elapsedWeeks = Math.floor(elapsed / (1000 * 60 * 60 * 24 * 7));
 
-            if (diffDays > 7) {
-                diffWeeks = Math.abs(Math.round(diffDays / 7));
-            }
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentDay = now.getDate();
+            const submittedYear = adjustedSubmitted.getFullYear();
+            const submittedMonth = adjustedSubmitted.getMonth();
+            const submittedDay = adjustedSubmitted.getDate();
 
-            if (diffDays > 30) {
-                diffMonths = Math.abs(Math.round(diffDays / 30));
-            }
+            let elapsedMonths = (currentYear - submittedYear) * 12;
+            elapsedMonths -= submittedMonth;
+            elapsedMonths += currentMonth;
+            elapsedMonths = elapsedMonths <= 0 ? 0 : elapsedMonths;
 
-
-            if (diffDays > 180) {
-                //If greater than 90 days, then list short date.
-                console.log("DD90:" + diffDays);
-                $('#time_' + id).text(" — " + d.toDateString());
-            } else if (diffDays > 90 && diffDays < 180) {
-                //If greater than 90 days, then list short date.
-                console.log("DD90:" + diffDays);
-                $('#time_' + id).text(" — about " + diffMonths + " months ago");
-            } else if (diffDays > 30 && diffDays < 90) {
-                //If greater than 30 days less than 90 days, then list how many months since post.
-                console.log("DD30:" + diffMonths);
-                $('#time_' + id).text(" — about " + diffMonths + " months ago");
-            } else if (diffDays > 7 && diffDays < 30) {
-                //If greater than 7 days less than 30 days, then list how many weeks since post.
-                console.log("DD7/30:" + diffWeeks);
-                $('#time_' + id).text(" — about " + diffWeeks + " weeks ago");
-            } else if (diffHours > 24 && diffDays < 7) {
-                //If greater than 24 hours and less than 7 days, then list how many days since post.
-
-                console.log("DD24/7:" + diffDays);
-                $('#time_' + id).text(" — about " + diffDays + " days ago");
-            } else if (diffHours < 24) {
-                //If less than 24 hours, then list how many minutes or hours since post.
-                if (diffHours == 0) {
-                    $('#time_' + id).text(" — a few minutes ago");
-                } else if (diffHours == 1) {
-                    $('#time_' + id).text(" — " + diffHours + " hour ago");
-                } else {
-                    $('#time_' + id).text(" — " + diffHours + " hours ago");
-                }
+            if (elapsedSeconds < 60) {
+                $('#time_' + id).text(" — " + `${elapsedSeconds} seconds ago`);
+            } else if (elapsedMinutes < 60) {
+                $('#time_' + id).text(" — " + `${elapsedMinutes} minutes ago`);
+            } else if (elapsedHours < 24) {
+                $('#time_' + id).text(" — " + `${elapsedHours} hours ago`);
+            } else if (elapsedDays < 7) {
+                $('#time_' + id).text(" — " + `${elapsedDays} days ago`);
+            } else if (elapsedWeeks < 4) {
+                $('#time_' + id).text(" — " + `${elapsedWeeks} weeks ago`);
+            } else if (elapsedMonths < 1 && elapsedMonths > 2) {
+                $('#time_' + id).text(" — " + '1 month ago');
+            } else if (elapsedMonths < 2 && elapsedMonths > 3) {
+                $('#time_' + id).text(" — " + '2 months ago');
+            } else if (elapsedMonths < 3 && elapsedMonths > 4) {
+                $('#time_' + id).text(" — " + '3 months ago');
+            } else {
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                $('#time_' + id).text(" — " + adjustedSubmitted.toLocaleDateString(undefined, options));
             }
         }
 
@@ -420,6 +606,138 @@
             });
 
 
+            var IpfsPid = "@Model.CurrentModel.Hash";
+            var verisonsTable = $('#versionsTable').DataTable({
+                data: null,
+                info: false,
+                searching: false,
+			    fixedHeader: false,
+			    lengthChange: false,
+			    autoWidth: false,
+			    responsive: false,
+			    columns: [
+                    { data: "DateAdded" },
+                    { data: "Name" },
+                    { data: "IPFSHash" }
+
+			    ],
+            });
+
+            var verisonsTable = $('#evidenceTable').DataTable({
+                data: null,
+                info: false,
+                searching: false,
+                fixedHeader: false,
+                lengthChange: false,
+                autoWidth: false,
+                responsive: false,
+                columns: [
+                    { data: "DateAdded" },
+                    { data: "Name" },
+                    { data: "IPFSHash" }
+
+                ],
+            });
+
+            var verisonsTable = $('#topicsTable').DataTable({
+                data: null,
+                info: false,
+                searching: false,
+                fixedHeader: false,
+                lengthChange: false,
+                autoWidth: false,
+                responsive: false,
+                columns: [
+                    { data: "DateAdded" },
+                    { data: "Name" },
+                    { data: "IPFSHash" }
+
+                ],
+            });
+
+            $.getJSON('@Url.Action("GetVersions", "Proposals", new { Area = "Proposals" })', { IpfsPid: IpfsPid }, function (tableData) {
+
+                        var verisonsTable = $('#versionsTable').DataTable({
+                        destroy: true,
+                        data: JSON.parse(tableData),
+                        order: [[0, '']],
+                        info: false,
+                        searching: false,
+				        fixedHeader: false,
+				        lengthChange: false,
+				        autoWidth: false,
+				        responsive: true,
+				        columns: [
+                            { data: "DateAdded" },
+					        { data: "Name" },
+                            {
+                            data: null,
+                            render: function (data, type, full, meta) {
+
+                                    return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.IPFSHash + '</a href>');
+                                }
+                            }
+
+				        ],
+			        });
+                });
+
+                $.getJSON('@Url.Action("GetEvidence", "Proposals", new { Area = "Proposals" })', { IpfsPid: IpfsPid }, function( tableData ) {
+
+                        var verisonsTable = $('#evidenceTable').DataTable({
+                        destroy: true,
+                        data: JSON.parse(tableData),
+                        order: [[0, '']],
+                        info: false,
+                        searching: false,
+				        fixedHeader: false,
+				        lengthChange: false,
+				        autoWidth: false,
+				        responsive: true,
+				        columns: [
+                            { data: "DateAdded" },
+					        { data: "Name" },
+                            {
+                            data: null,
+                            render: function (data, type, full, meta) {
+
+                                    return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.IPFSHash + '</a href>');
+                                }
+                            }
+
+				        ],
+			        });
+                });
+
+                $.getJSON('@Url.Action("GetTopics", "Proposals", new { Area = "Proposals" })', { IpfsPid: IpfsPid}, function( tableData ) {
+
+                        var verisonsTable = $('#topicsTable').DataTable({
+                        destroy: true,
+                        data: JSON.parse(tableData),
+                        order: [[0, '']],
+                        info: false,
+                        searching: false,
+				        fixedHeader: false,
+				        lengthChange: false,
+				        autoWidth: false,
+				        responsive: true,
+				        columns: [
+                            { data: "DateAdded" },
+					        { data: "Name" },
+                            {
+                            data: null,
+                            render: function (data, type, full, meta) {
+
+                                    return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.IPFSHash + '</a href>');
+                                }
+                            }
+
+				        ],
+			        });
+                });
+
+
+
             var url = /(https?:\/\/[^\s]+)/g;
 
             var oldurltmp = "";
@@ -481,12 +799,201 @@
                 }
             });
 
- 
+
             $('#btnDialog_@Model.CurrentModel.Id').popover({
                 html: true,
                 content: function () {
                     return $('#popover-content').html();
                 }
+            });
+
+
+            $('#btnEvidence_@Model.CurrentModel.Id').on('click', function () {
+
+                votingProposalId = @Model.CurrentModel.Id;
+                votingParentHash = '@Model.CurrentModel.Hash';
+                    (async () => {
+
+                        const { value: type } = await Swal.fire({
+                            title: 'Select Evidence Type',
+                            input: 'select',
+                            confirmButtonColor: "#48B5C4",
+                            inputOptions: {
+                                record: 'Record',
+                                archive: 'Archive',
+                            },
+                            inputPlaceholder: 'Select a type',
+                            showCancelButton: true,
+                            inputValidator: (value) => {
+                                return new Promise((resolve) => {
+                                    if (value === 'record' || value === 'archive') {
+                                        resolve()
+                                    } else {
+                                        resolve('You need to select a type :)')
+                                    }
+                                })
+                            }
+                        })
+
+                        if (type === "record") {
+                            const { value: template } = await Swal.fire({
+                                title: 'Select Template',
+                                input: 'select',
+                                confirmButtonColor: "#48B5C4",
+                                inputOptions: {
+                                    none: 'None',
+                                    news: 'Article #1'
+                                    //wiki: 'Wiki'
+                                },
+                                inputPlaceholder: 'Select a template',
+                                showCancelButton: true,
+                                inputValidator: (value) => {
+                                    return new Promise((resolve) => {
+                                        if (value === 'none' || value === 'news' || value === 'wiki') {
+                                            resolve()
+                                        } else {
+                                            resolve('You need to select a template')
+                                        }
+                                    })
+                                }
+                            });
+
+                            if (template === "none") {
+                               window.location = '/Create/Create/CreateEdit?Id=0&Type=4&Template=none&Pid=@Model.CurrentModel.Hash&CidType=1';
+                            } else if (template === "news") {
+                               window.location = '/Create/Create/CreateEdit?Id=0&Type=4&Template=news&Pid=@Model.CurrentModel.Hash&CidType=1';
+                            } else if (template === "wiki") {
+                               window.location = '/Create/Create/CreateEdit?Id=0&Type=4&Template=wiki&Pid=@Model.CurrentModel.Hash&CidType=1';
+                            }
+
+                        } else if (type === "archive") {
+                            window.location = '/Create/Create/CreateEdit?Id=0&Type=5&Pid=@Model.CurrentModel.Hash&CidType=1&ipfs=@Model.CurrentModel.ProposalDescriptionUrl';
+                        }
+
+                    })()
+
+                    return false;
+
+            });
+
+            $('#btnEdit_@Model.CurrentModel.Id').on('click', function () {
+                votingProposalId = @Model.CurrentModel.Id;
+                votingParentHash = '@Model.CurrentModel.Hash';
+
+                    Swal.fire({
+                    title: "Are you sure you want to suggest a edit?",
+                        html: '<h5>This will take you to the Create page</h5>',
+                        type: "warning",
+                        confirmButtonColor: "#48B5C4",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+
+                        closeOnClickOutside: false,
+                        backdrop: true,
+                        showCancelButton: true,
+                        confirmButtonClass: "btn-danger",
+                        confirmButtonText: "Yes, lets go!",
+                        cancelButtonText: "No, not right now!",
+                        closeOnConfirm: true,
+                        closeOnCancel: true,
+
+
+                    }).then(function(confirm) {
+                        if (confirm.value)
+                        {
+                            window.location = '/Create/Create/CreateEdit?Id=' + votingProposalId + '&Type=' + @Model.CurrentModel.Type + '&Template=none&Pid=' + votingParentHash + '&CidType=0' + '&isDraft=0';
+                        }
+
+                    })
+
+
+            });
+
+            $('#btnTopic_@Model.CurrentModel.Id').on('click', function () {
+                votingProposalId = @Model.CurrentModel.Id;
+                votingParentHash = '@Model.CurrentModel.Hash';
+                    (async () => {
+
+                        const { value: type } = await Swal.fire({
+                            title: 'Select Topic Type',
+                            input: 'select',
+                            confirmButtonColor: "#48B5C4",
+                            inputOptions: {
+                                record: 'Record',
+                                archive: 'Archive',
+                            },
+                            inputPlaceholder: 'Select a type',
+                            showCancelButton: true,
+                            inputValidator: (value) => {
+                                return new Promise((resolve) => {
+                                    if (value === 'record' || value === 'archive') {
+                                        resolve()
+                                    } else {
+                                        resolve('You need to select a type :)')
+                                    }
+                                })
+                            }
+                        })
+
+                        if (type === "record") {
+                            const { value: template } = await Swal.fire({
+                                title: 'Select Template',
+                                input: 'select',
+                                confirmButtonColor: "#48B5C4",
+                                inputOptions: {
+                                    none: 'None',
+                                    news: 'Article #1'
+                                    //wiki: 'Wiki'
+                                },
+                                inputPlaceholder: 'Select a template',
+                                showCancelButton: true,
+                                inputValidator: (value) => {
+                                    return new Promise((resolve) => {
+                                        if (value === 'none' || value === 'news' || value === 'wiki') {
+                                            resolve()
+                                        } else {
+                                            resolve('You need to select a template')
+                                        }
+                                    })
+                                }
+                            });
+
+                            if (template === "none") {
+                                window.location = '/Create/Create/CreateEdit?Id=0&Type=4&Template=none&Pid=@Model.CurrentModel.Hash&CidType=2';
+
+                            } else if (template === "news") {
+                                window.location = '/Create/Create/CreateEdit?Id=0&Type=4&Template=news&Pid=@Model.CurrentModel.Hash&CidType=2';
+
+                            } else if (template === "wiki") {
+                                window.location = '/Create/Create/CreateEdit?Id=0&Type=4&Template=wiki&Pid=@Model.CurrentModel.Hash&CidType=2';
+                            }
+
+                        } else if (type === "archive") {
+                            window.location = '/Create/Create/CreateEdit?Id=0&Type=5&Pid=@Model.CurrentModel.Hash&CidType=2&ipfs=@Model.CurrentModel.ProposalDescriptionUrl';
+                        }
+
+                    })()
+                    return false;
+            });
+
+            $('#btnTranslation_@Model.CurrentModel.Id').on('click', function () {
+                votingProposalId = @Model.CurrentModel.Id;
+                votingParentHash = '@Model.CurrentModel.Hash';
+                    Swal.fire({
+                    title: "Add Translation - Coming Soon",
+                        html: '<h5>This will allow you to add a translation</h5>',
+                        type: "warning",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        closeOnClickOutside: false,
+                        backdrop: true,
+                        confirmButtonClass: "btn-danger",
+                        confirmButtonText: "Ok",
+                        closeOnConfirm: true,
+
+
+                    })
+
             });
 
 
@@ -537,8 +1044,8 @@
                     var d = new Date();
                     var seconds = Math.round(d.getTime() / 1000);
 
-                    var vinMasternode = data.collateralHash + '-' + data.collateralIndex; 
-                    var voteSignal = 1; 
+                    var vinMasternode = data.collateralHash + '-' + data.collateralIndex;
+                    var voteSignal = 1;
                     var message = vinMasternode + '|' + votingParentHash + '|' + voteSignal + '|' + voteOutcome + '|' + seconds;
 
                     $.getJSON('@Url.Action("SignMessage", "Masternode", new { area = "Masternode" })', { message: message, privateKey: decrypted.toString()}, function (signData) {

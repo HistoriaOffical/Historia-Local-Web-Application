@@ -35,9 +35,9 @@
 </div>
 
 
-    @section Scripts {
+@section Scripts {
 
-        <script type="text/javascript">
+    <script type="text/javascript">
         var url = "";
         $(document).ready(function () {
 
@@ -59,11 +59,16 @@
                         { data: "draftName" },
                         { data: "draftSummary" },
                         {
-                            data: "id",
+                            data: null,
                     	    render: function(data, type, full, meta)
 						    {
-                                var url = "/Create/Create/CreateBuilder?Id=" + data;
-                  
+                                var url = "";
+                                if (data.cidtype === "") {
+                                    url = "/Create/Create/CreateBuilder?Id=" + data.id + "&Type=" + data.type + "&Template=" + data.template;
+                                } else {
+                                    url = "/Create/Create/CreateEdit?Id=" + data.id + "&Type=" + data.type + "&Template=" + data.template + "&Pid=" + data.pid + "&CidType=" + data.cidtype + "&ipfspid=" + data.ipfspid + "&isDraft=" + data.isdraft;
+                                }
+
                                 return '<a href="' + url + '" class="btn btn-secondary btn active" role="button" aria-pressed="true">Resume</a>';
 
                             }
@@ -147,14 +152,14 @@
                                 })
                             }
                         });
-                        console.log("TEMPLATE: " + template);
+
                         if (template === "none") {
                             window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=none';
                         } else if (template === "news") {
                             window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=news';
                         } else if (template === "wiki") {
                             window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=wiki';
-                            
+
                         }
 
                     } else if (type === "archive") {
@@ -165,5 +170,5 @@
 
                 return false;
             });
-        </script>
-    }
+    </script>
+}

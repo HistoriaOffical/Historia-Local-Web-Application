@@ -26,6 +26,36 @@
         .popover {
             max-width: 760px !important;
         }
+
+        .card-vertical {
+            display: none;
+        }
+
+            .card-vertical > img {
+                width: 100%;
+            }
+
+        .card-horizontal {
+            display: flex;
+            flex: 1 1 auto;
+        }
+
+        @@media screen and (max-width: 700px) {
+            .card-vertical {
+                display: block;
+            }
+
+            .card-horizontal {
+                display: none;
+            }
+        }
+
+        @@supports (-moz-appearance:none) {
+            iframe {
+                border: 2px solid rgb(218, 218, 218);
+                height: auto !important;
+            }
+        }
     </style>
 }
 
@@ -93,12 +123,34 @@
             <span id="recordType" class="ml-0" style="vertical-align:middle;"></span>
 
             <input type="hidden" id="timetemp_" value="">
-            <h5 class="card-title" style="display: inline-block;"><a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a></h5>
+            <h5 class="card-title" style="display: inline-block;"><a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash="></a></h5>
             <span id="recordTime" style="line-height: normal;" class="ml-0"></span>&nbsp;<br />
         </div>
 
         <div class="w-clearfix text-left" style="transform: rotate(0);">
             <p id="proposalSummary" class="card-text">ProposalSummary</p>
+            <span id="ogcardid" contenteditable="false" class="og" style="display:none">
+                <div id="ogcard" class="card">
+                    <div class="card-horizontal">
+                        <img id="oglinksimageurl" class="" style="width: 250px; height:auto; object-fit: cover" src="">
+                        <div class="card-body">
+                            <h4 id="oglinkstitle" class="card-title"></h4>
+                            <p id="oglinksdescription" class="card-text"></p>
+                            <i class="fas fa-link"> </i>
+                            <a id="oglinksurl" href='' target='_blank' class='stretched-link'></a>
+                        </div>
+                    </div>
+                    <div class='card-vertical'>
+                        <img id="oglinksimageurl" class='' style="width: 100%; height:auto; object-fit: cover" src=''>
+                        <div class='card-body'>
+                            <h4 id="oglinkstitle" class='card-title'></h4>
+                            <p id="oglinksdescription" class='card-text'></p>
+                            <i class='fas fa-link'> </i>
+                            <a id="oglinksurl" href='' target='_blank' class='stretched-link'></a>
+                        </div>
+                    </div>
+                </div>
+            </span>
         </div>
 
         <div style="margin-top:20px; margin-bottom:10px;">
@@ -164,6 +216,7 @@
             $('#allRecordsContainer').empty();
             $('#proposalsContainer').empty();
             $('#recordsContainer').empty();
+            $('#searchContainer').empty();
             pageIndex = 0;
         }
 
@@ -190,6 +243,18 @@
                         template.find('#proposalSummary').text(record.proposalSummary);
                         template.find('#proposalName').text(record.proposalName);
 
+                        if (record.oglinksid != "0") {
+
+                            template.find('#ogcardid').show();
+                            template.find('#oglinksimageurl').attr("src", record.oglinksimageurl);
+                            template.find('#oglinkstitle').text(record.oglinkstitle);
+                            template.find('#oglinksdescription').text(record.oglinksdescription);
+                            template.find('#oglinksurl').text(record.oglinkssitename);
+                            template.find('#oglinksurl').attr("href", record.oglinksurl)
+                            template.find('#ogcardid').attr("class", "og_" + record.ogcardid)
+
+                        }
+
                         template.find('#recordTime').attr('id', `recordTime_${record.hash}`);
                         template.find(`#recordTime_${record.hash}`).attr('class', `time_${record.hash}`);
                         localUTCDateC(template.find(`#recordTime_${record.hash}`), record.proposalDate);
@@ -206,6 +271,7 @@
                                 if (record.pastSuperBlock === 0) {
                                     if (record.cidtype === "1") {
                                         template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>');
+
                                     } else if (record.cidtype === "2") {
                                         template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
                                     } else {
@@ -229,6 +295,7 @@
                                 if (record.pastSuperBlock === 0) {
                                     if (record.cidtype === "1") {
                                         template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Suggested Evidence Update</button></span>');
+
                                     } else if (record.cidtype === "2") {
                                         template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
                                     } else {
@@ -248,6 +315,63 @@
                                 template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>');
                             }
                         }
+
+                        template.find('#btnSEU').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Suggested Evidence Update?',
+                                type: 'alert',
+                                html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnSTU').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Suggested Topic Update?',
+                                type: 'alert',
+                                html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnSRU').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Suggested Record Update?',
+                                type: 'alert',
+                                html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnPro').on('click', function () {
+                            Swal.fire({
+                                title: 'What is a Proposal?',
+                                type: 'alert',
+                                confirmButtonColor: "#545B62",
+                                html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnRec').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Record?',
+                                type: 'alert',
+                                confirmButtonColor: "#545B62",
+                                html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnArc').on('click', function () {
+                            Swal.fire({
+                                title: 'What is a Archive?',
+                                type: 'alert',
+                                confirmButtonColor: "#545B62",
+                                html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
 
                         if (record.pastSuperBlock === 0) {
                             // if (record.voting) {
@@ -272,7 +396,7 @@
                                     template.find('#pastVotingCycle').text('Past Voting Cycle');
                                 }
                                 else {
-                                    //template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
                                 }
                             }
                         }
@@ -363,6 +487,8 @@
                 $(id).text(" — " + `${elapsedMinutes} minutes ago`);
             } else if (elapsedHours < 24) {
                 $(id).text(" — " + `${elapsedHours} hours ago`);
+            } else if (elapsedHours > 24 && elapsedHours < 48) {
+                $(id).text(" — " + `1 day ago`);
             } else if (elapsedDays < 7) {
                 $(id).text(" — " + `${elapsedDays} days ago`);
             } else if (elapsedWeeks < 4) {
@@ -378,7 +504,6 @@
                 $(id).text(" — " + adjustedSubmitted.toLocaleDateString(undefined, options));
             }
         }
-
 
         let selectedType = 'all';
 
@@ -396,6 +521,64 @@
                 }
             });
             lazyLoadAll(selectedType, pageIndex);
+
+            $('#btnSEU').on('click', function () {
+                Swal.fire({
+                    title: 'What is Suggested Evidence Update?',
+                    type: 'alert',
+                    html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnSTU').on('click', function () {
+                Swal.fire({
+                    title: 'What is Suggested Topic Update?',
+                    type: 'alert',
+                    html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnSRU').on('click', function () {
+                Swal.fire({
+                    title: 'What is Suggested Record Update?',
+                    type: 'alert',
+                    html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnPro').on('click', function () {
+                Swal.fire({
+                    title: 'What is a Proposal?',
+                    type: 'alert',
+                    confirmButtonColor: "#545B62",
+                    html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnRec').on('click', function () {
+                Swal.fire({
+                    title: 'What is Record?',
+                    type: 'alert',
+                    confirmButtonColor: "#545B62",
+                    html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnArc').on('click', function () {
+                Swal.fire({
+                    title: 'What is a Archive?',
+                    type: 'alert',
+                    confirmButtonColor: "#545B62",
+                    html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
 
         });
 

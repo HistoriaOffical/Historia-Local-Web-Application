@@ -25,119 +25,226 @@
         .popover {
             max-width: 760px !important;
         }
+
+        .card-vertical {
+            display: none;
+        }
+
+            .card-vertical > img {
+                width: 100%;
+            }
+
+        .card-horizontal {
+            display: flex;
+            flex: 1 1 auto;
+        }
+
+        #versionsTable {
+            table-layout: fixed;
+        }
+
+        @@media screen and (max-width: 700px) {
+            .card-vertical {
+                display: block;
+            }
+
+            .card-horizontal {
+                display: none;
+            }
+        }
+
+        @@supports (-moz-appearance:none) {
+            iframe {
+                border: 2px solid rgb(218, 218, 218);
+                height: auto !important;
+            }
+        }
     </style>
 }
 
 
 <div class="text-left" style="margin-top:50px">
     <div class="listing-container">
-        <div class="title text-left">
+        <div class="row">
+            <div class="col-md-10">
+                <div class="w-clearfix" style="margin-top: 5px;">
+                    <h5 class="card-title" style="display: inline;">
+                        <a href="/Proposals/Proposals/ProposalDetails?hash=@Model.CurrentModel.Hash" class="">@Model.CurrentModel.ProposalName</a>
+                    </h5>
 
-            @if (Model.CurrentModel.Type == "1")
-            {
-                <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>
-            }
-            else if (Model.CurrentModel.Type == "4")
-            { @if (@Model.CurrentModel.ParentIPFSCID == "")
-                {
-                    <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>
-                }
-                else
-                {
-                    @if (Model.CurrentModel.PastSuperBlock == 0)
+                    <label id="time_@Model.CurrentModel.Id" style="line-height: normal;"></label>&nbsp;
+                    <label id="recordTime" style="line-height: normal;" class="ml-0 float-right"></label>&nbsp;<br />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="title text-left">
+
+                    @if (Model.CurrentModel.Type == "1")
                     {
-                        if (@Model.CurrentModel.cidtype == "1")
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>
+                    }
+                    else if (Model.CurrentModel.Type == "4")
+                    { @if (@Model.CurrentModel.ParentIPFSCID == "")
                         {
-                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>
-                        }
-                        else if (@Model.CurrentModel.cidtype == "2")
-                        {
-                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSTU" class="btn btn-outline-dark float-right btn-sm">Suggested Topic Update</button></span>
+                            <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>
                         }
                         else
                         {
-                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSRU" class="btn btn-outline-dark float-right btn-sm">Suggested Record Update</button></span>
+                            @if (Model.CurrentModel.PastSuperBlock == 0)
+                            {
+                                if (@Model.CurrentModel.cidtype == "1")
+                                {
+                                    <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>
+                                }
+                                else if (@Model.CurrentModel.cidtype == "2")
+                                {
+                                    <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSTU" class="btn btn-outline-dark float-right btn-sm">Suggested Topic Update</button></span>
+                                }
+                                else
+                                {
+                                    <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSRU" class="btn btn-outline-dark float-right btn-sm">Suggested Record Update</button></span>
+                                }
+                            }
+                            else
+                            {
+                                if (@Model.CurrentModel.cidtype == "1")
+                                {
+                                    <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>
+                                }
+                                else if (@Model.CurrentModel.cidtype == "2")
+                                {
+                                    <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSTU" class="btn btn-outline-dark float-right btn-sm">Topic Update</button></span>
+                                }
+                                else
+                                {
+                                    <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSRU" class="btn btn-outline-dark float-right btn-sm">Record Update</button></span>
+                                }
+                            }
+
                         }
+
+                }
+                else if (Model.CurrentModel.Type == "5")
+                { @if (@Model.CurrentModel.ParentIPFSCID == "")
+                    {
+                        <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>
                     }
                     else
                     {
-                        if (@Model.CurrentModel.cidtype == "1")
+                        @if (Model.CurrentModel.PastSuperBlock == 0)
                         {
-                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>
-                        }
-                        else if (@Model.CurrentModel.cidtype == "2")
-                        {
-                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSTU" class="btn btn-outline-dark float-right btn-sm">Topic Update</button></span>
+                            if (@Model.CurrentModel.cidtype == "1")
+                            {
+                                <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAEU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Evidence Update</button></span>
+                            }
+                            else if (@Model.CurrentModel.cidtype == "2")
+                            {
+                                <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSATU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Topic Update</button></span>
+                            }
+                            else
+                            {
+                                <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Record Update</button></span>
+                            }
                         }
                         else
                         {
-                            <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSRU" class="btn btn-outline-dark float-right btn-sm">Record Update</button></span>
+                            if (@Model.CurrentModel.cidtype == "1")
+                            {
+                                <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAEU" class="btn btn-outline-dark float-right btn-sm">Archive - Evidence Update</button></span>
+                            }
+                            else if (@Model.CurrentModel.cidtype == "2")
+                            {
+                                <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSATU" class="btn btn-outline-dark float-right btn-sm">Archive - Topic Update</button></span>
+                            }
+                            else
+                            {
+                                <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAU" class="btn btn-outline-dark float-right btn-sm">Archive - Record Update</button></span>
+                            }
                         }
                     }
-
-                }
-
-        }
-        else if (Model.CurrentModel.Type == "5")
-        { @if (@Model.CurrentModel.ParentIPFSCID == "")
-            {
-                <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>
             }
-            else
-            {
-                @if (Model.CurrentModel.PastSuperBlock == 0)
-                {
-                    if (@Model.CurrentModel.cidtype == "1")
-                    {
-                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAEU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Evidence Update</button></span>
-                    }
-                    else if (@Model.CurrentModel.cidtype == "2")
-                    {
-                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSATU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Topic Update</button></span>
-                    }
-                    else
-                    {
-                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAU" class="btn btn-outline-dark float-right btn-sm">Archive - Suggested Record Update</button></span>
-                    }
-                }
-                else
-                {
-                    if (@Model.CurrentModel.cidtype == "1")
-                    {
-                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAEU" class="btn btn-outline-dark float-right btn-sm">Archive - Evidence Update</button></span>
-                    }
-                    else if (@Model.CurrentModel.cidtype == "2")
-                    {
-                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSATU" class="btn btn-outline-dark float-right btn-sm">Archive - Topic Update</button></span>
-                    }
-                    else
-                    {
-                        <span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSAU" class="btn btn-outline-dark float-right btn-sm">Archive - Record Update</button></span>
-                    }
-                }
-            }
-    }
 
-            <input type="hidden" id="timetemp_@Model.CurrentModel.Id" value="@Model.CurrentModel.ProposalDate">
+                    <input type="hidden" id="timetemp_@Model.CurrentModel.Id" value="@Model.CurrentModel.ProposalDate">
+                </div>
+            </div>
+
         </div>
         <div class="w-clearfix" style="margin-top:5px;">
-            <h5 class="card-title">
-                <a href="/Proposals/Proposals/ProposalDetails?hash=@Model.CurrentModel.Hash" class="heading_news">@Model.CurrentModel.ProposalName</a>
-            </h5>
-
             <p class="card-text">@Model.CurrentModel.ProposalSummary</p>
-            @if (@Model.CurrentModel.Expired == 0)
+            @if (@Model.CurrentModel.Type != "5")
             {
-                <iframe src="@Model.CurrentModel.ProposalDescriptionUrlRazor" style="width:100%;height:700px;" frameBorder="1"></iframe>
+                <iframe src="@Model.CurrentModel.ProposalDescriptionUrlRazor" sandbox="" style="width:100%;height:700px;" frameBorder="1"></iframe>
+                <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
             }
             else
             {
-                <iframe id="ProposalContainer" style="width:100%;height:700px;" frameBorder="1" srcdoc='@Model.CurrentModel.ProposalDescriptionUrlRazor'></iframe>
+                @if (Model.CurrentModel.oglinksid != 0)
+                {
+                    <div class='text-left'>
+                        <span contenteditable='false' class='og_@Model.CurrentModel.oglinksid'>
+                            <div class='card'>
+                                <div class='card-horizontal'>
+                                    <img class='' style="width: 250px; height:auto; object-fit: cover" src='@Model.CurrentModel.oglinksimageurl'>
+                                    <div class='card-body'>
+                                        <h4 class='card-title'>@Model.CurrentModel.oglinkstitle</h4>
+                                        <p class='card-text'>@Model.CurrentModel.oglinksdescription</p>
+                                        <i class='fas fa-link'> </i>
+                                        <a id="urlchoice" href='@Model.CurrentModel.orgUrl' target='_blank' class='stretched-link'>@Model.CurrentModel.oglinkssitename</a>
+                                    </div>
+                                </div>
+                                <div class='card-vertical'>
+                                    <img class='' style="width: 100%; height:auto; object-fit: cover" src='@Model.CurrentModel.oglinksimageurl'>
+                                    <div class='card-body'>
+                                        <h4 class='card-title'>@Model.CurrentModel.oglinkstitle</h4>
+                                        <p class='card-text'>@Model.CurrentModel.oglinksdescription</p>
+                                        <i class='fas fa-link'> </i>
+                                        <a id="urlchoice" href='@Model.CurrentModel.orgUrl' target='_blank' class='stretched-link'>@Model.CurrentModel.oglinkssitename</a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </span>
+                        <br>
+                    </div>
+
+                    <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
+                    <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Non-Archived Version</a></div>
+
+                }
+                else
+                {
+                    <div class='text-left'>
+                        <span contenteditable='false' class='og_@Model.CurrentModel.oglinksid'>
+                            <div class='card'>
+                                <div class='card-horizontal'>
+                                    <img class='' style="width: 250px; height:auto; object-fit: cover" src='/images/og.png'>
+                                    <div class='card-body'>
+                                        <h4 class='card-title'>No Preview Available</h4>
+                                        <p class='card-text'>Click to view archived content</p>
+                                        <i class='fas fa-link'> </i>
+                                        <a id="url" href='https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl' target='_blank' class='stretched-link'></a>
+                                    </div>
+                                </div>
+                                <div class='card-vertical'>
+                                    <img class='' style="width: 100%; height:auto; object-fit: cover" src='/images/og.png'>
+                                    <div class='card-body'>
+                                        <h4 class='card-title'>No Preview Available</h4>
+                                        <p class='card-text'>Click to view archived content</p>
+                                        <i class='fas fa-link'> </i>
+                                        <a id="url" href='https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl' target='_blank' class='stretched-link'></a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </span>
+                        <br>
+                    </div>
+                    <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
+                    <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Non-Archived Version</a></div>
+                }
             }
-            <div class="title text-left">
-                <span id="time_@Model.CurrentModel.Id" class="ml-0 float-right" style="line-height: normal;">@Model.CurrentModel.ProposalDate</span>&nbsp;
-                <span id="recordTime" style="line-height: normal;" class="ml-0 float-right"></span>&nbsp;<br />
-            </div>
+
+
         </div>
         <div style="margin-top:5px; margin-bottom:10px;">
             <div class="row mt-4">
@@ -525,24 +632,26 @@
             elapsedMonths = elapsedMonths <= 0 ? 0 : elapsedMonths;
 
             if (elapsedSeconds < 60) {
-                $('#time_' + id).text(" — " + `${elapsedSeconds} seconds ago`);
+                $('#time_@Model.CurrentModel.Id').text(" — " + `${elapsedSeconds} seconds ago`);
             } else if (elapsedMinutes < 60) {
-                $('#time_' + id).text(" — " + `${elapsedMinutes} minutes ago`);
+                $('#time_@Model.CurrentModel.Id').text(" — " + `${elapsedMinutes} minutes ago`);
             } else if (elapsedHours < 24) {
-                $('#time_' + id).text(" — " + `${elapsedHours} hours ago`);
+                $('#time_@Model.CurrentModel.Id').text(" — " + `${elapsedHours} hours ago`);
+            } else if (elapsedHours > 24 && elapsedHours < 48) {
+                $('#time_@Model.CurrentModel.Id').text(" — " + `1 day ago`);
             } else if (elapsedDays < 7) {
-                $('#time_' + id).text(" — " + `${elapsedDays} days ago`);
+                $('#time_@Model.CurrentModel.Id').text(" — " + `${elapsedDays} days ago`);
             } else if (elapsedWeeks < 4) {
-                $('#time_' + id).text(" — " + `${elapsedWeeks} weeks ago`);
+                $('#time_@Model.CurrentModel.Id').text(" — " + `${elapsedWeeks} weeks ago`);
             } else if (elapsedMonths < 1 && elapsedMonths > 2) {
-                $('#time_' + id).text(" — " + '1 month ago');
+                $('#time_@Model.CurrentModel.Id').text(" — " + '1 month ago');
             } else if (elapsedMonths < 2 && elapsedMonths > 3) {
-                $('#time_' + id).text(" — " + '2 months ago');
+                $('#time_@Model.CurrentModel.Id').text(" — " + '2 months ago');
             } else if (elapsedMonths < 3 && elapsedMonths > 4) {
-                $('#time_' + id).text(" — " + '3 months ago');
+                $('#time_@Model.CurrentModel.Id').text(" — " + '3 months ago');
             } else {
                 const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-                $('#time_' + id).text(" — " + adjustedSubmitted.toLocaleDateString(undefined, options));
+                $('#time_@Model.CurrentModel.Id').text(" — " + adjustedSubmitted.toLocaleDateString(undefined, options));
             }
         }
 
@@ -577,6 +686,90 @@
 
         $(document).ready(function () {
 
+            $('#btnSEU').on('click', function () {
+
+                Swal.fire({
+                    title: 'What is Suggested Evidence Update?',
+                    type: 'alert',
+                    html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnPro').on('click', function () {
+                Swal.fire({
+                    title: 'What is a Proposal?',
+                    type: 'alert',
+                    html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnRec').on('click', function () {
+                Swal.fire({
+                    title: 'What is Record?',
+                    type: 'alert',
+                    html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnArc').on('click', function () {
+                Swal.fire({
+                    title: 'What is a Archive?',
+                    type: 'alert',
+                    html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnSTU').on('click', function () {
+
+                Swal.fire({
+                    title: 'What is Suggested Topic Update?',
+                    type: 'alert',
+                    html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
+            $('#btnSRU').on('click', function () {
+
+                Swal.fire({
+                    title: 'What is Suggested Record Update?',
+                    type: 'alert',
+                    html: "Suggested Record Update is a new record, that is suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+            $('#btnSAEU').on('click', function () {
+
+                Swal.fire({
+                    title: 'What is Suggested Archive Evidence Update?',
+                    type: 'alert',
+                    html: "Suggested Archive Evidence Update is a new record, that is supporting or opposing the original record with a new archive.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+            $('#btnSATU').on('click', function () {
+
+                Swal.fire({
+                    title: 'What is Suggested Archive Topic Update?',
+                    type: 'alert',
+                    html: "Suggested Archive Topic Update is a new record, that adding a topic to the original record with a new archive.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+            $('#btnSAU').on('click', function () {
+
+                Swal.fire({
+                    title: 'What is Suggested Archive Update?',
+                    type: 'alert',
+                    html: "Suggested Archive Update is a new record, that is shows the original record archive has been updated. This is rare.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonText: 'Ok'
+                });
+            });
+
             $('body').on('click', function (e) {
                 if ($(e.target).data('toggle') !== 'popover'
                     && $(e.target).parents('[data-toggle="popover"]').length === 0
@@ -585,6 +778,71 @@
                 }
             });
             var dd1 = $('#timetemp_@(Model.CurrentModel.Id)').val();
+
+            $('#urlchoice').click(function (event) {
+                event.preventDefault(); // prevent the link from following the URL
+
+                Swal.fire({
+                    title: 'Which version do you want to open?',
+                    icon: 'warning',
+                    showDenyButton: true,
+                    showCancelButton: false,
+                    confirmButtonColor: '#48B5C4',
+                    denyButtonColor: '#d33',
+                    confirmButtonText: 'Archived',
+                    denyButtonText: 'Non-Archived',
+                    showCloseButton: true // add an "X" button to close the dialog
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open($('#url').attr('href'), '_blank'); // open the link URL in a new tab
+                    } else if (result.isDenied) {
+                        window.open($('#url1').attr('href'), '_blank') // follow the link URL in the same tab
+                    } else {
+                        // do nothing if the dialog is dismissed
+                    }
+                });
+            });
+
+
+
+            $('#url').click(function (event) {
+                event.preventDefault(); // prevent the link from following the URL
+
+                Swal.fire({
+                    title: 'Offsite Link',
+                    text: 'This will take you offsite. Are you sure you would like to continue?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#48B5C4',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, continue',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open($('#url').attr('href'), '_blank');  // follow the link URL
+                    }
+                });
+            });
+
+
+            $('#url1').click(function (event) {
+                event.preventDefault(); // prevent the link from following the URL
+
+                Swal.fire({
+                    title: 'Offsite Link',
+                    text: 'This will take you offsite. Are you sure you would like to continue?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#48B5C4',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, continue',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open($('#url1').attr('href'), '_blank');  // follow the link URL
+                    }
+                });
+            });
 
             localUTCDateC(@Model.CurrentModel.Id, dd1);
 

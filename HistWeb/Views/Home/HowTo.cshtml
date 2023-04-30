@@ -2,89 +2,170 @@
     ViewData["Title"] = "How To";
 }
 
-    <div class="listing-container">
-        <div class="title" class="heading_news">
-            <h1 class="display-4">Create New Record or Proposal</h1>
-        </div>
+<div class="listing-container">
+    <div class="title" class="heading_news">
+        <h1 class="display-4">Create New Record or Proposal</h1>
+    </div>
 
-        <div class="row">
-            <div class="listing-container" style="margin: 0px 10px 10px 0px">
-                <h2>What is Historia?</h2>
-                <p>If you haven't already read the About page, we suggest you do that now <a href="/Home/About" style="text-decoration: underline;">here.</a></p>
-            </div>
+    <div class="row">
+        <div class="listing-container" style="margin: 0px 10px 10px 0px">
+            <h2>What is Historia?</h2>
+            <p>If you haven't already read the About page, we suggest you do that now <a href="/Home/About" style="text-decoration: underline;">here.</a></p>
         </div>
-        <div class="row">
-            <div class="listing-container" style="margin: 0px 10px 10px 0px">
-                <h2>What is?</h2>
-                <br />
-                <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
-                    <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase active">Proposals</a></li>
-                    <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Records</a></li>
-                    <li class="nav-item"><a href="#archive" data-target="#archive" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Archives</a></li>
-                    <li class="nav-item"><a href="#cycle" data-target="#cycle" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Voting Cycle</a></li>
-                    <li class="nav-item"><a href="#raddress" data-target="#raddress" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Reward Address</a></li>
-                    <li class="nav-item"><a href="#ramount" data-target="#ramount" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Reward Amount</a></li>
+    </div>
+    <div class="row">
+        <div class="listing-container" style="margin: 0px 10px 10px 0px">
+            <h2>What is?</h2>
+            <br />
+            <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase active">Proposals</a></li>
+                <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Records</a></li>
+                <li class="nav-item"><a href="#archive" data-target="#archive" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Archives</a></li>
+                <li class="nav-item"><a href="#suggest" data-target="#suggest" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Suggested Updates</a></li>
+                <li class="nav-item"><a href="#cycle" data-target="#cycle" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Voting Cycle</a></li>
+                <li class="nav-item"><a href="#raddress" data-target="#raddress" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Reward Address</a></li>
+                <li class="nav-item"><a href="#ramount" data-target="#ramount" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Reward Amount</a></li>
 
-                </ul>
-                <div class="tab-content">
-                    <div id="proposals" class="tab-pane fade show active">
-                        <br />
-                        <p>
-                            A proposal is a temporary object that lets voters decide the direction of the Historia Network and this application.
-                            If a proposal passes, the Historia developers will do our best to follow the will of the voters. All proposals will expire
-                            and be deleted from the decentralized network. Things that could be submitted as proposals listed below:
-                        </p>
+            </ul>
+            <div class="tab-content">
+                <div id="proposals" class="tab-pane fade show active">
+                    <br />
+                    <p>
+                        A proposal is a temporary object that lets voters decide the direction of the Historia Network and this application.
+                        If a proposal passes, the Historia developers will do our best to follow the will of the voters. All proposals will expire
+                        and be deleted from the decentralized network. Things that could be submitted as proposals listed below:
+                    </p>
+                    <ul>
+                        <li>You have a good idea, are willing to do the work, and want to get paid in HTA.</li>
+                        <li>Directions to the developers on content</li>
+                        <li>Ideas on marketing</li>
+                        <li>Directions on development or new features</li>
+                    </ul>
+                </div>
+                <div id="records" class="tab-pane fade show">
+                    <br />
+                    <p>
+                        A record is a object that if the voters approve, then will be a permanently added to the network. Once added, the record
+                        can never be altered, edited, or deleted by anybody, including the developers. It is 100% impossible as the records exist on
+                        in a decentralized database that no one person owns or controls. Things that could be submitted as records listed below:
+                    </p>
+                    <ul>
+                        <li>A current event</li>
+                        <li>Wiki content</li>
+                        <li>Useful information that should always be maintained forever.</li>
+                    </ul>
+                </div>
+                <div id="suggest" class="tab-pane fade show">
+                    <br />
+                    <h5>Suggested Record Update</h5>
+                    <p>Suggested Record Update is a new record, to suggest an edit to a original record. The original record will be maintain without edits. If the suggested record update is approved by voters, it will be permanetly added to the Historia Network blockchain as a new record version.</p>
+                    <h5>Suggested Evidence Update</h5>
+                    <p>Suggested Evidence Update is a new record, that could be supporting or opposing the original record. If the suggested evidence update is approved by voters, it will be permanetly added to the Historia Network blockchain as a new record.</p>
+                    <h5>Suggested Topic Update</h5>
+                    <p>Suggested Topic Update is a new record, that adding a topic to the original record. A new topic can be related to the original record. If the suggested topic update is approved by voters, it will be permanetly added to the Historia Network blockchain as a new record.</p>
+                    <p>The goal is to add to the original record and create a complete story via independent individual records, linked together on the blockchain. An example of this could be the following:</p>
+                    <p>
+                        <b>Original Topic: SARS-Cov-2 </b>
                         <ul>
-                            <li>You have a good idea, are willing to do the work, and want to get paid in HTA.</li>
-                            <li>Directions to the developers on content</li>
-                            <li>Ideas on marketing</li>
-                            <li>Directions on development or new features</li>
+                            <li>New Topic: Lockdowns around the world cause econmic hardship for the world population</li>
+                            <li>New Topic: SARS-Cov-2 Vaccine is released</li>
+                            <li>New Topic: New virus causes pandemic</li>
                         </ul>
-                    </div>
-                    <div id="records" class="tab-pane fade show">
-                        <br />
-                        <p>
-                            A record is a object that if the voters approve, then will be a permanently added to the network. Once added, the record
-                            can never be altered, edited, or deleted by anybody, including the developers. It is 100% impossible as the records exist on
-                            in a decentralized database that no one person owns or controls. Things that could be submitted as records listed below:
-                        </p>
-                        <ul>
-                            <li>A current event</li>
-                            <li>Wiki content</li>
-                            <li>Useful information that should always be maintained forever.</li>
-                        </ul>
-                    </div>
-                    <div id="archive" class="tab-pane fade show">
-                        <br />
-                        <p>An archive is similar to a record, but is used to archive a web page at the current point in time.</p>
-                    </div>
-                    <div id="cycle" class="tab-pane fade show">
-                        <br />
-                        <p>
-                            A new Voting Cycle starts every 30 days, approximately around middle of the month. The exact start date changes
-                            month to month. Any proposal, records, or archives that are submitted during the voting cycle will either be approved
-                            and paid, or expire and deleted from the Historia Network.
-                        </p>
-                    </div>
-                    <div id="raddress" class="tab-pane fade show">
-                        <br />
-                        <p>
-                            A reward address is the payment address that user would like to receive payment to, if their proposal, record, or archive passes.
-                        </p>
-                    </div>
-                    <div id="ramount" class="tab-pane fade show">
-                        <br />
-                        <p>
-                            A reward amount is the amount of Historia (HTA) coins that the user requests for payment if, if their proposal, record, or archive passes.
-                        </p>
-                    </div>
+                    </p>
+                </div>
+                <div id="archive" class="tab-pane fade show">
+                    <br />
+                    <p>An archive is similar to a record, but is used to archive a web page at the current point in time.</p>
+                </div>
+                <div id="cycle" class="tab-pane fade show">
+                    <br />
+                    <p>
+                        A new Voting Cycle starts every 30 days, approximately around middle of the month. The exact start date changes
+                        month to month. Any proposal, records, or archives that are submitted during the voting cycle will either be approved
+                        and paid, or expire and deleted from the Historia Network.
+                    </p>
+                </div>
+                <div id="raddress" class="tab-pane fade show">
+                    <br />
+                    <p>
+                        A reward address is the payment address that user would like to receive payment to, if their proposal, record, or archive passes.
+                    </p>
+                </div>
+                <div id="ramount" class="tab-pane fade show">
+                    <br />
+                    <p>
+                        A reward amount is the amount of Historia (HTA) coins that the user requests for payment if, if their proposal, record, or archive passes.
+                    </p>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="listing-container" style="margin: 0px 10px 10px 0px">
-                <h2>How to use the Create Builder</h2>
-                <p>Please read the Create Builder instructions at the documentation site <a href="https://docs.historia.network/en/latest/governance/create.html" target="_blank" style="text-decoration: underline;">here</a></p>
+    </div>
+    <div class="row">
+        <div class="listing-container" style="margin: 0px 10px 10px 0px">
+            <h2>Tutorials</h2>
+            <br />
+            <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                <li class="nav-item"><a href="#masternodes" data-target="#masternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase active">Masternodes</a></li>
+                <li class="nav-item"><a href="#votingnodes" data-target="#votingnodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Voting Nodes</a></li>
+                <li class="nav-item"><a href="#hlwa" data-target="#hlwa" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Historia Local Web App</a></li>
+                <li class="nav-item"><a href="#votingkeys" data-target="#votingkeys" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Setup Voting Node Keys</a></li>
+                <li class="nav-item"><a href="#create" data-target="#create" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Create Builder</a></li>
+                <li class="nav-item"><a href="#hbe" data-target="#hbe" data-toggle="tab" role="tab" class="nav-link small text-uppercase ">Historia Browser Extension</a></li>
+
+            </ul>
+            <div class="tab-content">
+                <div id="masternodes" class="tab-pane fade show active">
+                    <br />
+                    <h3>How to setup a Masternode</h3>
+                    <p>Please read the Masternode setup instructions at the documentation site <a href="https://docs.historia.network/en/latest/masternodes/setup-cdmn.html" target="_blank" style="text-decoration: underline;">here</a></p>
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe width="1247" height="505" src="https://www.youtube.com/embed/uTIx0Y_moaQ" title="Historia Network - Setup a Masternode" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div id="votingnodes" class="tab-pane fade show">
+                    <br />
+                    <h3>How to setup a Voting Node</h3>
+                    <p>Please read the Voting Node setup instructions at the documentation site <a href="https://docs.historia.network/en/latest/votingnodes/setup.html" target="_blank" style="text-decoration: underline;">here</a></p>
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe width="1247" height="505" src="https://www.youtube.com/embed/upYk31b-bls" title="Historia Network - Setup a Voting Node" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div id="hlwa" class="tab-pane fade show">
+                    <br />
+                    <h3>How to setup the Historia Local Web Application (HLWA)</h3>
+                    <p>Please read the Historia Local Web Application setup instructions at the documentation site <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="text-decoration: underline;">here</a></p>
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe width="1247" height="505" src="https://www.youtube.com/embed/n5aHiWuJI78" title="Historia Network - Setup the Historia Local Web Application" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div id="votingkeys" class="tab-pane fade show">
+                    <br />
+                    <h3>How to setup voting keys in the Historia Local Web App (HLWA) or the Historia Network website</h3>
+                    <p>Please read the setup voting keys instructions at the documentation site <a href="https://docs.historia.network/en/latest/governance/basex.html" target="_blank" style="text-decoration: underline;">here</a></p>
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe width="1247" height="505" src="https://www.youtube.com/embed/Cw-fNbBXs48" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div id="create" class="tab-pane fade show">
+                    <br />
+                    <h3>How to use the Create Builder</h3>
+
+                    <p>Please read the Create Builder instructions at the documentation site <a href="https://docs.historia.network/en/latest/governance/create.html" target="_blank" style="text-decoration: underline;">here</a></p>
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe width="1247" height="505" src="https://www.youtube.com/embed/KkNR4-6zGog" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+
+                </div>
+                <div id="hbe" class="tab-pane fade show">
+                    <br />
+                    <h3>How to Setup the Historia Browser Extension</h3>
+
+                    <p>Please read the Historia Browser Extension instructions at the documentation site <a href="https://docs.historia.network/en/latest/governance/create.html#how-to-use-the-create-system-archive" target="_blank" style="text-decoration: underline;">here</a></p>
+                    <div class="embed-responsive embed-responsive-16by9">
+                        <iframe width="1247" height="505" src="https://www.youtube.com/embed/emtIGw9At_w" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    </div>
+                </div>
+
             </div>
         </div>
 

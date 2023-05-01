@@ -71,17 +71,36 @@
                             </div>
                         </li>
                         <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Create" asp-controller="Create" asp-action="Index">Create</a>
+                            <a class="nav-link text-dark" asp-area="Create" asp-controller="Create" asp-action="Index">Create</a>
                         </li>
 
                     </ul>
                 </div>
-
+                <div class="d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li>
+                            <form id="search-form" class="form-inline">
+                                <div class="input-group no-wrap">
+                                    <input class="search border-end-0 border rounded-pill rotate" type="search" autocomplete="off" id="search-input" value="Search Historia" data-default-value="Search Historia">
+                                    <span class="input-group-append">
+                                        <button id="searchSubmit" class="btn btn-outline-secondary border rounded-pill searchSubmit rotate" style="margin-left: 0px;" type="button">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
 
                 <div class="d-sm-inline-flex flex-sm-row-reverse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item dropdown" title="Number of days left in the current voting cycle">
-                            <span class="nav-link"><label id="rotate">Loading...</label></span>
+                            <span class="nav-link">
+                                <button class="btn btn-outline-secondary bg-white border rounded-pill btn-outline-secondary rotate" id="rotate" style="min-width: 230px; pointer-events: none;" type="button" value="Loading...">Loading...</button>
+
+                                <!-- <label id="rotate" class="rotate">Loading...</label>-->
+                            </span>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link fas fa-cog fa-2x" role="button" aria-pressed="true" asp-area="Home" asp-controller="Home" asp-action="Settings"></a>
@@ -106,7 +125,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-11">
-                    &copy; 2022 - Historia - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+                    &copy; 2023 - Historia - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
                 </div>
                 <div class="col-1 pull-right">
                     <a href="https://twitter.com/historiasys?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Follow historiasys</a>
@@ -157,7 +176,121 @@
             return result;
         }
 
+        function clearRecords() {
+            $('#allRecordsContainer').empty();
+            $('#proposalsContainer').empty();
+            $('#recordsContainer').empty();
+            $('#searchContainer').empty();
+            pageIndex = 0;
+        }
+
         $(document).ready(function () {
+
+            const searchInput = $('#search-input');
+            const defaultValue = searchInput.attr('data-default-value');
+            searchInput.val(defaultValue);
+            searchInput.on('focus', () => {
+                if (searchInput.val() === defaultValue) {
+                    searchInput.val('');
+                }
+                searchSubmitButton.addClass('highlighted');
+            });
+
+            var parameters = {};
+            var queryR = "";
+            var query = "";
+            $.each(window.location.search.substr(1).split('&'), function (index, value) {
+                var parameter = value.split('=');
+                var name = decodeURIComponent(parameter[0]);
+                var value = decodeURIComponent(parameter[1]);
+                parameters[name] = value;
+                queryR = parameters['q'];
+            });
+
+            searchInput.on('blur', () => {
+                if (searchInput.val() === '') {
+                    searchInput.val(defaultValue);
+                }
+                searchSubmitButton.removeClass('highlighted');
+            });
+
+
+            $('#searchSubmit').on('click', function (evt) {
+                    var selectedType = "search";
+                    clearRecords();
+                    var searchInput = $('#search-input').val();
+                    if (searchInput === "" || searchInput === "Search Historia" || typeof searchInput === 'undefined') {
+                        $("#SearchNoRecordMsg").show();
+                        $('a[href="#search"]').tab('show');
+                        $("#searchTab").show();
+                        $("#allTab").removeClass("active");
+                        $("#proposalsTab").removeClass("active");
+                        $("#recordsTab").removeClass("active");
+                        $("#all").removeClass("active");
+                        $("#proposals").removeClass("active");
+                        $("#records").removeClass("active");
+                        $('#search').show;
+                        $('#search').addClass("show active");
+                        $('#searchNoRecordMsg').addClass("show active");
+                        $("#searchContainer").show();
+                        return;
+                    } else {
+                        var query = $('#search-input').val();
+                        var currentUrl = $(location).attr('href');
+                        if (currentUrl === 'https://localhost:44322/')
+                        {
+                            lazyLoadAll(selectedType, pageIndex, query);
+                        }
+                        else {
+                            if (typeof query === "undefined" || query === "") {
+                                window.location.href = 'https://localhost:44322/home?q=' + queryR;
+                            } else {
+                                window.location.href = 'https://localhost:44322/home?q=' + query;
+                            }
+                        }
+                    }
+                    event.preventDefault();
+            });
+
+            $('#search-input').keydown(function (event) {
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                    $('#searchSubmit').trigger('click');
+                }
+            });
+
+            $('.tab-close').click(function () {
+
+                if ($(this).hasClass('tab-close')) {
+                    $("#searchTab").hide();
+                    $('#search').removeClass('show active');
+                    $("#searchloadingdiv").hide();
+                    //$(this).parent().prev().addClass('active');
+                }
+                $("a[href='#all']").addClass("active");
+                $("a[href='#all']").attr("aria-selected", "true");
+                $("#search-input").val("Search Historia");
+                selectedType = "all";
+                $("#all").addClass("show active");
+                pageIndex = 0;
+                lastScroll = 0;
+                clearRecords();
+                lazyLoadAll("all", pageIndex);
+            });
+
+            $('.tab-select').click(function () {
+
+                $("#searchTab").hide();
+                $('#search').removeClass('show active');
+                $("#searchloadingdiv").hide();
+                $("#search-input").val("Search Historia");
+                pageIndex = 0;
+                lastScroll = 0;
+                clearRecords();
+            });
+
+
+
 
              $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
                 console.log('superblock data: ', result);
@@ -195,7 +328,7 @@
                  var todaydd = new Date();
                  var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock)));
                  $("#EndCycleDate").html(correctDate);
-                
+
                  $('#totalCoins').html(internationalNumberFormat.format(Math.floor(_totalCoins)));
                  $('#totalPassingCoins').html(internationalNumberFormat.format(_totalPassingCoins));
 

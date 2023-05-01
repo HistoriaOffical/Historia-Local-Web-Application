@@ -246,7 +246,7 @@ body {
 .heading_news {
     margin-top: 0px;
     margin-bottom: 0px;
-    font-size: 30px;
+    font-size: 17px;
     line-height: 31px;
     font-weight: 800;
     text-transform: capitalize;
@@ -557,6 +557,18 @@ body {
         margin-top: 20px;
     }
 
+    .search {
+        min-width: 250px;
+        position: relative;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        width: 1%;
+        margin-bottom: 0;
+        padding: 0.375rem 0.75rem;
+        color: #495057;
+        outline: none;
+    }
+
     .author-p {
         margin-top: 3px;
         font-size: 10px;
@@ -632,4 +644,24 @@ body {
     .usertabs {
         margin-bottom: 25px;
     }
+}
+
+.search {
+    min-width: 350px;
+    position: relative;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    margin-bottom: 0;
+    padding: 0.375rem 0.75rem;
+    color: #495057;
+    outline: none;
+}
+
+.btn-outline-secondary.rounded-pill:after {
+    content: none;
+}
+
+.usermenu {
+    margin-top: 5px;
 }

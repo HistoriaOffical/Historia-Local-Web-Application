@@ -67,6 +67,7 @@
                     <li class="nav-item"><a href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
                     <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase " onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
                     <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase " onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
+                    <li class="nav-item" id="searchTab" style="display:none"><a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close" onclick="">Search<i class="fa fa-times" style="margin-left: 5px;"></i></a></li>
 
                 </ul>
                 <div class="tab-content">
@@ -104,6 +105,18 @@
                         <div class="row mt-4" id="recordsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
                                 <h4>Please wait while the Historia client syncs</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="search" class="tab-pane fade">
+                        <div id="searchloadingdiv" style="text-align:center;margin-bottom:20px;">
+                            Loading...
+                        </div>
+                        <div id="searchContainer">
+                        </div>
+                        <div class="row mt-4" id="searchNoRecordMsg">
+                            <div class="col-12 mx-auto">
+                                <h4>No search results found</h4>
                             </div>
                         </div>
                     </div>
@@ -212,24 +225,38 @@
             return Math.floor(Math.random() * (max - min + 1) + min);
         }
 
-        function clearRecords() {
-            $('#allRecordsContainer').empty();
-            $('#proposalsContainer').empty();
-            $('#recordsContainer').empty();
-            $('#searchContainer').empty();
-            pageIndex = 0;
-        }
 
         //TODO: Move this into a separate file
-        function lazyLoadAll(type, pageIndex) {
+        function lazyLoadAll(type, pageIndex, sq) {
+            if (typeof sq === 'undefined' || sq === "") {
+                console.log("No Search Query");
+                sq = "";
+            } else {
+                $('#searchContainer').empty();
+                type = "search";
+                $('a[href="#search"]').tab('show');
+                $("#searchTab").show();
+                $("#allTab").removeClass("active");
+                $("#proposalsTab").removeClass("active");
+                $("#recordsTab").removeClass("active");
+                $("#all").removeClass("active");
+                $("#proposals").removeClass("active");
+                $("#records").removeClass("active");
+                $('#search').show;
+                $('#search').addClass("show active");
+                $("#searchContainer").show();
+
+            }
+
             $("#allloadingdiv").show();
             $("#proposalloadingdiv").show();
             $("#recordsloadingdiv").show();
+            $("#searchloadingdiv").show();
             $.ajax({
                 type: 'GET',
                 url: '/Home/LoadRecords',
                 contentType: 'application/json; charset=utf-8',
-                data: { recordType: type, pageIndex: pageIndex },
+                data: { recordType: type, pageIndex: pageIndex, query: sq },
                 dataType: 'json',
                 success: function (result, status, xhr) {
 
@@ -417,29 +444,61 @@
 
                             if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
                                 $("#recordsContainer").append(template);
+                        } else if (type === 'search') {
+                            if ($('#searchContainer').find(`#record_${record.id}`).length === 0)
+                                $("#searchContainer").append(template);
+
                         }
                     });
 
                     if (result.records && result.records.length > 0) {
-                        if (type === 'all')
+                        if (type === 'all') {
                             $('#allRecordsNoRecordMsg').hide();
-                        else if (type === 'proposals')
+                        }
+                        else if (type === 'proposals') {
                             $('#proposalsNoRecordMsg').hide();
-                        else
+                        }
+                        else if (type === 'records') {
                             $('#recordsNoRecordMsg').hide();
+                        }
+                        else if (type === 'search') {
+                            $('#searchNoRecordMsg').hide();
+                        }
                     }
                     else {
-                        if (type === 'all' && $("#allRecordsContainer").children().length === 0)
+                        if (type === 'all' && $("#allRecordsContainer").children().length === 0) {
                             $('#allRecordsNoRecordMsg').show();
-                        else if (type === 'proposals' && $("#proposalsContainer").children().length === 0)
+
+                        }
+                        else if (type === 'proposals' && $("#proposalsContainer").children().length === 0) {
                             $('#proposalsNoRecordMsg').show();
-                        else if ($("#recordsContainer").children().length === 0)
+
+                        }
+                        else if (type === 'records' && $("#recordsContainer").children().length === 0) {
                             $('#recordsNoRecordMsg').show();
+
+                        }
+                        else if (type === 'search' && $("#searchContainer").children().length === 0) {
+                            $("#SearchNoRecordMsg").show();
+                            $('a[href="#search"]').tab('show');
+                            $("#searchTab").show();
+                            $("#allTab").removeClass("active");
+                            $("#proposalsTab").removeClass("active");
+                            $("#recordsTab").removeClass("active");
+                            $("#all").removeClass("active");
+                            $("#proposals").removeClass("active");
+                            $("#records").removeClass("active");
+                            $('#search').show;
+                            $('#search').addClass("show active");
+                            $('#searchNoRecordMsg').addClass("show active");
+
+                        }
                     }
 
                     $("#allloadingdiv").hide();
                     $("#proposalloadingdiv").hide();
                     $("#recordsloadingdiv").hide();
+                    $("#searchloadingdiv").hide();
                     inProgress = false;
                 },
 
@@ -520,72 +579,26 @@
 
                 }
             });
-            lazyLoadAll(selectedType, pageIndex);
 
-            $('#btnSEU').on('click', function () {
-                Swal.fire({
-                    title: 'What is Suggested Evidence Update?',
-                    type: 'alert',
-                    html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                    confirmButtonText: 'Ok'
-                });
+            var parameters = {};
+            var queryR = "";
+            var query = "";
+            $.each(window.location.search.substr(1).split('&'), function (index, value) {
+                var parameter = value.split('=');
+                var name = decodeURIComponent(parameter[0]);
+                var value = decodeURIComponent(parameter[1]);
+                parameters[name] = value;
+                queryR = parameters['q'];
             });
 
-            $('#btnSTU').on('click', function () {
-                Swal.fire({
-                    title: 'What is Suggested Topic Update?',
-                    type: 'alert',
-                    html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                    confirmButtonText: 'Ok'
-                });
-            });
-
-            $('#btnSRU').on('click', function () {
-                Swal.fire({
-                    title: 'What is Suggested Record Update?',
-                    type: 'alert',
-                    html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                    confirmButtonText: 'Ok'
-                });
-            });
-
-            $('#btnPro').on('click', function () {
-                Swal.fire({
-                    title: 'What is a Proposal?',
-                    type: 'alert',
-                    confirmButtonColor: "#545B62",
-                    html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                    confirmButtonText: 'Ok'
-                });
-            });
-
-            $('#btnRec').on('click', function () {
-                Swal.fire({
-                    title: 'What is Record?',
-                    type: 'alert',
-                    confirmButtonColor: "#545B62",
-                    html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                    confirmButtonText: 'Ok'
-                });
-            });
-
-            $('#btnArc').on('click', function () {
-                Swal.fire({
-                    title: 'What is a Archive?',
-                    type: 'alert',
-                    confirmButtonColor: "#545B62",
-                    html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                    confirmButtonText: 'Ok'
-                });
-            });
-
+            if (typeof queryR === "undefined" || queryR === "") {
+                lazyLoadAll(selectedType, pageIndex);
+            } else {
+                lazyLoadAll(selectedType, pageIndex, queryR);
+            }
 
         });
 
-
-        function renderRecord() {
-
-        }
     </script>
 
 }

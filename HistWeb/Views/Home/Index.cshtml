@@ -64,9 +64,9 @@
         <div class="row">
             <div class="col-12">
                 <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
-                    <li class="nav-item"><a href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
-                    <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase " onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
-                    <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase " onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
+                    <li class="nav-item"><a href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
+                    <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
+                    <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
                     <li class="nav-item" id="searchTab" style="display:none"><a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close" onclick="">Search<i class="fa fa-times" style="margin-left: 5px;"></i></a></li>
 
                 </ul>
@@ -92,7 +92,7 @@
                         </div>
                         <div class="row mt-4" id="proposalsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Please wait while the Historia client syncs</h4>
+                                <h4>Either Historia client has not synced or there are no proposals up for vote</h4>
                             </div>
                         </div>
                     </div>
@@ -104,7 +104,7 @@
                         </div>
                         <div class="row mt-4" id="recordsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Please wait while the Historia client syncs</h4>
+                                <h4>Either Historia client has not synced or there are no records up for vote</h4>
                             </div>
                         </div>
                     </div>
@@ -229,8 +229,9 @@
         //TODO: Move this into a separate file
         function lazyLoadAll(type, pageIndex, sq) {
             if (typeof sq === 'undefined' || sq === "") {
-                console.log("No Search Query");
+
                 sq = "";
+
             } else {
                 $('#searchContainer').empty();
                 type = "search";
@@ -429,19 +430,14 @@
                         }
 
                         if (type === 'all') {
-                            console.log('all result: ', `#record_${record.hash}`, $('#allRecordsContainer').find(`#record_${record.id}`));
                             if ($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
                                 $("#allRecordsContainer").append(template);
                         }
                         else if (type === 'proposals') {
-                            console.log('proposals result: ', `#record_${record.hash}`, $('#allRecordsContainer').find(`#record_${record.id}`));
-
                             if ($('#proposalsContainer').find(`#record_${record.hash}`).length === 0)
                                 $("#proposalsContainer").append(template);
                         }
                         else if (type === 'records') {
-                            console.log('records result: ', `#record_${record.hash}`, $('#allRecordsContainer').find(`#record_${record.id}`));
-
                             if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
                                 $("#recordsContainer").append(template);
                         } else if (type === 'search') {
@@ -468,15 +464,12 @@
                     else {
                         if (type === 'all' && $("#allRecordsContainer").children().length === 0) {
                             $('#allRecordsNoRecordMsg').show();
-
                         }
                         else if (type === 'proposals' && $("#proposalsContainer").children().length === 0) {
                             $('#proposalsNoRecordMsg').show();
-
                         }
                         else if (type === 'records' && $("#recordsContainer").children().length === 0) {
                             $('#recordsNoRecordMsg').show();
-
                         }
                         else if (type === 'search' && $("#searchContainer").children().length === 0) {
                             $("#SearchNoRecordMsg").show();
@@ -568,18 +561,6 @@
 
         $(document).ready(function () {
             let inProgress = false;
-
-            $(window).on("scroll", function () {
-                var docHeight = $(document).height();
-                var winScrolled = $(window).height() + $(window).scrollTop();
-                if ((docHeight - winScrolled) < 1) {
-                    inProgress = true;
-                    lazyLoadAll(selectedType, pageIndex);
-                    pageIndex = pageIndex + 1;
-
-                }
-            });
-
             var parameters = {};
             var queryR = "";
             var query = "";
@@ -589,6 +570,22 @@
                 var value = decodeURIComponent(parameter[1]);
                 parameters[name] = value;
                 queryR = parameters['q'];
+            });
+
+
+            $(window).on("scroll", function () {
+                var docHeight = $(document).height();
+                var winScrolled = $(window).height() + $(window).scrollTop();
+                if ((docHeight - winScrolled) < 1) {
+                    inProgress = true;
+                    if (typeof queryR === "undefined" || queryR === "") {
+                        lazyLoadAll(selectedType, pageIndex);
+                    } else {
+                        lazyLoadAll(selectedType, pageIndex, queryR);
+                    }
+                    pageIndex = pageIndex + 1;
+
+                }
             });
 
             if (typeof queryR === "undefined" || queryR === "") {

@@ -4,6 +4,19 @@
     Layout = "_Layout";
 }
 
+@section Styles
+{
+    <style>
+
+        .custom-control-label::before {
+            background-color: #545B62 !important;
+        }
+
+        .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #007bff !important;
+        }
+    </style>
+}
 <div>
     <form id="profile-form" method="post">
         <div class="card">
@@ -74,32 +87,55 @@
                     </div>
                     <div class="col-4">
                         <div class="form-group float-right">
-                           <button id="btnTestIPFSApi" type="button" class="btn btn-secondary btn-sm">Test Connection to IPFS API Server</button>
+                            <button id="btnTestIPFSApi" type="button" class="btn btn-secondary btn-sm">Test Connection to IPFS API Server</button>
                         </div>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-6">
-                       <div class="form-group">
-                           <label id="IPFSApiHostLabel">IPFS API Host</label>
-                           <input asp-for="IPFSApiHost" class="form-control" value="@Model.IPFSApiHost" />
-                       </div>
-                       <div class="form-group">
-                           <label id="IPFSApiPortLabel">IPFS API Port</label>
-                           <input asp-for="IPFSApiPort" class="form-control" value="@Model.IPFSApiPort" />
-                       </div>
+                        <div class="form-group">
+                            <label id="IPFSApiHostLabel">IPFS API Host</label>
+                            <input asp-for="IPFSApiHost" class="form-control" value="@Model.IPFSApiHost" />
+                        </div>
+                        <div class="form-group">
+                            <label id="IPFSApiPortLabel">IPFS API Port</label>
+                            <input asp-for="IPFSApiPort" class="form-control" value="@Model.IPFSApiPort" />
+                        </div>
 
                     </div>
                 </div>
 
-                <div class="col-12">
-                    <div class="form-group float-right">
-                        <button id="btnSaveSettings" type="button" class="btn btn-secondary btn">Save Settings</button>
+                <br />
+
+                <div class="row">
+                    <div class="col-1">
+                        <div class="custom-control custom-switch float-left">
+                            <input type="checkbox" class="custom-control-input" id="btnImportHistoriaRecords">
+                            <label class="custom-control-label" id="btnImportHistoriaRecordsLabel" for="btnImportHistoriaRecords">Off</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <label><b>Enable Deep Search</b></label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        "Deep Search" runs at startup to load records that have not yet been fully downloaded, as well while the user is browsing the home page. If you are on a slow Internet connection this could cause slower responsive times. This will also increase the amount of bandwidth used. If you want full search capabilities of not only the blockchain objects (IE proposals, records, and archives) but the contents of the blockchain objects you should enable this.
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group float-right">
+                            <button id="btnSaveSettings" type="button" class="btn btn-secondary btn">Save Settings</button>&nbsp;
+                            <button id="btnInstructions" type="button" class="btn btn-secondary btn">
+                                <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="color:white;">Setup Instructions</a>
+                            </button>
+
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <br /> <br /> <br />
+            <br /> <br /> <br />
 
 
     </form>
@@ -110,6 +146,17 @@
 @section Scripts {
     <script type="text/javascript">
         window.addEventListener('DOMContentLoaded', function () {
+
+
+            $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
+                if (data.value == 0) {
+                    $('#btnImportHistoriaRecordsLabel').html("Off");
+                    $('#btnImportHistoriaRecords').prop('checked', false);
+                } else {
+                    $('#btnImportHistoriaRecordsLabel').html("On");
+                    $('#btnImportHistoriaRecords').prop('checked', true);
+                }
+            });
 
             document.getElementById('btnTestIPFS').onclick = (e) => {
                 var data = {
@@ -197,7 +244,6 @@
                     HistoriaRPCUserName: $('#HistoriaRPCUserName').val(),
                     HistoriaRPCPassword: $('#HistoriaRPCPassword').val(),
                 };
-                console.log('data', data);
                 $.ajax({
                     url: "/Home/TestHistoriaClient",
                     type: "POST",
@@ -233,6 +279,136 @@
                 });
             };
 
+            document.getElementById('btnImportHistoriaRecords').onclick = (e) => {
+
+                if ($('#btnImportHistoriaRecordsLabel').html() === "On") {
+                    Swal.fire({
+                        title: 'Deep Search',
+                        html: 'Are you sure you want to disable Deep Search?' +
+                            '<br>',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ok',
+                        denyButtonText: 'Cancel',
+
+
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', null, function (data) {
+                                if (data.value == 0) {
+                                    $('#btnImportHistoriaRecordsLabel').html("Off");
+                                    $('#btnImportHistoriaRecords').prop('checked', false);
+                                } else {
+                                    $('#btnImportHistoriaRecordsLabel').html("On");
+                                    $('#btnImportHistoriaRecords').prop('checked', true);
+                                }
+                            });
+                        }
+                    });
+                    return false;
+                }
+
+                var IPFSGateway = "@Model.IPFSHost";
+                if (typeof IPFSGateway === "undefined" || IPFSGateway === "") {
+                    Swal.fire({
+                        title: 'IPFS Gateway not found',
+                        html: 'Please set a IPFS Host and IPFS Port, and hit the Save button before attemping to import.' +
+                            '<br>',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        showCancelButton: false,
+                        confirmButtonText: 'Ok',
+                        denyButtonText: 'Cancel',
+
+                    });
+                    return false;
+                }
+
+                Swal.fire({
+                    title: 'Import all records?',
+                    html: 'This will import all proposals and records into your local database. This will take awhile.' +
+                        '<br>',
+                    icon: 'warning',
+                    confirmButtonText: 'Ok',
+                    showCancelButton: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "/Home/ImportHistoriaClientRecords",
+                            type: 'GET',
+                            contentType: false,
+                            processData: false,
+                            beforeSend: function () {
+                                Swal.fire({
+                                    showConfirmButton: false,
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    closeOnClickOutside: false,
+                                    backdrop: true,
+                                    title: 'Importing',
+                                    html:
+                                        'Attempting to import all records into the local database.' +
+                                        '<br>' +
+                                        '<br>Do not leave this page until you receive success or failure message!',
+
+                                    didOpen: () => {
+                                        const content = Swal.getHtmlContainer()
+                                        const $ = content.querySelector.bind(content)
+                                        Swal.showLoading()
+                                    }
+                                })
+                            },
+                            complete: function (data) {
+                            }
+
+                        }).done(function (result) {
+                            swal.close();
+                            if (result.success) {
+                                Swal.fire({
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    closeOnClickOutside: false,
+                                    confirmButtonColor: "#545B62",
+                                    backdrop: true,
+                                    title: 'Success!',
+                                    text: 'Import has been succesful.',
+                                    type: 'success',
+                                    confirmButtonText: 'Ok'
+                                });
+                                $('#btnImportHistoriaRecordsLabel').html("On");
+                                $('#btnImportHistoriaRecords').prop('checked', true);
+                            }
+                            else {
+                                Swal.fire({
+                                    allowOutsideClick: false,
+                                    allowEscapeKey: false,
+                                    closeOnClickOutside: false,
+                                    backdrop: true,
+                                    confirmButtonColor: "#545B62",
+                                    title: 'Error!',
+                                    text: result.error,
+                                    type: 'error',
+                                    confirmButtonText: 'Ok'
+                                });
+                                $('#btnImportHistoriaRecordsLabel').html("Off");
+                                $('#btnImportHistoriaRecords').prop('checked', false);
+                            }
+                        }).always(function (result) {
+
+                        });
+                        return false;
+
+                    } else if (result.isDenied) {
+                        return false;
+                    } else {
+                        // do nothing if the dialog is dismissed
+                    }
+                });
+
+            }
+
+
             document.getElementById('btnSaveSettings').onclick = (e) => {
                 var data = {
                     IPFSHost: $('#IPFSHost').val(),
@@ -244,7 +420,6 @@
                     HistoriaRPCUserName: $('#HistoriaRPCUserName').val(),
                     HistoriaRPCPassword: $('#HistoriaRPCPassword').val(),
                 };
-                console.log('data', data);
                 $.ajax({
                     url: "/Home/Settings",
                     type: "POST",
@@ -258,6 +433,10 @@
                                 text: 'Your settings have been saved!',
                                 type: 'success',
                                 confirmButtonText: 'Ok'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
                             });
                         }
                         else {
@@ -274,7 +453,7 @@
                     }
                 });
             };
-        });
+            });
     </script>
 
     <partial name="_ValidationScriptsPartial" />

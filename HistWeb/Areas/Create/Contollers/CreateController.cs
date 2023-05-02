@@ -97,7 +97,7 @@ namespace HistWeb.Controllers
 					{
 						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT * FROM items";
+						cmd.CommandText = "SELECT * FROM items and imported !=0";
 
 						using (SqliteDataReader rdr = cmd.ExecuteReader())
 						{
@@ -581,8 +581,8 @@ namespace HistWeb.Controllers
 						{
 							conn.Open();
 							cmd.CommandType = System.Data.CommandType.Text;
-							cmd.CommandText = "Insert into items (Name, Summary, html, css, PaymentAddress, PaymentAmount, IsDraft, Type, ParentIPFSCID, cidtype, proposalhash) " +
-								"VALUES (@Name, @Summary, @html, @css, @PaymentAddress, @PaymentAmount, @IsDraft, @Type, @ParentIPFSCID, @cidtype, @proposalhash)";
+							cmd.CommandText = "Insert into items (Name, Summary, html, css, PaymentAddress, PaymentAmount, IsDraft, Type, ParentIPFSCID, cidtype, proposalhash, imported) " +
+								"VALUES (@Name, @Summary, @html, @css, @PaymentAddress, @PaymentAmount, @IsDraft, @Type, @ParentIPFSCID, @cidtype, @proposalhash, @imported)";
 							cmd.Parameters.AddWithValue("Name", Name);
 							cmd.Parameters.AddWithValue("Summary", Summary);
 							cmd.Parameters.AddWithValue("html", html);
@@ -594,7 +594,7 @@ namespace HistWeb.Controllers
 							cmd.Parameters.AddWithValue("ParentIPFSCID", IpfsPid);
 							cmd.Parameters.AddWithValue("cidtype", cidType);
 							cmd.Parameters.AddWithValue("proposalhash", pid);
-
+							cmd.Parameters.AddWithValue("imported", 0);
 							cmd.ExecuteNonQuery();
 
 						}

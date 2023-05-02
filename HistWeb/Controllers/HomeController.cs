@@ -44,7 +44,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Microsoft.Data.Sqlite;
+using SQLitePCL;
 
+using System.Runtime.InteropServices;
 
 namespace HistWeb.Controllers
 {
@@ -112,6 +114,211 @@ namespace HistWeb.Controllers
 		}
 
 		[HttpGet]
+		public JsonResult ImportHistoriaClientRecords(string value)
+		{
+			ToggleDeepSearch();
+			try
+			{
+				string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
+				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
+				webRequest.Credentials = new NetworkCredential(_userName, _password);
+				webRequest.ContentType = "application/json-rpc";
+				webRequest.Method = "POST";
+				webRequest.Timeout = 5000;
+				string jsonstring = "";
+				jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"all\"] }}");
+
+				// serialize json for the request
+				byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+				webRequest.ContentLength = byteArray.Length;
+				Stream dataStream = webRequest.GetRequestStream();
+				dataStream.Write(byteArray, 0, byteArray.Length);
+				dataStream.Close();
+				WebResponse webResponse = webRequest.GetResponse();
+				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+				string getResp = sr.ReadToEnd();
+				if (!String.IsNullOrEmpty(getResp))
+				{
+					dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
+					foreach (var record in response.result)
+					{
+
+						//Get Datastring Info
+						var ds = record.Value.DataString;
+						string p1 = ds;
+						dynamic proposal1 = JObject.Parse(p1);
+
+						string hostname = _ipfsUrl;
+
+						GetHtmlSourceAsync(HttpUtility.HtmlEncode(proposal1.summary.name.ToString()), HttpUtility.HtmlEncode(proposal1.summary.description.ToString()), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString());
+
+					}
+				}
+
+				var rep = new { Success = true, toggle = GetDeepSearch() };
+				return Json(rep);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogCritical("ProposalDescription Error: " + ex.ToString());
+				var rep = new { Success = false, toggle = 0 };
+				return Json(rep);
+			}
+		}
+
+		private int ToggleDeepSearch()
+		{
+			int toggleValue = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "UPDATE basexConfiguration SET DeepSearch = NOT DeepSearch WHERE Id = 1";
+						cmd.ExecuteNonQuery();
+					}
+
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT DeepSearch FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("DeepSearch"));
+							}
+						}
+					}
+
+
+					return toggleValue;
+				}
+				catch (Exception ex)
+				{
+					return toggleValue;
+				}
+			}
+		}
+
+		[HttpGet]
+		public JsonResult ToggleDeepValue()
+		{
+			int toggleValue = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "UPDATE basexConfiguration SET DeepSearch = NOT DeepSearch WHERE Id = 1";
+						cmd.ExecuteNonQuery();
+					}
+
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT DeepSearch FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("DeepSearch"));
+							}
+						}
+					}
+
+
+					var rep = new { Success = true, value = toggleValue };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = toggleValue };
+					return Json(rep);
+				}
+			}
+		}
+
+		[HttpGet]
+		public JsonResult GetDeepValue()
+		{
+			int toggleValue = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT DeepSearch FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("DeepSearch"));
+							}
+						}
+					}
+
+
+					var rep = new { Success = true, value = toggleValue };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = 0 };
+					return Json(rep);
+				}
+			}
+		}
+		private static int GetDeepSearch()
+		{
+			int toggleValue = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT DeepSearch FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("DeepSearch"));
+							}
+						}
+					}
+
+
+					return toggleValue;
+				}
+				catch (Exception ex)
+				{
+					return toggleValue;
+				}
+			}
+		}
+
+		[DllImport("sqlite3.dll", EntryPoint = "sqlite3_load_extension")]
+		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
+
+		[HttpGet]
 		public JsonResult LoadRecords(string recordType, int pageIndex, string query)
 		{
 
@@ -122,6 +329,7 @@ namespace HistWeb.Controllers
 				case "records": dbRecordType = 4; break;
 
 			}
+			int toggle = GetDeepSearch();
 			List<ProposalRecordModel> records = new List<ProposalRecordModel>();
 
 			try
@@ -174,15 +382,79 @@ namespace HistWeb.Controllers
 						pm.Hash = record.Value.Hash;
 						pm.ProposalName = HttpUtility.HtmlEncode(proposal1.summary.name.ToString());
 						pm.ProposalSummary = HttpUtility.HtmlEncode(proposal1.summary.description.ToString());
+						var en = new System.Globalization.CultureInfo("en-US");
 
-						if (!string.IsNullOrEmpty(query))
+						if (!string.IsNullOrEmpty(query) && toggle == 0)
 						{
+
+							// This is terribly ugly code. This was required as there were weird values that were not being found, even if the string value was exactly the same. Something to do with unicode values, but haven't solved it completed yet.
+							//This code needs to be refactored, but it works currently.
+							int compareLinguisticName = String.Compare(query, pm.ProposalName, en, System.Globalization.CompareOptions.IgnoreCase);
+							int compareOrdinalName = String.Compare(query, pm.ProposalName, StringComparison.OrdinalIgnoreCase);
+							int compareLinguisticSummary = String.Compare(query, pm.ProposalSummary, en, System.Globalization.CompareOptions.IgnoreCase);
+							int compareOrdinalSummary = String.Compare(query, pm.ProposalSummary, StringComparison.OrdinalIgnoreCase);
+
+							if (compareLinguisticName == 0)
+							{
+								goto run;
+							}
+
+							if (compareOrdinalName == 0)
+							{
+								goto run;
+							}
+
+							if (compareLinguisticSummary == 0)
+							{
+								goto run;
+							}
+
+							if (compareOrdinalSummary == 0)
+							{
+								goto run;
+							}
+
 							if (!pm.ProposalName.Contains(query, StringComparison.OrdinalIgnoreCase) || !pm.ProposalSummary.Contains(query, StringComparison.OrdinalIgnoreCase))
 							{
 								continue;
 							}
 						}
+						else if (!string.IsNullOrEmpty(query) && toggle == 1)
+						{
+							
+							try
+							{
+								using (var conn = new SqliteConnection("Data Source=basex.db;"))
+								{
 
+									using (var cmd = conn.CreateCommand())
+									{
+										conn.Open();
+										cmd.CommandType = System.Data.CommandType.Text;
+										cmd.CommandText = "SELECT ipfscid FROM items_fts WHERE ipfscid = @ipfscid AND (name MATCH @query OR summary MATCH @query OR html MATCH @query)";
+										cmd.Parameters.AddWithValue("@ipfscid", proposal1.ipfscid.ToString());
+										cmd.Parameters.AddWithValue("@query", query);
+										using (SqliteDataReader rdr = cmd.ExecuteReader())
+										{
+											if (rdr.Read())
+											{
+												goto run;
+											} else
+											{
+												continue;
+											}
+										}
+									}
+								}
+							}
+							catch (Exception ex)
+							{
+								Console.WriteLine(ex.Message);
+
+							}
+						}
+
+					run:
 
 						pm.ProposalDescriptionUrl = proposal1.ipfscid.ToString();
 						pm.PaymentAddress = proposal1.payment_address.ToString();
@@ -286,6 +558,13 @@ namespace HistWeb.Controllers
 
 						}
 
+						if (toggle == 1)
+						{
+							GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposal1.ipfscid.ToString());
+						}
+
+
+
 						records.Add(pm);
 					}
 				}
@@ -300,6 +579,84 @@ namespace HistWeb.Controllers
 
 			var rep = new { Success = true, Records = sortedRecords };
 			return Json(rep);
+		}
+
+		public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid)
+		{
+			int toggle = GetDeepSearch();
+			if (toggle == 0)
+			{
+				return false;
+			}
+			int count = 0;
+			try
+			{
+				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT COUNT(*) as count FROM items WHERE ipfscid = @ipfscid";
+						cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							while (rdr.Read())
+							{
+								count = rdr.GetInt32(rdr.GetOrdinal("count")); ;
+							}
+						}
+						if (count > 0)
+						{
+							return true;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				return false;
+			}
+			using (HttpClient client = new HttpClient())
+			{
+				using (HttpResponseMessage response = await client.GetAsync(url))
+				{
+					using (HttpContent content = response.Content)
+					{
+						string html = await content.ReadAsStringAsync();
+						try
+						{
+							using (var conn = new SqliteConnection("Data Source=basex.db"))
+							{
+								using (var cmd = conn.CreateCommand())
+								{
+									conn.Open();
+									cmd.CommandType = System.Data.CommandType.Text;
+									cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, imported) " +
+										"VALUES (@Name, @Summary, @html, @ipfscid, 1)";
+									cmd.Parameters.AddWithValue("Name", Name);
+									cmd.Parameters.AddWithValue("Summary", Summary);
+									cmd.Parameters.AddWithValue("html", html);
+									cmd.Parameters.AddWithValue("ipfscid", ipfscid);
+
+									cmd.ExecuteNonQuery();
+
+								}
+							}
+
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine(ex.Message);
+							return false;
+						}
+					}
+					return true;
+				}
+
+			}
+
 		}
 
 		public int OG(string url, string ipfscid)
@@ -377,24 +734,32 @@ namespace HistWeb.Controllers
 
 						if (urltmp != "")
 						{
-							using (var conn = new SqliteConnection("Data Source=basex.db"))
+							try
 							{
-								using (var cmd = conn.CreateCommand())
+								using (var conn = new SqliteConnection("Data Source=basex.db"))
 								{
-									//INSERT INTO followers(userid, followerid) VALUES(@userid, @followerid)";
-									conn.Open();
-									cmd.CommandType = System.Data.CommandType.Text;
-									cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid) VALUES(@url, @desc, @imageurl, @type, @title, @sitename);  SELECT LAST_INSERT_ID() as InsertedId";
-									cmd.Parameters.AddWithValue("@url", urltmp);
-									cmd.Parameters.AddWithValue("@desc", sanitizer.Sanitize(desc));
-									cmd.Parameters.AddWithValue("@imageurl", imageurl);
-									cmd.Parameters.AddWithValue("@type", type);
-									cmd.Parameters.AddWithValue("@title", sanitizer.Sanitize(title));
-									cmd.Parameters.AddWithValue("@sitename", sitename);
-									cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
-									cmd.ExecuteNonQuery();
-									id = Convert.ToInt32(cmd.ExecuteScalar());
+									using (var cmd = conn.CreateCommand())
+									{
+										//INSERT INTO followers(userid, followerid) VALUES(@userid, @followerid)";
+										conn.Open();
+										cmd.CommandType = System.Data.CommandType.Text;
+										cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid) VALUES(@url, @desc, @imageurl, @type, @title, @sitename, @ipfscid);  SELECT last_insert_rowid();";
+										cmd.Parameters.AddWithValue("@url", urltmp);
+										cmd.Parameters.AddWithValue("@desc", sanitizer.Sanitize(desc));
+										cmd.Parameters.AddWithValue("@imageurl", imageurl);
+										cmd.Parameters.AddWithValue("@type", type);
+										cmd.Parameters.AddWithValue("@title", sanitizer.Sanitize(title));
+										cmd.Parameters.AddWithValue("@sitename", sitename);
+										cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
+										cmd.ExecuteNonQuery();
+										id = Convert.ToInt32(cmd.ExecuteScalar());
+									}
 								}
+
+							}
+							catch (Exception ex)
+							{
+								return 0;
 							}
 						}
 					}

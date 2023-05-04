@@ -81,7 +81,7 @@
                         <li>
                             <form id="search-form" class="form-inline">
                                 <div class="input-group no-wrap">
-                                    <input class="search border-end-0 border rounded-pill rotate" type="search" autocomplete="off" id="search-input" value="Search Historia" data-default-value="Search Historia">
+                                    <input class="search border-end-0 border rounded-pill rotate" type="search" autocomplete="off" id="search-input" data-default-value="Search Historia">
                                     <span class="input-group-append">
                                         <button id="searchSubmit" class="btn btn-outline-secondary border rounded-pill searchSubmit rotate" style="margin-left: 0px;" type="button">
                                             <i class="fa fa-search"></i>
@@ -182,6 +182,8 @@
             $('#recordsContainer').empty();
             $('#searchContainer').empty();
             pageIndex = 0;
+            lastScroll = 0;
+            inProgress = false;
         }
 
         $(document).ready(function () {
@@ -193,6 +195,7 @@
                 if (searchInput.val() === defaultValue) {
                     searchInput.val('');
                 }
+
             });
 
             var parameters = {};
@@ -214,6 +217,7 @@
 
 
             $('#searchSubmit').on('click', function (evt) {
+
                     var selectedType = "search";
                     clearRecords();
                     var searchInput = $('#search-input').val();
@@ -230,20 +234,20 @@
                         $('#search').show;
                         $('#search').addClass("show active");
                         $('#searchNoRecordMsg').addClass("show active");
+
                         $("#searchContainer").show();
                         return;
                     } else {
                         var query = $('#search-input').val();
                         var currentUrl = $(location).attr('href');
-                        if (currentUrl === 'https://localhost:44322/')
-                        {
+                        var baseUrl = window.location.origin;
+                        if (currentUrl === baseUrl + '/') {
                             lazyLoadAll(selectedType, pageIndex, query);
-                        }
-                        else {
+                        } else {
                             if (typeof query === "undefined" || query === "") {
-                                window.location.href = 'https://localhost:44322/home?q=' + queryR;
+                                window.location.href = baseUrl + '/home?q=' + queryR;
                             } else {
-                                window.location.href = 'https://localhost:44322/home?q=' + query;
+                                window.location.href = baseUrl + '/home?q=' + query;
                             }
                         }
                     }
@@ -289,9 +293,7 @@
 
 
 
-
              $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
-                console.log('superblock data: ', result);
                 result = JSON.parse(result);
                 _currentSuperBlock = result.result.currentBlock;
                 _nextSuperBlock = result.result.nextsuperblock;
@@ -302,26 +304,19 @@
                  internationalNumberFormat = new Intl.NumberFormat('en-US');
                 var delta = _nextSuperBlock - _currentSuperBlock;
                 daysToSuperBlock = (((delta * 2.5) / 60) / 24);
-                console.log("DAYS: " + daysToSuperBlock + "nextSuperBlock " + _nextSuperBlock + "currentSuperBlock" + _currentSuperBlock);
                 if (daysToSuperBlock <= 2) {
                     $('#nextSuperBlock').html(Math.round(daysToSuperBlock));
-                    console.log('votingDeadline2:' + Math.round(daysToSuperBlock));
-                    //_daysleft = Math.round(daysToSuperBlock);
                     _daysleft = Math.round(daysToSuperBlock);
                 } else {
                     $('#nextSuperBlock').html(Math.round(daysToSuperBlock - 2));
-                    console.log('votingDeadline3:' + Math.round(daysToSuperBlock - 2));
                     _daysleft = Math.round(daysToSuperBlock - 2);
                  }
                  $('#daysToSuperBlock').html(Math.round(daysToSuperBlock));
-                 console.log('daysToSuper:' + Math.round(daysToSuperBlock));
                  var votingDeadline = 0;
                  if (daysToSuperBlock < 2) {
                      $('#votingDeadline').html(Math.round(daysToSuperBlock));
-                     console.log('votingDeadline2:' + Math.round(daysToSuperBlock));
                  } else {
                      $('#votingDeadline').html(Math.round(daysToSuperBlock - 2));
-                     console.log('votingDeadline2:' + Math.round(daysToSuperBlock - 2));
                  }
                  var todaydd = new Date();
                  var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock)));
@@ -377,7 +372,7 @@
                         $('#rotate').html("Next Superblock:  " + internationalNumberFormat.format(_nextSuperBlock));
                         i = 3;
                     } else if (i == 3) {
-                        var fixedSupply = _circulatingSupply.toFixed(2);
+                        var fixedSupply = Math.round(_circulatingSupply);
                         $('#rotate').html("Circulating Supply:  " + internationalNumberFormat.format(fixedSupply));
                         i = 0;
                     }

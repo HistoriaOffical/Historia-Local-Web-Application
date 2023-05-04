@@ -344,11 +344,11 @@ namespace HistWeb.Controllers
 				string jsonstring = "";
 				if (!string.IsNullOrEmpty(query))
 				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", "all", pageIndex * 10, 10);
+					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", "all", pageIndex * 5, 5);
 				}
 				else
 				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, pageIndex * 10, 10);
+					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, pageIndex * 5, 5);
 				}
 
 				// serialize json for the request
@@ -387,7 +387,7 @@ namespace HistWeb.Controllers
 						if (!string.IsNullOrEmpty(query) && toggle == 0)
 						{
 
-							// This is terribly ugly code. This was required as there were weird values that were not being found, even if the string value was exactly the same. Something to do with unicode values, but haven't solved it completed yet.
+							// This is terribly ugly code. This was required as there were weird values that were not being found, even if the string value was exactly the same. Something to do with unicode values, but haven't solved it completely yet.
 							//This code needs to be refactored, but it works currently.
 							int compareLinguisticName = String.Compare(query, pm.ProposalName, en, System.Globalization.CompareOptions.IgnoreCase);
 							int compareOrdinalName = String.Compare(query, pm.ProposalName, StringComparison.OrdinalIgnoreCase);
@@ -421,7 +421,7 @@ namespace HistWeb.Controllers
 						}
 						else if (!string.IsNullOrEmpty(query) && toggle == 1)
 						{
-							
+
 							try
 							{
 								using (var conn = new SqliteConnection("Data Source=basex.db;"))
@@ -439,7 +439,8 @@ namespace HistWeb.Controllers
 											if (rdr.Read())
 											{
 												goto run;
-											} else
+											}
+											else
 											{
 												continue;
 											}

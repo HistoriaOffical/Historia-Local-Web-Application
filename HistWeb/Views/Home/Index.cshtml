@@ -212,6 +212,8 @@
 
     <script type="text/javascript">
         let pageIndex = 0;
+        let inProgress = false;
+        let selectedType = 'all';
 
         function hex2a(hexx) {
             var hex = hexx.toString();//force conversion
@@ -225,39 +227,342 @@
             return Math.floor(Math.random() * (max - min + 1) + min);
         }
 
-
+        let lastScroll = 0;
         //TODO: Move this into a separate file
-        function lazyLoadAll(type, pageIndex, sq) {
-            if (typeof sq === 'undefined' || sq === "") {
-
+        function lazyLoadAll(type, pi, sq) {
+            console.log("lazyLoadAll");
+            if (inProgress)
+                return;
+            if (typeof sq === 'undefined' || sq === "" ) {
                 sq = "";
 
             } else {
-                $('#searchContainer').empty();
-                type = "search";
-                $('a[href="#search"]').tab('show');
-                $("#searchTab").show();
-                $("#allTab").removeClass("active");
-                $("#proposalsTab").removeClass("active");
-                $("#recordsTab").removeClass("active");
-                $("#all").removeClass("active");
-                $("#proposals").removeClass("active");
-                $("#records").removeClass("active");
-                $('#search').show;
-                $('#search').addClass("show active");
-                $("#searchContainer").show();
-
+                if (pi <= 0) //Don't clear results when searching and scrolling if we already have at least some results
+                {
+                    $('#searchContainer').empty();
+                    type = "search";
+                    $('a[href="#search"]').tab('show');
+                    $("#searchTab").show();
+                    $("#allTab").removeClass("active");
+                    $("#proposalsTab").removeClass("active");
+                    $("#recordsTab").removeClass("active");
+                    $("#all").removeClass("active");
+                    $("#proposals").removeClass("active");
+                    $("#records").removeClass("active");
+                    $('#search').show;
+                    $('#search').addClass("show active");
+                    $("#searchContainer").show();
+                }
             }
 
             $("#allloadingdiv").show();
             $("#proposalloadingdiv").show();
             $("#recordsloadingdiv").show();
             $("#searchloadingdiv").show();
+            inProgress = true;
             $.ajax({
                 type: 'GET',
                 url: '/Home/LoadRecords',
                 contentType: 'application/json; charset=utf-8',
-                data: { recordType: type, pageIndex: pageIndex, query: sq },
+                data: { recordType: type, pageIndex: pi, query: sq },
+                dataType: 'json',
+                success: function (result, status, xhr) {
+                    pageIndex = pageIndex + 1;
+                    result.records && result.records.length > 0 && result.records.map((record, idx) => {
+
+                        let template = $('#recordTemplate').clone().show();
+
+                        template.attr('id', `record_${record.hash}`);
+
+                        template.find('#proposedByUserName').text(record.proposedByUserName);
+                        template.find('#proposalSummary').text(record.proposalSummary);
+                        template.find('#proposalName').text(record.proposalName);
+
+
+                        if (record.oglinksid != "0") {
+
+                            template.find('#ogcardid').show();
+                            template.find('#oglinksimageurl').attr("src", record.oglinksimageurl);
+                            template.find('#oglinkstitle').text(record.oglinkstitle);
+                            template.find('#oglinksdescription').text(record.oglinksdescription);
+                            template.find('#oglinksurl').text(record.oglinkssitename);
+                            template.find('#oglinksurl').attr("href", record.oglinksurl);
+                            template.find('#ogcardid').attr("class", "og_"+record.ogcardid)
+
+                        }
+
+
+                        template.find('#recordTime').attr('id', `recordTime_${record.hash}`);
+                        template.find(`#recordTime_${record.hash}`).attr('class', `time_${record.hash}`);
+
+                        localUTCDateC(template.find(`#recordTime_${record.hash}`), record.proposalDate);
+                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
+                        template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
+
+                        if (record.type === '1') {
+                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>');
+                        }
+                        else if (record.type === '4') {
+                            if (record.isUpdate === "1") {
+                                if (record.pastSuperBlock === 0) {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Record Update</button></span>');
+                                    }
+                                } else {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Record Update</button></span>');
+                                    }
+                                }
+
+                            } else {
+                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>');
+                            }
+                        }
+                        else if (record.type === '5') {
+                            if (record.isUpdate === "1") {
+                                if (record.pastSuperBlock === 0) {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Suggested Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Update</button></span>');
+                                    }
+                                } else {
+                                    if (record.cidtype === "1") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Evidence Update</button></span>');
+                                    } else if (record.cidtype === "2") {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
+                                    } else {
+                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Update</button></span>');
+                                    }
+                                }
+
+                            } else {
+                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>');
+                            }
+                        }
+
+                        template.find('#btnSEU').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Suggested Evidence Update?',
+                                type: 'alert',
+                                html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnSTU').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Suggested Topic Update?',
+                                type: 'alert',
+                                html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnSRU').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Suggested Record Update?',
+                                type: 'alert',
+                                html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnPro').on('click', function () {
+                            Swal.fire({
+                                title: 'What is a Proposal?',
+                                type: 'alert',
+                                confirmButtonColor: "#545B62",
+                                html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnRec').on('click', function () {
+                            Swal.fire({
+                                title: 'What is Record?',
+                                type: 'alert',
+                                confirmButtonColor: "#545B62",
+                                html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        template.find('#btnArc').on('click', function () {
+                            Swal.fire({
+                                title: 'What is a Archive?',
+                                type: 'alert',
+                                confirmButtonColor: "#545B62",
+                                html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                confirmButtonText: 'Ok'
+                            });
+                        });
+
+                        if (record.pastSuperBlock === 0) {
+                            if (record.voting) {
+                                template.find('#votingSection').show();
+
+                                template.find('#yesCount').text(record.yesCount);
+                                template.find('#noCount').text(record.noCount);
+                                template.find('#abstainCount').text(record.abstainCount);
+
+                            }
+                        }
+                        else {
+                            if (record.type === '4') {
+                                if (record.cachedLocked) {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                                else {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                            }
+                            else {
+                                if (record.cachedLocked) {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                                else {
+                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                }
+                            }
+                        }
+
+
+                        if (record.expired === 1) {
+                            template.find('#expired').text('Expired');
+                        }
+                        else if (record.expired === 0) {
+                            template.find('#expired').text('Active');
+                        }
+                        else if (record.expired === -2) {
+                            template.find('#expired').text('Not Submitted');
+                        }
+
+                        //Handle top comment section
+
+                        if (type === 'all') {
+
+                            if($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#allRecordsContainer").append(template);
+
+                        }
+                        else if (type === 'proposals') {
+                            if ($('#proposalsContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#proposalsContainer").append(template);
+
+                        }
+                        else if (type === 'records') {
+                            if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#recordsContainer").append(template);
+
+                        }
+                        else if (type === 'search') {
+                            if ($('#searchContainer').find(`#record_${record.hash}`).length === 0)
+                                $("#searchContainer").append(template);
+
+                        }
+                    });
+
+                    if (result.records && result.records.length > 0) {
+                        if (type === 'all') {
+                            $('#allRecordsNoRecordMsg').hide();
+                        }
+                        else if (type === 'proposals') {
+                            $('#proposalsNoRecordMsg').hide();
+                        }
+                        else if (type === 'records') {
+                            $('#recordsNoRecordMsg').hide();
+                        }
+                        else if (type === 'search') {
+                            $('#searchNoRecordMsg').hide();
+                        }
+                    }
+                    else {
+                        if (type === 'all' && $("#allRecordsContainer").children().length === 0) {
+                            $('#allRecordsNoRecordMsg').show();
+                        }
+                        else if (type === 'proposals' && $("#proposalsContainer").children().length === 0) {
+                            $('#proposalsNoRecordMsg').show();
+                        }
+                        else if (type === 'records' && $("#recordsContainer").children().length === 0) {
+                            $('#recordsNoRecordMsg').show();
+                        }
+                        else if (type === 'search' && $("#searchContainer").children().length === 0 && pi === 0) {
+                            $("#SearchNoRecordMsg").show();
+                            $('a[href="#search"]').tab('show');
+                            $("#searchTab").show();
+                            $("#allTab").removeClass("active");
+                            $("#proposalsTab").removeClass("active");
+                            $("#recordsTab").removeClass("active");
+                            $("#all").removeClass("active");
+                            $("#proposals").removeClass("active");
+                            $("#records").removeClass("active");
+                            $('#search').show;
+                            $('#search').addClass("show active");
+                            $('#searchNoRecordMsg').addClass("show active");
+
+                        }
+                    }
+
+                    $("#allloadingdiv").hide();
+                    $("#proposalloadingdiv").hide();
+                    $("#recordsloadingdiv").hide();
+                    $("#searchloadingdiv").hide();
+                },
+                error: function (xhr, status, error) {
+                    console.log('error:', error);
+                },
+                complete: function (data) {
+                    inProgress = false;
+                }
+            });
+        }
+
+        function lazyLoadAll1(type, pi, sq) {
+            if (inProgress)
+                return;
+            if (typeof sq === 'undefined' || sq === "") {
+                sq = "";
+            } else {
+                if (pi <= 0) //Don't clear results when searching and scrolling if we already have at least some results
+                {
+                    $('#searchContainer').empty();
+                    type = "search";
+                    $('a[href="#search"]').tab('show');
+                    $("#searchTab").show();
+                    $("#allTab").removeClass("active");
+                    $("#proposalsTab").removeClass("active");
+                    $("#recordsTab").removeClass("active");
+                    $("#all").removeClass("active");
+                    $("#proposals").removeClass("active");
+                    $("#records").removeClass("active");
+                    $('#search').show;
+                    $('#search').addClass("show active");
+                    $("#searchContainer").show();
+
+                }
+            }
+
+            $("#allloadingdiv").show();
+            $("#proposalloadingdiv").show();
+            $("#recordsloadingdiv").show();
+            $("#searchloadingdiv").show();
+            inProgress = true;
+            $.ajax({
+                type: 'GET',
+                url: '/Home/LoadRecords',
+                contentType: 'application/json; charset=utf-8',
+                data: { recordType: type, pageIndex: pi, query: sq },
                 dataType: 'json',
                 success: function (result, status, xhr) {
 
@@ -471,7 +776,7 @@
                         else if (type === 'records' && $("#recordsContainer").children().length === 0) {
                             $('#recordsNoRecordMsg').show();
                         }
-                        else if (type === 'search' && $("#searchContainer").children().length === 0) {
+                        else if (type === 'search' && $("#searchContainer").children().length === 0 && pi === 0) {
                             $("#SearchNoRecordMsg").show();
                             $('a[href="#search"]').tab('show');
                             $("#searchTab").show();
@@ -487,16 +792,16 @@
 
                         }
                     }
-
                     $("#allloadingdiv").hide();
                     $("#proposalloadingdiv").hide();
                     $("#recordsloadingdiv").hide();
                     $("#searchloadingdiv").hide();
-                    inProgress = false;
                 },
-
                 error: function (xhr, status, error) {
-
+                    console.log('error:', error);
+                },
+                complete: function (data) {
+                    inProgress = false;
                 }
             });
         }
@@ -557,13 +862,11 @@
             }
         }
 
-        let selectedType = 'all';
-
         $(document).ready(function () {
-            let inProgress = false;
+
             var parameters = {};
             var queryR = "";
-            var query = "";
+
             $.each(window.location.search.substr(1).split('&'), function (index, value) {
                 var parameter = value.split('=');
                 var name = decodeURIComponent(parameter[0]);
@@ -572,19 +875,23 @@
                 queryR = parameters['q'];
             });
 
-
+            var count = 0;
             $(window).on("scroll", function () {
+
                 var docHeight = $(document).height();
                 var winScrolled = $(window).height() + $(window).scrollTop();
-                if ((docHeight - winScrolled) < 1) {
-                    inProgress = true;
-                    if (typeof queryR === "undefined" || queryR === "") {
-                        lazyLoadAll(selectedType, pageIndex);
-                    } else {
-                        lazyLoadAll(selectedType, pageIndex, queryR);
+                count = count + 1;
+                if (docHeight - winScrolled < 1) {
+                    let nowScroll = $(this).scrollTop();
+                    if (nowScroll >= lastScroll && nowScroll != 0) {
+                        if (typeof queryR === "undefined" || queryR === "") {
+                            lazyLoadAll(selectedType, pageIndex);
+                        } else {
+                            lazyLoadAll(selectedType, pageIndex, queryR);
+                        }
+                        pageIndex = pageIndex + 1;
                     }
-                    pageIndex = pageIndex + 1;
-
+                    lastScroll = nowScroll;
                 }
             });
 

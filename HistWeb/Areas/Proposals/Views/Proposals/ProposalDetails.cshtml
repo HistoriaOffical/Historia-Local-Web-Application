@@ -174,7 +174,7 @@
             @if (@Model.CurrentModel.Type != "5")
             {
                 <iframe src="@Model.CurrentModel.ProposalDescriptionUrlRazor" sandbox="" style="width:100%;height:700px;" frameBorder="1"></iframe>
-                <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
+                <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
             }
             else
             {
@@ -207,7 +207,7 @@
                         <br>
                     </div>
 
-                    <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
+                    <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
                     <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Non-Archived Version</a></div>
 
                 }
@@ -222,7 +222,7 @@
                                         <h4 class='card-title'>No Preview Available</h4>
                                         <p class='card-text'>Click to view archived content</p>
                                         <i class='fas fa-link'> </i>
-                                        <a id="url" href='https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl' target='_blank' class='stretched-link'></a>
+                                        <a id="url" href='https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl' target='_blank' class='stretched-link'></a>
                                     </div>
                                 </div>
                                 <div class='card-vertical'>
@@ -231,7 +231,7 @@
                                         <h4 class='card-title'>No Preview Available</h4>
                                         <p class='card-text'>Click to view archived content</p>
                                         <i class='fas fa-link'> </i>
-                                        <a id="url" href='https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl' target='_blank' class='stretched-link'></a>
+                                        <a id="url" href='https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl' target='_blank' class='stretched-link'></a>
                                     </div>
                                 </div>
 
@@ -239,7 +239,7 @@
                         </span>
                         <br>
                     </div>
-                    <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://gateway.ipfs.io/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
+                    <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
                     <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Non-Archived Version</a></div>
                 }
             }

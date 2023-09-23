@@ -10,7 +10,6 @@ a.navbar-brand {
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
     color: #fff;
     background-color: #545b62;
-    
 }
 
 /* Sticky footer styles
@@ -19,11 +18,13 @@ html {
     font-size: 14px;
     height: 100%
 }
+
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
+
 .wrapper {
     position: relative;
     width: 100%;
@@ -31,20 +32,24 @@ html {
     min-height: 100%;
     overflow-x: hidden
 }
-.wrapper.ng-leave {
-    display: none
-}
-.wrapper.section-container {
-    position: relative;
-    height: 100%;
-    margin-left: 0;
-    z-index: 111;
-    background-color: #f5f7fa;
-    margin-bottom: 60px !important
-}
+
+    .wrapper.ng-leave {
+        display: none
+    }
+
+    .wrapper.section-container {
+        position: relative;
+        height: 100%;
+        margin-left: 0;
+        z-index: 111;
+        background-color: #f5f7fa;
+        margin-bottom: 60px !important
+    }
+
 .border-top {
     border-top: 1px solid #e5e5e5;
 }
+
 .border-bottom {
     border-bottom: 1px solid #e5e5e5;
 }
@@ -138,6 +143,7 @@ body {
     /* Margin bottom by footer height */
     /*margin-bottom: 60px;*/
 }
+
 .footer {
     position: fixed;
     bottom: 0;
@@ -208,6 +214,7 @@ body {
 .container {
     max-width: 1350px !important;
 }
+
 .content-wrapper.container, .content-wrapper.container-fluid {
     padding-left: 0;
     padding-right: 0
@@ -229,6 +236,7 @@ body {
                 margin: 0
             }
 }
+
 @media(min-width: 768px) {
     body {
         min-height: 100%
@@ -523,7 +531,7 @@ body {
 
 .socialmain {
     margin-left: 14px;
-    margin-top:30px;
+    margin-top: 30px;
     font-family: 'Fa solid 900', sans-serif;
     color: #b5b5b5;
     font-size: 14px;
@@ -531,13 +539,12 @@ body {
     cursor: pointer;
 }
 
-    .social:hover {
-       
-    }
+.social:hover {
+}
 
-    .social.brands {
-        font-family: 'Fa brands 400', sans-serif;
-    }
+.social.brands {
+    font-family: 'Fa brands 400', sans-serif;
+}
 
 .icon {
     font-size: 20px;
@@ -578,10 +585,12 @@ body {
     .article-text {
         overflow: auto;
     }
+
     .articleh {
         font-size: 24px;
         line-height: 26px;
     }
+
     .usertabs {
         -webkit-box-orient: horizontal;
         -webkit-box-direction: normal;
@@ -664,4 +673,12 @@ body {
 
 .usermenu {
     margin-top: 5px;
+}
+
+.fab.fa-twitter {
+    font-size: 24px; /* Adjust the size as needed */
+}
+
+.gjs-block-label {
+    padding-top: 10px; /* Add padding at the top */
 }

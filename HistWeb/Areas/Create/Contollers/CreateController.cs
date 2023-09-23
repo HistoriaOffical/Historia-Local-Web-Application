@@ -30,6 +30,7 @@ using HtmlAgilityPack;
 using System.Threading;
 using System.Web;
 using PuppeteerSharp;
+using PuppeteerSharp.Media;
 
 namespace HistWeb.Controllers
 {
@@ -489,7 +490,7 @@ namespace HistWeb.Controllers
 										"iframe.onload = function(){iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 50 + 'px';} " +
 										"</script></body></html>";
 
-									var size = indexHtml.Length;
+									var size = Encoding.Default.GetByteCount(indexHtml);
 									var item = new { Id = 0, url = url, html = html, template = indexHtml, totalSize = size };
 									items.Add(item);
 								}
@@ -936,6 +937,105 @@ namespace HistWeb.Controllers
 			}
 			return htmlRet;
 		}
+		public class TweetContents
+		{
+			public Stream Screenshot { get; set; }
+		}
+
+		[HttpGet]
+		public async Task<JsonResult> ImportTweet(string tweetUrl)
+		{
+			string screenshotDataUrl = "";
+			string imagepng = "";
+			// Configure PuppeteerSharp
+			await new BrowserFetcher().DownloadAsync(BrowserFetcher.DefaultRevision);
+			var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+			{
+				Headless = true
+			});
+
+			try
+			{
+				using (var page = await browser.NewPageAsync())
+				{
+					// Navigate to the tweet page
+
+					await page.SetUserAgentAsync("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36");
+					NavigationOptions navigationOptions = new NavigationOptions()
+					{
+						Timeout = 60000,
+						WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+					};
+					await page.SetViewportAsync(new ViewPortOptions { Width = 550, Height = 672 }); // Adjust the dimensions accordingly
+
+
+
+					var url = "https://publish.twitter.com/?query=" + tweetUrl + "&widget=Tweet";
+					await page.GoToAsync(url, navigationOptions);
+
+					var iframeHandle = await page.QuerySelectorAsync("iframe[id^=twitter-widget-]");
+					int pageHeight = (int)await page.EvaluateFunctionAsync(@"() => {
+						var pageHeight = document.body.scrollHeight;
+						return pageHeight;
+					}");
+					if (pageHeight > 1250)
+					{
+						if (iframeHandle != null)
+						{
+							//Weird hack required because of Twitter
+							var boundingBox = await iframeHandle.BoundingBoxAsync();
+
+							if (boundingBox != null)
+							{
+								await iframeHandle.EvaluateFunctionAsync("element => element.scrollIntoView(true)");
+
+								await Task.Delay(500);  // Adjust the delay if needed
+								await page.AddStyleTagAsync(new AddTagOptions { Content = "body { overflow: hidden; }" });
+								int desiredViewportHeight = Math.Min(800, (int)boundingBox.Height);
+
+								int maxScrollY = (int)Math.Max(0, boundingBox.Y + boundingBox.Height - desiredViewportHeight);
+
+								await page.SetViewportAsync(new ViewPortOptions
+								{
+									Width = (int)boundingBox.Width,
+									Height = desiredViewportHeight
+								});
+								// Capture a screenshot of the iframe
+								imagepng = await page.ScreenshotBase64Async(new ScreenshotOptions()
+								{
+									Quality = 50,
+									Type = ScreenshotType.Jpeg,
+								});
+							}
+						}
+					}
+					else
+					{
+						var tweetHandles = await page.QuerySelectorAllAsync("iframe[id^=twitter-widget-]");
+						var tweetHandle = tweetHandles.FirstOrDefault();
+
+						imagepng = await tweetHandle.ScreenshotBase64Async(new ScreenshotOptions()
+						{
+							//FullPage = true,
+							Quality = 50,
+							Type = ScreenshotType.Jpeg,
+						});
+
+					}
+				}
+				// Close the browser
+				await browser.CloseAsync();
+
+				// Serialize tweetContents object to JSON string
+				dynamic json = JsonConvert.SerializeObject(imagepng);
+				return Json(json);
+			}
+			catch (Exception ex)
+			{
+				dynamic prepRespJsonFail = new { Success = false, Error = "Can't authenticate" };
+				return Json(prepRespJsonFail);
+			}
+		}
 
 		public class PageData
 		{
@@ -969,29 +1069,131 @@ namespace HistWeb.Controllers
 			}
 
 			//Get Screenshot of Archive Site via PuppeteerSharp
+			var image25jpg = "";
+			var image50jpg = "";
+			var image75jpg = "";
+			var image100jpg = "";
+			var imagepng = "";
 			var image = "";
-			using var browserFetcher = new BrowserFetcher();
-			await browserFetcher.DownloadAsync(BrowserFetcher.DefaultRevision);
-			var launchOptions = new LaunchOptions()
-			{
-				Headless = true,
-			};
+			int size = 0;
+			bool imageTest = true;
 
-
-			using (var browser = await Puppeteer.LaunchAsync(launchOptions))
-			using (var page = await browser.NewPageAsync())
+			try
 			{
-				await page.GoToAsync(URL);
-				var SetViewportOptions = new ViewPortOptions()
+				using var browserFetcher = new BrowserFetcher();
+				await browserFetcher.DownloadAsync(BrowserFetcher.DefaultRevision);
+				var launchOptions = new LaunchOptions()
 				{
-					Width = 1280,
+					Headless = true,
 				};
-				await page.SetViewportAsync(SetViewportOptions);
-				var screenshotOptions = new ScreenshotOptions()
+				using (var browser = await Puppeteer.LaunchAsync(launchOptions))
 				{
-					FullPage = true,
-				};
-				image = await page.ScreenshotBase64Async(screenshotOptions);
+					await browser.CreateIncognitoBrowserContextAsync();
+					using (var page = await browser.NewPageAsync())
+					{
+						await page.SetUserAgentAsync("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36");
+
+						NavigationOptions navigationOptions = new NavigationOptions()
+						{
+							Timeout = 60000,
+							WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+						};
+
+						await page.GoToAsync(URL, navigationOptions);
+
+						var bodyHandle = await page.QuerySelectorAsync("body");
+						var boundingBox = await bodyHandle.BoundingBoxAsync();
+						await bodyHandle.DisposeAsync();
+
+						var viewportHeight = page.Viewport.Height;
+						var viewportIncr = 0;
+						while (viewportIncr + viewportHeight < boundingBox.Height)
+						{
+							await page.EvaluateExpressionAsync($"window.scrollBy(0, {viewportHeight});");
+							await Task.Delay(20);
+							viewportIncr += viewportHeight;
+						}
+
+						await page.EvaluateExpressionAsync("window.scrollTo(0, 0);");
+
+						await Task.Delay(100); // Extra delay to let images load
+
+						var SetViewportOptions = new ViewPortOptions()
+						{
+							Width = 1280,
+						};
+						await page.SetViewportAsync(SetViewportOptions);
+
+						imagepng = await page.ScreenshotBase64Async(new ScreenshotOptions()
+						{
+							FullPage = true,
+							Type = ScreenshotType.Png,
+						});
+
+						size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(imagepng);
+						double megabytes = size / (1024.0 * 1024.0);
+						if (megabytes < 9.00)
+						{
+							image = imagepng;
+						}
+						else
+						{
+							image75jpg = await page.ScreenshotBase64Async(new ScreenshotOptions()
+							{
+								FullPage = true,
+								Quality = 75,
+								Type = ScreenshotType.Jpeg,
+							});
+							size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image75jpg);
+							megabytes = size / (1024.0 * 1024.0);
+							if (megabytes < 9.00)
+							{
+								image = image75jpg;
+							}
+							else
+							{
+								image50jpg = await page.ScreenshotBase64Async(new ScreenshotOptions()
+								{
+									FullPage = true,
+									Quality = 50,
+									Type = ScreenshotType.Jpeg,
+								});
+								size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image50jpg);
+								megabytes = size / (1024.0 * 1024.0);
+								if (megabytes < 9.00)
+								{
+									image = image50jpg;
+								}
+								else
+								{
+									image25jpg = await page.ScreenshotBase64Async(new ScreenshotOptions()
+									{
+										FullPage = true,
+										Quality = 25,
+										Type = ScreenshotType.Jpeg,
+									});
+									size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image25jpg);
+									megabytes = size / (1024.0 * 1024.0);
+									if (megabytes < 9.00)
+									{
+										image = image25jpg;
+									}
+
+								}
+
+							}
+
+						}
+					}
+					await browser.CloseAsync();
+					await browser.DisposeAsync();
+				}
+				imageTest = true;
+			}
+			catch (Exception ex)
+			{
+				//Screen shot failed
+				imageTest = false;
 			}
 
 			try

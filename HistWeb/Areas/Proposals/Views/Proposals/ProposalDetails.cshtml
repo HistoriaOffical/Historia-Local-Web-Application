@@ -609,7 +609,7 @@
 
             const userTimezoneOffset = submitted.getTimezoneOffset(); // get user's timezone offset in minutes
             const timezoneOffsetMs = userTimezoneOffset * 60 * 1000; // convert minutes to milliseconds
-            const adjustedSubmitted = new Date(submitted.getTime() + timezoneOffsetMs);
+            const adjustedSubmitted = new Date(submitted.getTime() - timezoneOffsetMs);
 
             const elapsed = now.getTime() - adjustedSubmitted.getTime(); // elapsed time in milliseconds
 
@@ -1329,6 +1329,7 @@
                                         Swal.fire({
                                             title: 'Success!',
                                             text: 'Your vote has been submitted to the network!',
+                                            confirmButtonColor: "#48B5C4",
                                             type: 'success',
                                             confirmButtonText: 'Ok'
                                         });

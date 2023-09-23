@@ -233,7 +233,7 @@
             console.log("lazyLoadAll");
             if (inProgress)
                 return;
-            if (typeof sq === 'undefined' || sq === "" ) {
+            if (typeof sq === 'undefined' || sq === "") {
                 sq = "";
 
             } else {
@@ -287,7 +287,7 @@
                             template.find('#oglinksdescription').text(record.oglinksdescription);
                             template.find('#oglinksurl').text(record.oglinkssitename);
                             template.find('#oglinksurl').attr("href", record.oglinksurl);
-                            template.find('#ogcardid').attr("class", "og_"+record.ogcardid)
+                            template.find('#ogcardid').attr("class", "og_" + record.ogcardid)
 
                         }
 
@@ -452,7 +452,7 @@
 
                         if (type === 'all') {
 
-                            if($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
+                            if ($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
                                 $("#allRecordsContainer").append(template);
 
                         }
@@ -816,7 +816,7 @@
 
             const userTimezoneOffset = submitted.getTimezoneOffset(); // get user's timezone offset in minutes
             const timezoneOffsetMs = userTimezoneOffset * 60 * 1000; // convert minutes to milliseconds
-            const adjustedSubmitted = new Date(submitted.getTime() + timezoneOffsetMs);
+            const adjustedSubmitted = new Date(submitted.getTime() - timezoneOffsetMs);
 
             const elapsed = now.getTime() - adjustedSubmitted.getTime(); // elapsed time in milliseconds
 

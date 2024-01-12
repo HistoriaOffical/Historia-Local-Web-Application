@@ -344,11 +344,11 @@ namespace HistWeb.Controllers
 				string jsonstring = "";
 				if (!string.IsNullOrEmpty(query))
 				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", "all", pageIndex * 5, 5);
+					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", "all", (pageIndex * 5) + 1, (pageIndex + 1) * 5);
 				}
 				else
 				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, pageIndex * 5, 5);
+					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, (pageIndex * 5) + 1, (pageIndex + 1) * 5);
 				}
 
 				// serialize json for the request

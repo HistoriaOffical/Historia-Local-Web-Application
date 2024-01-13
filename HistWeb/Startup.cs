@@ -70,6 +70,19 @@ namespace HistWeb
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
 
+						createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS proposalmatrix (
+													Id INTEGER PRIMARY KEY,
+													url TEXT UNIQUE,
+													proposalmatrixid INTEGER,
+													ParentIPFS TEXT,
+													proposalid INTEGER
+												);";
+						createCmd.CommandType = System.Data.CommandType.Text;
+						createCmd.ExecuteNonQuery();
+
+						createCmd.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS idx_proposalmatrix_url ON proposalmatrix(url);";
+						createCmd.ExecuteNonQuery();
+
 						createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS masternodeprivatekeys (
                                                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                     collateralIndex TEXT  NOT NULL,
@@ -86,7 +99,8 @@ namespace HistWeb
                                                     Summary TEXT NOT NULL,
                                                     html TEXT NOT NULL,
                                                     css TEXT,
-                                                    cidtype,
+                                                    cidtype TEXT,
+													dateadded TEXT,
                                                     proposalhash TEXT,
                                                     PaymentAddress TEXT,
                                                     PaymentAmount TEXT,
@@ -125,7 +139,8 @@ namespace HistWeb
                                                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                     html TEXT NOT NULL,
                                                     url TEXT NOT NULL,
-                                                    image TEXT NOT NULL
+                                                    image TEXT NOT NULL,
+													dateadded TEXT
                                                 );";
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
@@ -291,7 +306,7 @@ namespace HistWeb
 
 			services.AddRazorPages();
 			services.AddMvc().AddNewtonsoftJson();
-
+			services.AddHostedService<RecurringJobService>();
 			ApplicationSettings.LoadConfig();
 		}
 

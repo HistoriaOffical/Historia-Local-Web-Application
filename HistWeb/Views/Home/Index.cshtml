@@ -56,6 +56,101 @@
                 height: auto !important;
             }
         }
+
+
+
+        .collapseTree > a:hover {
+            text-decoration: none !important;
+        }
+
+        /*Styles For Tree container/items*/
+        table {
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+            table caption {
+                font-size: 1.5em;
+                margin: .5em 0 .75em;
+            }
+
+            table tr {
+                background-color: #f8f8f8;
+                border: 1px solid #ddd;
+                padding: .35em;
+            }
+
+            table th,
+            table td {
+                padding: .625em;
+                text-align: center;
+            }
+
+            table th {
+                font-size: .85em;
+                letter-spacing: .1em;
+                text-transform: uppercase;
+            }
+
+        @@media screen and (max-width: 600px) {
+            table {
+                border: 0;
+            }
+
+                table caption {
+                    font-size: 1.3em;
+                }
+
+                table thead {
+                    border: none;
+                    clip: rect(0 0 0 0);
+                    height: 1px;
+                    margin: -1px;
+                    overflow: hidden;
+                    padding: 0;
+                    position: absolute;
+                    width: 1px;
+                }
+
+                table tr {
+                    border-bottom: 3px solid #ddd;
+                    display: block;
+                    margin-bottom: .625em;
+                }
+
+                table td {
+                    border-bottom: 1px solid #ddd;
+                    display: block;
+                    font-size: .8em;
+                    text-align: right;
+                }
+
+                    table td::before {
+                        /*
+            * aria-label has no advantage, it won't be read inside a table
+            content: attr(aria-label);
+            */
+                        content: attr(data-label);
+                        float: left;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                    }
+
+                    table td:last-child {
+                        border-bottom: 0;
+                    }
+        }
+
+
+        /* general styling */
+        .generalTree {
+            font-family: "Open Sans", sans-serif;
+            line-height: 1;
+        }
     </style>
 }
 
@@ -64,22 +159,26 @@
         <div class="row">
             <div class="col-12">
                 <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
-                    <li class="nav-item"><a href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
-                    <li class="nav-item"><a href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
-                    <li class="nav-item"><a href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
+                    <li class="nav-item"><a id="allTab" href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
+                    <li class="nav-item"><a id="proposalsTab" href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
+                    <li class="nav-item"><a id="recordTab" href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
                     <li class="nav-item" id="searchTab" style="display:none"><a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close" onclick="">Search<i class="fa fa-times" style="margin-left: 5px;"></i></a></li>
+                    <li class="nav-item ml-auto">
+                        <a id="treeTab" href="#tree" data-target="#tree" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'tree'; clearRecords(); lazyLoadAll(selectedType, 0, '', 50);"><i class="fa fa-folder-tree" style="margin-left: 5px; margin-right: 5px;"></i>Tree View</a>
+                    </li>
+
 
                 </ul>
                 <div class="tab-content">
                     <div id="all" class="tab-pane fade show active">
                         <div id="allloadingdiv" style="text-align:center;margin-bottom:20px;">
-                            Loading...
+                            <h4>Is Historia Core Client Setup and Running?</h4>
                         </div>
                         <div id="allRecordsContainer">
                         </div>
                         <div class="row mt-4" id="allRecordsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Is Historia Core Client Setup and Running?</h4>
+                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
                             </div>
                         </div>
                     </div>
@@ -92,7 +191,7 @@
                         </div>
                         <div class="row mt-4" id="proposalsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Either Historia client has not synced or there are no proposals up for vote</h4>
+                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
                             </div>
                         </div>
                     </div>
@@ -104,7 +203,7 @@
                         </div>
                         <div class="row mt-4" id="recordsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Either Historia client has not synced or there are no records up for vote</h4>
+                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
                             </div>
                         </div>
                     </div>
@@ -120,24 +219,38 @@
                             </div>
                         </div>
                     </div>
+                    <div id="tree" class="tab-pane fade show">
+                        <div id="treeloadingdiv" style="text-align:center;margin-bottom:20px;">
+                            Loading...
+                        </div>
+                        <div id="treeContainer" style="margin-top: 1em" class="generalTree">
+                        </div>
+                        <div class="row mt-4" id="treeNoRecordMsg" style="display:none">
+                            <div class="col-12 mx-auto">
+                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <br /><br />
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
-
 <div id="recordTemplate" class="record" style="display:none">
     <div class="listing-container position-relative">
-        <div class="title text-left">
+        <div id="info" class="title text-left">
             <span id="recordType" class="ml-0" style="vertical-align:middle;"></span>
 
             <input type="hidden" id="timetemp_" value="">
             <h5 class="card-title" style="display: inline-block;"><a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash="></a></h5>
             <span id="recordTime" style="line-height: normal;" class="ml-0"></span>&nbsp;<br />
+
         </div>
 
         <div class="w-clearfix text-left" style="transform: rotate(0);">
@@ -165,53 +278,177 @@
                 </div>
             </span>
         </div>
-
         <div style="margin-top:20px; margin-bottom:10px;">
-            <div class="voting">
-                <div class="votingwrapper">
-                    <p id="pastVotingCycle"></p>
-                </div>
-                <div class="votingwrapper" style="margin-top:30px">
-                    <div id="votingSection" class="votingwrappermain" style="display:none">
-                        <div class="votingdown">VOTING</div>
-                        <a href="#">
-                            <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
-                        </a>
-                        <div id="yesCount" class="votingdown"></div>
-                        <a href="#">
-                            <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
-                        </a>
-                        <div id="noCount" class="votingdown"></div>
-                        <a href="#">
-                            <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
-                        </a>
-                        <div id="abstainCount" class="votingdown"></div>
-                        <a id="proposalNameVote" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a>
+            <div id="votingbar" class="votingbar">
+                <div class="voting">
+                    <div class="votingwrapper">
+                        <p id="pastVotingCycle"></p>
                     </div>
-                </div>
+                    <div class="votingwrapper" style="margin-top:30px">
+                        <div id="votingSection" class="votingwrappermain" style="display:none">
+                            <div class="votingdownbar">VOTING</div>
+                            <a href="#">
+                                <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
+                            </a>
+                            <div id="yesCount" class="votingdown"></div>
+                            <a href="#">
+                                <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
+                            </a>
+                            <div id="noCount" class="votingdown"></div>
+                            <a href="#">
+                                <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
+                            </a>
+                            <div id="abstainCount" class="votingdown"></div>
+                            <a id="proposalNameVote" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a>
+                        </div>
+                    </div>
 
-                <div class="votingwrapper" style="margin-top:30px">
-                    <span id="expired" class="ml-0"></span>
-                </div>
-            </div>
-            <div class="usertabs">
-                <div class="socialmain">
+                    <div id="votingwrapper" class="votingwrapper" style="margin-top:30px">
+                        <span id="expired" class="ml-0"></span>
+                    </div>
                 </div>
             </div>
         </div>
         <hr />
     </div>
+
+</div>
 </div>
 
 
+<style>
+    .treeTable {
+        border: none;
+    }
+
+    .VotingCycleTree {
+        display: inline-block;
+        padding: 0.2em 0.2em;
+        font-size: 86%;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .treeLine {
+        display: inline-block;
+    }
+
+    .treeRow {
+        border: none;
+        background: #0000;
+    }
+
+    .treeTable > td {
+        padding: 0em;
+    }
+
+    .treeExpander {
+        width: 3%;
+        padding: 0px;
+    }
+
+    .treeSummary {
+        width: 87%;
+        text-align: start;
+        padding: 0px;
+    }
+
+    @@media screen and (max-width: 600px) {
+        table tr {
+            display: inline-flex;
+            padding: 0em;
+            border: none;
+            border-bottom: none;
+            margin: 0em;
+        }
+
+        table td {
+            border: none;
+            border-bottom: none;
+        }
+    }
+</style>
+
+<div id="treeTemplate" class="record" style="display:none">
+    <div class="w-clearfix text-left" style="transform: rotate(0);">
+        <span id="card-title" class="card-title" style="margin-left:0px;">
+            <div class="treeLine">
+                <table class="treeTable">
+                    <tr class="treeRow">
+                        <td class="treeExpander">
+                            <a id="collapseTree" data-toggle="collapse" href="#collapseTree" role="button" aria-expanded="false" aria-controls="collapseTree" onclick="populateTree(this);" class="collapseTree"><i class="fa-solid fa-caret-right"></i>&nbsp;</a>
+                        </td>
+                        <td class="treeSummary">
+                            <a id="proposalName" href="/Proposals/Proposals/ProposalDetails?hash="></a>:
+                            <span id="proposalSummary" class="card-text">ProposalSummary</span>
+                            <span id="recordTime" class="ml-0" style="vertical-align:middle;"></span>&nbsp;
+                            <span id="cidtype" class="badge badge-pill badge-secondary"></span>
+                            <a id="votenow" href="/Proposals/Proposals/ProposalDetails?hash=" class="" style="display: none">
+                                <span id="VotingCycleTree" class="VotingCycleTree" alt="" style="cursor: pointer;" title=""></span>
+                            </a>
+                            <span id="pastVotingCycleTree" class="VotingCycleTree" style="cursor: pointer;" title=""></span>
+                            <div id="votingwrapper" class="votingwrappertreemain">
+                                <span id="expired" class="ml-0"></span>
+                                <span id="icontype" alt="" class="image-3" style="cursor: pointer;" title=""></span>
+                            </div>
+                            <div id="votingSection" style="display:none">
+                                <div class="votingdownbar"></div>
+                            </div>
+
+                            <input type="hidden" id="timetemp_" value="">
+                            <input type="hidden" id="hash" value="">
+
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                </table>
+                <div class="collapse" id="collapseTreeContent">
+                    <div class="subcollapse" style="margin-left:40px;" id="collapseTreeChildren">
+                    </div>
+                </div>
+            </div>
+        </span>
+    </div>
+</div>
+
+<div id="treeTemplateEmpty" class="record" style="display:none">
+    <div class="w-clearfix text-left" style="transform: rotate(0);">
+        <span id="card-title" class="card-title" style="margin-left:0px;">
+            <div class="treeLine">
+                <table class="treeTable">
+                    <tr class="treeRow">
+                        <td class="treeSummary">
+                            <span id="EmptyResults" class="card-text">No additional results found.</span>
+                            <input type="hidden" id="timetemp_" value="">
+                            <input type="hidden" id="hash" value="">
+
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                </table>
+                <div class="collapse" id="collapseTreeContent">
+                    <div class="subcollapse" style="margin-left:40px;" id="collapseTreeChildren">
+                    </div>
+                </div>
+            </div>
+        </span>
+    </div>
+</div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.js"></script>
-    <script src="/lib/cryptojs/crypto-js.min.js"></script>
-    <script src="/lib/jsrassign/jsrsasign-all-min.js"></script>
+
+    <script src="~/lib/cryptojs/crypto-js.min.js"></script>
+    <script src="~/lib/jsrassign/jsrsasign-all-min.js"></script>
 
     <script type="text/javascript">
-        let pageIndex = 0;
+        var pageIndex = 0;
         let inProgress = false;
         let selectedType = 'all';
 
@@ -224,16 +461,297 @@
         }
 
         function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1) + min);
+          return Math.floor(Math.random() * (max - min + 1) + min);
         }
 
+        var hasMN = false;
+        function GetMyMasternodes()
+        {
+            $.get('@Url.Action("GetMyMasternodes", "Proposals", new { area = "Proposals" })', null, function(data) {
+
+                if (data.length == 0) {
+                    hasMN = false;
+                }
+            });
+            hasMN = true;
+        }
         let lastScroll = 0;
+        var originalHtmlMap = {};
+
+        function populateTree(clickedElement, level = 0) {
+            var clickedId = $(clickedElement).attr('id');
+            var actualClickedId = clickedId.split('_')[1];
+            var actualClickedChildId = clickedId.length > 1 ? clickedId.split('_')[2] : -1;
+            if (actualClickedChildId >= 0)
+                $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).empty();
+            else
+                $(`#collapseTreeChildren_${actualClickedId}`).empty();
+
+            var lastDigits = clickedId.match(/\d+$/);
+            let Hash = actualClickedId;
+            let template;
+
+            let isCollapsed = false;
+            let icon = $(clickedElement).children('i');
+            if (icon.hasClass('fa-caret-right')) {
+                icon.removeClass('fa-caret-right');
+                icon.addClass('fa-caret-down');
+            }
+            else {
+                isCollapsed = true;
+                icon.removeClass('fa-caret-down');
+                icon.addClass('fa-caret-right');
+            }
+
+            if (isCollapsed) {
+                return;
+            }
+
+            $.ajax({
+                type: 'GET',
+                url: '/Proposals/Proposals/GetVersions',
+                contentType: 'application/json; charset=utf-8',
+                data: { phash: Hash, level: level }, /*Increment based on current level*/
+                dataType: 'json',
+                success: function (result, status, xhr) {
+                    try {
+                        const resultObj = JSON.parse(result);
+                        if (resultObj.success === false) {
+                            console.log("Error: " + resultObj.message);
+
+                        } else {
+
+                            resultObj.forEach((record, idx) => {
+                                if (record.ParentIPFSCid) {
+                                    template = $('#treeTemplate').clone().show();
+                                    template.attr("id", `treeTemplate_${record.IPFSHash}`);
+
+                                    if (actualClickedId != record.Id) {
+                                        template.find('#collapseTree').attr('aria-controls', `collapseTree_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#collapseTree').attr('onclick', `populateTree(this, ${level + 1});`)
+                                        template.find('#collapseTree').attr('id', `collapseTree_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+
+                                        template.find('#collapseTreeContent').attr('id', `collapseTreeContent_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#collapseTreeChildren').attr('id', `collapseTreeChildren_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#hash').val(record.hash);
+                                        template.find('#hash').attr('id', `hash_${record.Id}`);
+
+                                        template.find('#proposalSummary').text(record.Summary);
+                                        template.find('#cidtype').text("Version");
+                                        template.find('#proposalName').text(record.Name);
+                                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                        template.find('#recordTime').text("— " + record.DateAdded);
+
+                                        if (record.PastSuperBlock === 1) {
+                                            template.find('#votingSection').show();
+                                            template.find('#votenow').show();
+                                            template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+
+                                            var iconClass = 'fas fa-check-to-slot';
+                                            var iconContainer = $(template).find('#VotingCycleTree');
+                                            var iconElement = $('<i>').addClass(iconClass);
+                                            iconElement.css('margin', '1px');
+                                            iconElement.attr('title', 'In Voting Cycle');
+                                            iconElement.css('color', '#48bacf');
+                                            iconContainer.append(iconElement);
+                                            $('#template').replaceWith(template);
+
+                                        } else {
+                                            var iconClass = 'fas fa-lock';
+                                            var iconContainer = $(template).find('#pastVotingCycleTree');
+                                            var iconElement = $('<i>').addClass(iconClass);
+                                            iconElement.css('margin', '1px');
+                                            iconElement.attr('title', 'Past Voting Cycle');
+                                            iconContainer.append(iconElement);
+                                            $('#template').replaceWith(template);
+                                        }
+
+
+                                        if ($(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).length !== 0) {
+                                            $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
+                                            if (!$(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).is(":visible"))
+                                                $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
+
+                                        }
+                                        else {
+                                            $(`#collapseTreeChildren_${actualClickedId}`).append(template);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.log("Error: Unable to parse the response as JSON");
+                        template = $('#treeTemplateEmpty').clone().show();
+                        $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
+                        $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
+                    }
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: '/Proposals/Proposals/GetEvidence',
+                contentType: 'application/json; charset=utf-8',
+                data: { phash: Hash, level: level }, /*Increment based on current level*/
+                dataType: 'json',
+                success: function (result, status, xhr) {
+                    //console.log(JSON.stringify(result, null, 0));
+                    try {
+                        const resultObj = JSON.parse(result);
+                        if (resultObj.success === false) {
+                            //console.log("Error: " + resultObj.message);
+                        } else {
+                            resultObj.forEach((record, idx) => {
+                                if (record.ParentIPFSCid) {
+                                    template = $('#treeTemplate').clone().show();
+                                    template.attr("id", `treeTemplate_${record.IPFSHash}`);
+
+                                    if (actualClickedId != record.Id) {
+                                        template.find('#collapseTree').attr('aria-controls', `collapseTree_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#collapseTree').attr('onclick', `populateTree(this, ${level + 1});`)
+                                        template.find('#collapseTree').attr('id', `collapseTree_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+
+                                        template.find('#collapseTreeContent').attr('id', `collapseTreeContent_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#collapseTreeChildren').attr('id', `collapseTreeChildren_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#hash').val(record.hash);
+                                        template.find('#hash').attr('id', `hash_${record.Id}`);
+
+                                        template.find('#proposalSummary').text(record.Summary);
+                                        template.find('#cidtype').text("Evidence");
+                                        template.find('#proposalName').text(record.Name);
+                                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                        template.find('#recordTime').text("— " + record.DateAdded);
+
+                                        if (record.PastSuperBlock === 1) {
+                                            template.find('#votingSection').show();
+                                            template.find('#votenow').show();
+                                            template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                            var iconClass = 'fas fa-check-to-slot';
+                                            var iconContainer = $(template).find('#VotingCycleTree');
+                                            var iconElement = $('<i>').addClass(iconClass);
+                                            iconElement.css('margin', '1px');
+                                            iconElement.attr('title', 'In Voting Cycle');
+                                            iconElement.css('color', '#48bacf');
+                                            iconContainer.append(iconElement);
+                                            $('#template').replaceWith(template);
+                                        } else {
+                                            var iconClass = 'fas fa-lock';
+                                            var iconContainer = $(template).find('#pastVotingCycleTree');
+                                            var iconElement = $('<i>').addClass(iconClass);
+                                            iconElement.css('margin', '1px');
+                                            iconElement.attr('title', 'Past Voting Cycle');
+                                            iconContainer.append(iconElement);
+                                            $('#template').replaceWith(template);
+                                        }
+
+
+                                        if ($(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).length !== 0) {
+                                            $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
+                                            if (!$(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).is(":visible"))
+                                                $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
+
+                                        }
+                                        else {
+
+                                            $(`#collapseTreeChildren_${actualClickedId}`).append(template);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        //console.log("Error: Unable to parse the response as JSON");
+                    }
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: '/Proposals/Proposals/GetTopics',
+                contentType: 'application/json; charset=utf-8',
+                data: { phash: Hash, level: level}, /*Increment based on current level*/
+                dataType: 'json',
+                success: function (result, status, xhr) {
+                    console.log(JSON.stringify(result, null, 0));
+                    try {
+                        const resultObj = JSON.parse(result);
+                        if (resultObj.success === false) {
+                           //console.log("Error: " + resultObj.message);
+                        } else {
+                            resultObj.forEach((record, idx) => {
+                                console.log('record: ', record);
+                                if (record.ParentIPFSCid) {
+                                    template = $('#treeTemplate').clone().show();
+                                    template.attr("id", `treeTemplate_${record.IPFSHash}`);
+                                    if (actualClickedId != record.Id) {
+                                        template.find('#collapseTree').attr('aria-controls', `collapseTree_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#collapseTree').attr('onclick', `populateTree(this, ${level + 1});`)
+                                        template.find('#collapseTree').attr('id', `collapseTree_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+
+                                        template.find('#collapseTreeContent').attr('id', `collapseTreeContent_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#collapseTreeChildren').attr('id', `collapseTreeChildren_${actualClickedChildId >= 0 ? actualClickedChildId : actualClickedId}_${record.Id}`);
+                                        template.find('#hash').val(record.hash);
+                                        template.find('#hash').attr('id', `hash_${record.Id}`);
+
+                                        template.find('#proposalSummary').text(record.Summary);
+                                        template.find('#cidtype').text("Topic");
+                                        template.find('#proposalName').text(record.Name);
+                                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                        template.find('#recordTime').text("— " + record.DateAdded);
+
+                                        if (record.PastSuperBlock === 1) {
+                                            template.find('#votingSection').show();
+                                            template.find('#votenow').show();
+                                            template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                            var iconClass = 'fas fa-check-to-slot';
+                                            var iconContainer = $(template).find('#VotingCycleTree');
+                                            var iconElement = $('<i>').addClass(iconClass);
+                                            iconElement.css('margin', '1px');
+                                            iconElement.attr('title', 'In Voting Cycle');
+                                            iconElement.css('color', '#48bacf');
+                                            iconContainer.append(iconElement);
+                                            $('#template').replaceWith(template);
+                                        } else {
+                                            var iconClass = 'fas fa-lock';
+                                            var iconContainer = $(template).find('#pastVotingCycleTree');
+                                            var iconElement = $('<i>').addClass(iconClass);
+                                            iconElement.css('margin', '1px');
+                                            iconElement.attr('title', 'Past Voting Cycle');
+                                            iconContainer.append(iconElement);
+                                            $('#template').replaceWith(template);
+                                        }
+
+                                        console.log('actualClickedId/actualClickedChildId', actualClickedId, actualClickedChildId)
+                                        if ($(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).length !== 0) {
+                                            $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
+                                            if (!$(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).is(":visible"))
+                                                $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
+                                        }
+                                        else {
+                                            console.log('adding to ', actualClickedId, $(`#collapseTreeChildren_${actualClickedId}`))
+                                            $(`#collapseTreeChildren_${actualClickedId}`).append(template);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    } catch (error) {
+                         console.log("Error: Unable to parse the response as JSON");
+                    }
+                }
+            });
+        }
+
+        function toggleExpandableContent(recordId) {
+            $("#" + recordId + " .expandable-content").slideToggle();
+        }
+
         //TODO: Move this into a separate file
-        function lazyLoadAll(type, pi, sq) {
-            console.log("lazyLoadAll");
+        function lazyLoadAll(type, pi, sq, numberToLoad) {
             if (inProgress)
                 return;
-            if (typeof sq === 'undefined' || sq === "") {
+            if (typeof sq === 'undefined' || sq === "" ) {
                 sq = "";
 
             } else {
@@ -246,9 +764,11 @@
                     $("#allTab").removeClass("active");
                     $("#proposalsTab").removeClass("active");
                     $("#recordsTab").removeClass("active");
+                    $("#treeTab").removeClass("active");
                     $("#all").removeClass("active");
                     $("#proposals").removeClass("active");
                     $("#records").removeClass("active");
+                    $("#tree").removeClass("active");
                     $('#search').show;
                     $('#search').addClass("show active");
                     $("#searchContainer").show();
@@ -259,217 +779,288 @@
             $("#proposalloadingdiv").show();
             $("#recordsloadingdiv").show();
             $("#searchloadingdiv").show();
+            $("#treeloadingdiv").show();
             inProgress = true;
+
+
             $.ajax({
                 type: 'GET',
                 url: '/Home/LoadRecords',
                 contentType: 'application/json; charset=utf-8',
-                data: { recordType: type, pageIndex: pi, query: sq },
+                data: { recordType: type, pageIndex: pi, query: sq, numberToLoad: numberToLoad },
                 dataType: 'json',
                 success: function (result, status, xhr) {
                     pageIndex = pageIndex + 1;
+                    //console.log(JSON.stringify(result, null, 2));
                     result.records && result.records.length > 0 && result.records.map((record, idx) => {
-
-                        let template = $('#recordTemplate').clone().show();
-
-                        template.attr('id', `record_${record.hash}`);
-
-                        template.find('#proposedByUserName').text(record.proposedByUserName);
-                        template.find('#proposalSummary').text(record.proposalSummary);
-                        template.find('#proposalName').text(record.proposalName);
-
-
-                        if (record.oglinksid != "0") {
-
-                            template.find('#ogcardid').show();
-                            template.find('#oglinksimageurl').attr("src", record.oglinksimageurl);
-                            template.find('#oglinkstitle').text(record.oglinkstitle);
-                            template.find('#oglinksdescription').text(record.oglinksdescription);
-                            template.find('#oglinksurl').text(record.oglinkssitename);
-                            template.find('#oglinksurl').attr("href", record.oglinksurl);
-                            template.find('#ogcardid').attr("class", "og_" + record.ogcardid)
-
+                        let template;
+                        let add = true;
+                        if (type === "tree") {
+                            if (record.parentIPFSCID) //Don't add items with parent, instead they will show as topics in tree view
+                                add = false;
+                            template = $('#treeTemplate').clone().show();
+                        } else {
+                            template = $('#recordTemplate').clone().show();
                         }
 
+                        if (add) {
+                            template.attr('id', `record_${record.hash}`);
+                            template.attr("id", `treeTemplate_${record.hash}`);
 
-                        template.find('#recordTime').attr('id', `recordTime_${record.hash}`);
-                        template.find(`#recordTime_${record.hash}`).attr('class', `time_${record.hash}`);
+                            template.find('#collapseTopics').attr('href', '#' + `collapseTopicsContent_${record.hash}`);
+                            template.find('#collapseTopics').attr('aria-controls', `collapseTopics_${record.hash}`);
+                            template.find('#collapseTopics').attr('id', `collapseTopics_${record.hash}`);
+                            template.find('#collapseTopicsContent').attr('id', `collapseTopicsContent_${record.hash}`);
 
-                        localUTCDateC(template.find(`#recordTime_${record.hash}`), record.proposalDate);
-                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
-                        template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
+                            template.find('#collapseEvidence').attr('href', '#' + `collapseEvidenceContent_${record.hash}`);
+                            template.find('#collapseEvidence').attr('aria-controls', `collapseEvidence_${record.hash}`);
+                            template.find('#collapseEvidence').attr('id', `collapseEvidence_${record.hash}`);
+                            template.find('#collapseEvidenceContent').attr('id', `collapseEvidenceContent_${record.hash}`);
 
-                        if (record.type === '1') {
-                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>');
-                        }
-                        else if (record.type === '4') {
-                            if (record.isUpdate === "1") {
-                                if (record.pastSuperBlock === 0) {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>');
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                            template.find('#collapseVersion').attr('href', '#' + `collapseVersionContent_${record.hash}`);
+                            template.find('#collapseVersion').attr('aria-controls', `collapseVersion_${record.hash}`);
+                            template.find('#collapseVersion').attr('id', `collapseVersion_${record.hash}`);
+                            template.find('#collapseVersionContent').attr('id', `collapseVersionContent_${record.hash}`);
+
+                            template.find('#collapseTree').attr('href', '#' + `collapseTreeContent_${record.hash}`);
+                            template.find('#collapseTree').attr('aria-controls', `collapseTree_${record.hash}`);
+                            template.find('#collapseTree').attr('id', `collapseTree_${record.hash}`);
+                            template.find('#collapseTreeContent').attr('id', `collapseTreeContent_${record.hash}`);
+                            template.find('#collapseTreeChildren').attr('id', `collapseTreeChildren_${record.hash}`);
+
+                            template.find('#proposalSummary').text(record.proposalSummary);
+                            template.find('#proposalName').text(record.proposalName);
+                            template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+
+                            if (record.oglinksid != "0") {
+
+                                template.find('#ogcardid').show();
+                                template.find('#oglinksimageurl').attr("src", record.oglinksimageurl);
+                                template.find('#oglinkstitle').text(record.oglinkstitle);
+                                template.find('#oglinksdescription').text(record.oglinksdescription);
+                                template.find('#oglinksurl').text(record.oglinkssitename);
+                                template.find('#oglinksurl').attr("href", record.oglinksurl);
+                                template.find('#ogcardid').attr("class", "og_" + record.ogcardid)
+
+                            }
+
+                            template.find('#recordTime').attr('id', `recordTime_${record.hash}`);
+                            template.find(`#recordTime_${record.hash}`).attr('class', `time_${record.hash} ml-auto`);
+                            template.find('#hash').val(record.hash);
+                            template.find('#hash').attr('id', `hash_${record.hash}`);
+
+                            localUTCDateC(template.find(`#recordTime_${record.hash}`), record.proposalDate);
+
+                            if (record.type === '1') {
+                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>');
+                            }
+                            else if (record.type === '4') {
+                                if (record.isUpdate === "1") {
+                                    if (record.pastSuperBlock === 0) {
+                                        if (record.cidtype === "1") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>');
+                                        } else if (record.cidtype === "2") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                                        } else {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Record Update</button></span>');
+                                        }
                                     } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Record Update</button></span>');
+                                        if (record.cidtype === "1") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>');
+                                        } else if (record.cidtype === "2") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
+                                        } else {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Record Update</button></span>');
+                                        }
                                     }
+
                                 } else {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>');
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
-                                    } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Record Update</button></span>');
-                                    }
+                                    template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>');
                                 }
-
-                            } else {
-                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>');
                             }
-                        }
-                        else if (record.type === '5') {
-                            if (record.isUpdate === "1") {
-                                if (record.pastSuperBlock === 0) {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Suggested Evidence Update</button></span>');
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                            else if (record.type === '5') {
+                                if (record.isUpdate === "1") {
+                                    if (record.pastSuperBlock === 0) {
+                                        if (record.cidtype === "1") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Suggested Evidence Update</button></span>');
+                                        } else if (record.cidtype === "2") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
+                                        } else {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Update</button></span>');
+                                        }
                                     } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Update</button></span>');
+                                        if (record.cidtype === "1") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Evidence Update</button></span>');
+                                        } else if (record.cidtype === "2") {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
+                                        } else {
+                                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Update</button></span>');
+                                        }
                                     }
+
                                 } else {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Evidence Update</button></span>');
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
-                                    } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Update</button></span>');
-                                    }
+                                    template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>');
                                 }
-
-                            } else {
-                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>');
                             }
-                        }
 
-                        template.find('#btnSEU').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Suggested Evidence Update?',
-                                type: 'alert',
-                                html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
+                            if (record.pastSuperBlock === 0) {
+                                if (record.voting) {
+                                    template.find('#votingSection').show();
+                                    template.find('#btnVoteYes').attr('id', `btnVoteYes_${record.hash}`);
+                                    template.find('#btnVoteNo').attr('id', `btnVoteNo_${record.hash}`);
+                                    template.find('#btnVoteAbstain').attr('id', `btnVoteAbstain_${record.hash}`);
 
-                        template.find('#btnSTU').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Suggested Topic Update?',
-                                type: 'alert',
-                                html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
+                                    template.find('#yesCount').text(record.yesCount);
+                                    template.find('#noCount').text(record.noCount);
+                                    template.find('#abstainCount').text(record.abstainCount);
 
-                        template.find('#btnSRU').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Suggested Record Update?',
-                                type: 'alert',
-                                html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnPro').on('click', function () {
-                            Swal.fire({
-                                title: 'What is a Proposal?',
-                                type: 'alert',
-                                confirmButtonColor: "#545B62",
-                                html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnRec').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Record?',
-                                type: 'alert',
-                                confirmButtonColor: "#545B62",
-                                html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnArc').on('click', function () {
-                            Swal.fire({
-                                title: 'What is a Archive?',
-                                type: 'alert',
-                                confirmButtonColor: "#545B62",
-                                html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        if (record.pastSuperBlock === 0) {
-                            if (record.voting) {
-                                template.find('#votingSection').show();
-
-                                template.find('#yesCount').text(record.yesCount);
-                                template.find('#noCount').text(record.noCount);
-                                template.find('#abstainCount').text(record.abstainCount);
-
-                            }
-                        }
-                        else {
-                            if (record.type === '4') {
-                                if (record.cachedLocked) {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
-                                }
-                                else {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
                                 }
                             }
                             else {
-                                if (record.cachedLocked) {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                if (record.type === '4') {
+                                    if (record.cachedLocked) {
+                                        template.find('#pastVotingCycle').text('Past Voting Cycle');
+
+                                        var iconClass = 'fas fa-lock';
+                                        var iconContainer = $(template).find('#pastVotingCycleTree');
+                                        var iconElement = $('<i>').addClass(iconClass);
+                                        iconElement.css('margin', '1px');
+                                        iconElement.attr('title', 'Past Voting Cycle');
+                                        iconContainer.append(iconElement);
+                                        $('#template').replaceWith(template);
+
+                                    }
+                                    else {
+                                        template.find('#pastVotingCycle').text('Past Voting Cycle');
+
+                                        var iconClass = 'fas fa-lock';
+                                        var iconContainer = $(template).find('#pastVotingCycleTree');
+                                        var iconElement = $('<i>').addClass(iconClass);
+                                        iconElement.css('margin', '1px');
+                                        iconElement.attr('title', 'Past Voting Cycle');
+                                        iconContainer.append(iconElement);
+                                        $('#template').replaceWith(template);
+                                    }
                                 }
                                 else {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
+                                    if (record.cachedLocked) {
+                                        template.find('#pastVotingCycle').text('Past Voting Cycle');
+
+                                        var iconClass = 'fas fa-lock';
+                                        var iconContainer = $(template).find('#pastVotingCycleTree');
+                                        var iconElement = $('<i>').addClass(iconClass);
+                                        iconElement.css('margin', '1px');
+                                        iconElement.attr('title', 'Past Voting Cycle');
+                                        iconContainer.append(iconElement);
+                                        $('#template').replaceWith(template);
+                                    }
+                                    else {
+                                        template.find('#pastVotingCycle').text('Past Voting Cycle');
+
+                                        var iconClass = 'fas fa-lock';
+                                        var iconContainer = $(template).find('#pastVotingCycleTree');
+                                        var iconElement = $('<i>').addClass(iconClass);
+                                        iconElement.css('margin', '1px');
+                                        iconElement.attr('title', 'Past Voting Cycle');
+                                        iconContainer.append(iconElement);
+                                        $('#template').replaceWith(template);
+                                    }
                                 }
                             }
-                        }
 
+                            template.find('#btnSEU').on('click', function () {
+                                Swal.fire({
+                                    title: 'What is Suggested Evidence Update?',
+                                    type: 'alert',
+                                    html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                    confirmButtonText: 'Ok'
+                                });
+                            });
 
-                        if (record.expired === 1) {
-                            template.find('#expired').text('Expired');
-                        }
-                        else if (record.expired === 0) {
-                            template.find('#expired').text('Active');
-                        }
-                        else if (record.expired === -2) {
-                            template.find('#expired').text('Not Submitted');
-                        }
+                            template.find('#btnSTU').on('click', function () {
+                                Swal.fire({
+                                    title: 'What is Suggested Topic Update?',
+                                    type: 'alert',
+                                    html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                    confirmButtonText: 'Ok'
+                                });
+                            });
 
-                        //Handle top comment section
+                            template.find('#btnSRU').on('click', function () {
+                                Swal.fire({
+                                    title: 'What is Suggested Record Update?',
+                                    type: 'alert',
+                                    html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                    confirmButtonText: 'Ok'
+                                });
+                            });
 
-                        if (type === 'all') {
+                            template.find('#btnPro').on('click', function () {
+                                Swal.fire({
+                                    title: 'What is a Proposal?',
+                                    type: 'alert',
+                                    confirmButtonColor: "#545B62",
+                                    html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                    confirmButtonText: 'Ok'
+                                });
+                            });
 
-                            if ($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#allRecordsContainer").append(template);
+                            template.find('#btnRec').on('click', function () {
+                                Swal.fire({
+                                    title: 'What is Record?',
+                                    type: 'alert',
+                                    confirmButtonColor: "#545B62",
+                                    html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                    confirmButtonText: 'Ok'
+                                });
+                            });
 
-                        }
-                        else if (type === 'proposals') {
-                            if ($('#proposalsContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#proposalsContainer").append(template);
+                            template.find('#btnArc').on('click', function () {
+                                Swal.fire({
+                                    title: 'What is a Archive?',
+                                    type: 'alert',
+                                    confirmButtonColor: "#545B62",
+                                    html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                                    confirmButtonText: 'Ok'
+                                });
+                            });
 
-                        }
-                        else if (type === 'records') {
-                            if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#recordsContainer").append(template);
+                            if (record.expired === 1) {
+                                template.find('#expired').text('Expired');
+                            }
+                            else if (record.expired === 0) {
+                                template.find('#expired').text('Active');
+                            }
+                            else if (record.expired === -2) {
+                                template.find('#expired').text('Not Submitted');
+                            }
 
-                        }
-                        else if (type === 'search') {
-                            if ($('#searchContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#searchContainer").append(template);
+                            if (type === 'all') {
 
+                                if ($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
+                                    $("#allRecordsContainer").append(template);
+
+                            }
+                            else if (type === 'proposals') {
+                                if ($('#proposalsContainer').find(`#record_${record.hash}`).length === 0)
+                                    $("#proposalsContainer").append(template);
+
+                            }
+                            else if (type === 'records') {
+                                if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
+                                    $("#recordsContainer").append(template);
+
+                            }
+                            else if (type === 'search') {
+                                if ($('#searchContainer').find(`#record_${record.hash}`).length === 0)
+                                    $("#searchContainer").append(template);
+
+                            }
+                            else if (type === 'tree') {
+                                if ($('#treeContainer').find(`#record_${record.hash}`).length === 0)
+                                    $("#treeContainer").append(template);
+
+                            }
                         }
                     });
 
@@ -486,6 +1077,9 @@
                         else if (type === 'search') {
                             $('#searchNoRecordMsg').hide();
                         }
+                        else if (type === 'tree') {
+                             $('#treeNoRecordMsg').hide();
+                        }
                     }
                     else {
                         if (type === 'all' && $("#allRecordsContainer").children().length === 0) {
@@ -496,6 +1090,9 @@
                         }
                         else if (type === 'records' && $("#recordsContainer").children().length === 0) {
                             $('#recordsNoRecordMsg').show();
+                        }
+                        else if (type === 'tree' && $("#treeContainer").children().length === 0) {
+                            $('#treeNoRecordMsg').show();
                         }
                         else if (type === 'search' && $("#searchContainer").children().length === 0 && pi === 0) {
                             $("#SearchNoRecordMsg").show();
@@ -518,6 +1115,7 @@
                     $("#proposalloadingdiv").hide();
                     $("#recordsloadingdiv").hide();
                     $("#searchloadingdiv").hide();
+                    $("#treeloadingdiv").hide();
                 },
                 error: function (xhr, status, error) {
                     console.log('error:', error);
@@ -528,287 +1126,10 @@
             });
         }
 
-        function lazyLoadAll1(type, pi, sq) {
-            if (inProgress)
-                return;
-            if (typeof sq === 'undefined' || sq === "") {
-                sq = "";
-            } else {
-                if (pi <= 0) //Don't clear results when searching and scrolling if we already have at least some results
-                {
-                    $('#searchContainer').empty();
-                    type = "search";
-                    $('a[href="#search"]').tab('show');
-                    $("#searchTab").show();
-                    $("#allTab").removeClass("active");
-                    $("#proposalsTab").removeClass("active");
-                    $("#recordsTab").removeClass("active");
-                    $("#all").removeClass("active");
-                    $("#proposals").removeClass("active");
-                    $("#records").removeClass("active");
-                    $('#search').show;
-                    $('#search').addClass("show active");
-                    $("#searchContainer").show();
-
-                }
-            }
-
-            $("#allloadingdiv").show();
-            $("#proposalloadingdiv").show();
-            $("#recordsloadingdiv").show();
-            $("#searchloadingdiv").show();
-            inProgress = true;
-            $.ajax({
-                type: 'GET',
-                url: '/Home/LoadRecords',
-                contentType: 'application/json; charset=utf-8',
-                data: { recordType: type, pageIndex: pi, query: sq },
-                dataType: 'json',
-                success: function (result, status, xhr) {
-
-                    pageindex = pageIndex + 1;
-                    result.records && result.records.length > 0 && result.records.map((record, idx) => {
-
-                        let template = $('#recordTemplate').clone().show();
-                        template.attr('id', `record_${record.hash}`);
-
-                        template.find('#proposedByUserName').text(record.proposedByUserName);
-                        template.find('#proposalSummary').text(record.proposalSummary);
-                        template.find('#proposalName').text(record.proposalName);
-
-                        if (record.oglinksid != "0") {
-
-                            template.find('#ogcardid').show();
-                            template.find('#oglinksimageurl').attr("src", record.oglinksimageurl);
-                            template.find('#oglinkstitle').text(record.oglinkstitle);
-                            template.find('#oglinksdescription').text(record.oglinksdescription);
-                            template.find('#oglinksurl').text(record.oglinkssitename);
-                            template.find('#oglinksurl').attr("href", record.oglinksurl)
-                            template.find('#ogcardid').attr("class", "og_" + record.ogcardid)
-
-                        }
-
-                        template.find('#recordTime').attr('id', `recordTime_${record.hash}`);
-                        template.find(`#recordTime_${record.hash}`).attr('class', `time_${record.hash}`);
-                        localUTCDateC(template.find(`#recordTime_${record.hash}`), record.proposalDate);
-
-                        template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
-                        template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}&id=`);
-
-
-                        if (record.type === '1') {
-                            template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>');
-                        }
-                        else if (record.type === '4') {
-                            if (record.isUpdate === "1") {
-                                if (record.pastSuperBlock === 0) {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Suggested Evidence Update</button></span>');
-
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
-                                    } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Record Update</button></span>');
-                                    }
-                                } else {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" id="btnSEU" class="btn btn-outline-dark float-right btn-sm">Evidence Update</button></span>');
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
-                                    } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Record Update</button></span>');
-                                    }
-                                }
-                            } else {
-                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>');
-                            }
-                        }
-                        else if (record.type === '5') {
-                            if (record.isUpdate === "1") {
-                                if (record.pastSuperBlock === 0) {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Suggested Evidence Update</button></span>');
-
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Suggested Topic Update</button></span>');
-                                    } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Suggested Update</button></span>');
-                                    }
-                                } else {
-                                    if (record.cidtype === "1") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSEU">Evidence Update</button></span>');
-                                    } else if (record.cidtype === "2") {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSTU">Topic Update</button></span>');
-                                    } else {
-                                        template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnSRU">Update</button></span>');
-                                    }
-                                }
-
-                            } else {
-                                template.find('#recordType').html('<span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>');
-                            }
-                        }
-
-                        template.find('#btnSEU').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Suggested Evidence Update?',
-                                type: 'alert',
-                                html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnSTU').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Suggested Topic Update?',
-                                type: 'alert',
-                                html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnSRU').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Suggested Record Update?',
-                                type: 'alert',
-                                html: "Suggested Record Update is a new record, to suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnPro').on('click', function () {
-                            Swal.fire({
-                                title: 'What is a Proposal?',
-                                type: 'alert',
-                                confirmButtonColor: "#545B62",
-                                html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnRec').on('click', function () {
-                            Swal.fire({
-                                title: 'What is Record?',
-                                type: 'alert',
-                                confirmButtonColor: "#545B62",
-                                html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        template.find('#btnArc').on('click', function () {
-                            Swal.fire({
-                                title: 'What is a Archive?',
-                                type: 'alert',
-                                confirmButtonColor: "#545B62",
-                                html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
-                                confirmButtonText: 'Ok'
-                            });
-                        });
-
-                        if (record.pastSuperBlock === 0) {
-                            // if (record.voting) {
-                            template.find('#votingSection').show();
-
-                            template.find('#yesCount').text(record.yesCount);
-                            template.find('#noCount').text(record.noCount);
-                            template.find('#abstainCount').text(record.abstainCount);
-                            // }
-                        }
-                        else {
-                            if (record.type === '4') {
-                                if (record.cachedLocked) {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
-                                }
-                                else {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
-                                }
-                            }
-                            else {
-                                if (record.cachedLocked) {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
-                                }
-                                else {
-                                    template.find('#pastVotingCycle').text('Past Voting Cycle');
-                                }
-                            }
-                        }
-
-                        if (type === 'all') {
-                            if ($('#allRecordsContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#allRecordsContainer").append(template);
-                        }
-                        else if (type === 'proposals') {
-                            if ($('#proposalsContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#proposalsContainer").append(template);
-                        }
-                        else if (type === 'records') {
-                            if ($('#recordsContainer').find(`#record_${record.hash}`).length === 0)
-                                $("#recordsContainer").append(template);
-                        } else if (type === 'search') {
-                            if ($('#searchContainer').find(`#record_${record.id}`).length === 0)
-                                $("#searchContainer").append(template);
-
-                        }
-                    });
-
-                    if (result.records && result.records.length > 0) {
-                        if (type === 'all') {
-                            $('#allRecordsNoRecordMsg').hide();
-                        }
-                        else if (type === 'proposals') {
-                            $('#proposalsNoRecordMsg').hide();
-                        }
-                        else if (type === 'records') {
-                            $('#recordsNoRecordMsg').hide();
-                        }
-                        else if (type === 'search') {
-                            $('#searchNoRecordMsg').hide();
-                        }
-                    }
-                    else {
-                        if (type === 'all' && $("#allRecordsContainer").children().length === 0) {
-                            $('#allRecordsNoRecordMsg').show();
-                        }
-                        else if (type === 'proposals' && $("#proposalsContainer").children().length === 0) {
-                            $('#proposalsNoRecordMsg').show();
-                        }
-                        else if (type === 'records' && $("#recordsContainer").children().length === 0) {
-                            $('#recordsNoRecordMsg').show();
-                        }
-                        else if (type === 'search' && $("#searchContainer").children().length === 0 && pi === 0) {
-                            $("#SearchNoRecordMsg").show();
-                            $('a[href="#search"]').tab('show');
-                            $("#searchTab").show();
-                            $("#allTab").removeClass("active");
-                            $("#proposalsTab").removeClass("active");
-                            $("#recordsTab").removeClass("active");
-                            $("#all").removeClass("active");
-                            $("#proposals").removeClass("active");
-                            $("#records").removeClass("active");
-                            $('#search').show;
-                            $('#search').addClass("show active");
-                            $('#searchNoRecordMsg').addClass("show active");
-
-                        }
-                    }
-                    $("#allloadingdiv").hide();
-                    $("#proposalloadingdiv").hide();
-                    $("#recordsloadingdiv").hide();
-                    $("#searchloadingdiv").hide();
-                },
-                error: function (xhr, status, error) {
-                    console.log('error:', error);
-                },
-                complete: function (data) {
-                    inProgress = false;
-                }
-            });
-        }
-
-
-
-
+        var votingProposalId = null;
+        var votingParentHash = null;
+        var vote = 'yes';
+        var UTC = new Date().getTime();
 
         function localUTCDateC(id, submittedAt) {
             const now = new Date();
@@ -866,7 +1187,6 @@
 
             var parameters = {};
             var queryR = "";
-
             $.each(window.location.search.substr(1).split('&'), function (index, value) {
                 var parameter = value.split('=');
                 var name = decodeURIComponent(parameter[0]);
@@ -875,33 +1195,89 @@
                 queryR = parameters['q'];
             });
 
-            var count = 0;
-            $(window).on("scroll", function () {
 
+            $(window).on("scroll", function () {
                 var docHeight = $(document).height();
                 var winScrolled = $(window).height() + $(window).scrollTop();
-                count = count + 1;
                 if (docHeight - winScrolled < 1) {
                     let nowScroll = $(this).scrollTop();
-                    if (nowScroll >= lastScroll && nowScroll != 0) {
+                    //console.log("lastScroll:" + lastScroll + "nowScroll:" + nowScroll + "docHeight:" + docHeight + "winScrolled:" + winScrolled);
+                    if (nowScroll >= lastScroll) {
                         if (typeof queryR === "undefined" || queryR === "") {
-                            lazyLoadAll(selectedType, pageIndex);
+                            lazyLoadAll(selectedType, pageIndex, "", 5);
                         } else {
-                            lazyLoadAll(selectedType, pageIndex, queryR);
+                            lazyLoadAll(selectedType, pageIndex, queryR, 5);
                         }
                         pageIndex = pageIndex + 1;
                     }
                     lastScroll = nowScroll;
+
                 }
             });
 
             if (typeof queryR === "undefined" || queryR === "") {
-                lazyLoadAll(selectedType, pageIndex);
+
+                lazyLoadAll(selectedType, pageIndex, "", 5);
             } else {
-                lazyLoadAll(selectedType, pageIndex, queryR);
+
+                lazyLoadAll(selectedType, pageIndex, queryR, 5);
             }
 
+
+            $('body').on('click', function (e) {
+                if ($(e.target).data('toggle') !== 'popover'
+                    && $(e.target).parents('[data-toggle="popover"]').length === 0
+                    && $(e.target).parents('.popover.in').length === 0) {
+                    $('[data-toggle="popover"]').popover('hide');
+                }
+            });
+
+           @foreach(var proposal in Model.All)
+           {
+            <text>
+            var dd1 = $('#timetemp_@(proposal.Id)').val();
+            localUTCDateC(@proposal.Id, dd1);
+            $('.btnVoteManual_@(proposal.Id)').popover('enable');
+            </text>
+
+            }
+
+           @foreach(var proposal in Model.Proposals)
+           {
+
+                <text>
+                var dd1 = $('#timetemp_@(proposal.Id)').val();
+
+                localUTCDateC(@proposal.Id, dd1);
+                </text>
+            }
+
+           @foreach(var proposal in Model.Records)
+            {
+
+                <text>
+                var dd1 = $('#timetemp_@(proposal.Id)').val();
+
+                localUTCDateC(@proposal.Id, dd1);
+                </text>
+            }
+
+
+            $('input[name="voteOptions"]').change(function (evt) {
+
+                vote = evt.target.id;
+
+            });
+
+
+
         });
+
+
+        function renderRecord() {
+
+                }
+
 
     </script>
 

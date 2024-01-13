@@ -54,6 +54,7 @@ namespace HistWeb.Areas.Proposals.Models
 		public string oglinkssitename { get; set; }
 		public string oglinksdescription { get; set; }
 		public string ParentIPFSCID { get; set; }
+		public string start_epoch { get; set; }
 		public string cidtype { get; set; }
 		public string IsUpdate { get; set; }
 
@@ -100,10 +101,10 @@ namespace HistWeb.Areas.Proposals.Models
 	}
 	public class PreviousVersionsModel
 	{
-		public string cidtype;
-
+		public int Id { get; set; }
+		public string cidtype { get; set; }
 		public string Name { get; set; }
-
+		public string Summary { get; set; }
 		public string ParentIPFSCid { get; set; }
 
 		public string IPFSHash { get; set; }

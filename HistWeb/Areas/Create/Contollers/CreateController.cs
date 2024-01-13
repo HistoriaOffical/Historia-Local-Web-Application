@@ -62,18 +62,6 @@ namespace HistWeb.Controllers
 		public async Task<IActionResult> Index()
 		{
 
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
-			{
-				using (var cmd = conn.CreateCommand())
-				{
-					conn.Open();
-					cmd.CommandType = System.Data.CommandType.Text;
-					cmd.CommandText = "DELETE FROM archives";
-					cmd.ExecuteNonQuery();
-
-				}
-			}
-
 			return View();
 		}
 
@@ -396,7 +384,7 @@ namespace HistWeb.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> CreateBuilderLoadArchiveURL(string html)
+		public async Task<IActionResult> CreateBuilderLoadArchiveURL(int id)
 		{
 			List<object> items = new List<object>();
 			var sanitizer = new HtmlSanitizer();
@@ -411,7 +399,7 @@ namespace HistWeb.Controllers
 						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
 						cmd.CommandText = "DELETE FROM archives";
-						cmd.ExecuteNonQuery();
+						//cmd.ExecuteNonQuery();
 
 					}
 				}
@@ -431,7 +419,7 @@ namespace HistWeb.Controllers
 
 
 		[HttpGet]
-		public async Task<IActionResult> PollForArchive()
+		public async Task<IActionResult> PollForArchive(int id)
 		{
 			List<object> items = new List<object>();
 			var sanitizer = new HtmlSanitizer();
@@ -446,7 +434,8 @@ namespace HistWeb.Controllers
 						{
 							conn.Open();
 							cmd.CommandType = System.Data.CommandType.Text;
-							cmd.CommandText = "SELECT * FROM archives LIMIT 1";
+							cmd.CommandText = "SELECT * FROM archives WHERE  id = @id LIMIT 1";
+							cmd.Parameters.AddWithValue("@id", id);
 							cmd.ExecuteNonQuery();
 
 							using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -454,6 +443,7 @@ namespace HistWeb.Controllers
 								while (rdr.Read())
 								{
 									var url = rdr.GetString(rdr.GetOrdinal("url"));
+									var urlInsert = HttpUtility.HtmlEncode(rdr.GetString(rdr.GetOrdinal("url")));
 									var html = !rdr.IsDBNull(rdr.GetOrdinal("html")) ? rdr.GetString(rdr.GetOrdinal("html")) : "";
 									var image = !rdr.IsDBNull(rdr.GetOrdinal("image")) ? rdr.GetString(rdr.GetOrdinal("image")) : "";
 									string orgUrl = "";
@@ -475,7 +465,7 @@ namespace HistWeb.Controllers
 										"<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script> <script " +
 										"src=\"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js\"></script> <script " +
 										"src=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js\"></script> </head> <body> <center>" +
-										"This page was archived on " + DateTime.UtcNow.ToString("F") + " UTC</center> <div class=\"container\"> <div class=\"row\" id=\"ArchivePreview\" style=\"max-width:1500px\"> " +
+										"This page was archived on " + DateTime.UtcNow.ToString("F") + " UTC<br> Original URL: <a href = " + urlInsert + ">" + urlInsert + " </a></center> <div class=\"container\"> <div class=\"row\" id=\"ArchivePreview\" style=\"max-width:1500px\"> " +
 										"<div class=\"col-12\"> <ul id=\"tabsJustified\" class=\"nav nav-tabs\" style=\"background: #fff;\"> " +
 										"<li class=\"nav-item\"><a href=\"#archiveHtml\" data-target=\"#archiveHtml\" data-toggle=\"tab\" role=\"tab\" " +
 										"class=\"nav-link small text-uppercase\" aria-selected=\"true\">HTML</a></li><li class=\"nav-item\">" +
@@ -512,6 +502,39 @@ namespace HistWeb.Controllers
 
 		}
 
+		[HttpPost]
+		public async Task<JsonResult> DeleteArchiveDraft(IFormCollection formCollection)
+		{
+			var sanitizer = new HtmlSanitizer();
+			var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+			try
+			{
+				string id = sanitizer.Sanitize(formCollection["id"]);
+
+				if (id != "0")
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "DELETE FROM archives WHERE id=@id";
+							cmd.Parameters.AddWithValue("id", id);
+							cmd.ExecuteNonQuery();
+
+						}
+					}
+				}
+				dynamic prepRespJson = new { Success = true };
+				return Json(prepRespJson);
+			}
+			catch (Exception ex)
+			{
+				var prepRespJson1 = new { Success = false, Error = ex.ToString() };
+				return Json(prepRespJson1);
+			}
+		}
 		public string GetTemporaryDirectory()
 		{
 			string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", ""));
@@ -632,6 +655,50 @@ namespace HistWeb.Controllers
 				}
 				dynamic prepRespJson = new { Success = true };
 				return Json(prepRespJson);
+			}
+			catch (Exception ex)
+			{
+				var prepRespJson1 = new { Success = false, Error = ex.ToString() };
+				return Json(prepRespJson1);
+			}
+		}
+
+		[HttpGet]
+		public JsonResult GetArchiveDrafts()
+		{
+			var sanitizer = new HtmlSanitizer();
+			var userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+			string proposalhash = "";
+			try
+			{
+				List<object> items = new List<object>();
+				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT * FROM archives";
+
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							while (rdr.Read())
+							{
+								var id = rdr.GetInt32(rdr.GetOrdinal("Id"));
+								var url = !rdr.IsDBNull(rdr.GetOrdinal("url")) ? rdr.GetString(rdr.GetOrdinal("url")) : "";
+								//var date = !rdr.IsDBNull(rdr.GetOrdinal("dateadded")) ? rdr.GetDateTime(rdr.GetOrdinal("dateadded")).ToString() : "";
+								double dateAdded = double.Parse(rdr.GetString(rdr.GetOrdinal("dateadded")));
+								var date = UnixTimeStampToDateTime(dateAdded).ToString("MMM dd, yyyy HH:mm:ss");
+								var item = new { Id = id, draftName = sanitizer.Sanitize(url), date = date };
+								items.Add(item);
+							}
+
+						}
+					}
+				}
+
+				var json1 = JsonConvert.SerializeObject(items);
+				return Json(json1);
 			}
 			catch (Exception ex)
 			{
@@ -1195,6 +1262,7 @@ namespace HistWeb.Controllers
 				//Screen shot failed
 				imageTest = false;
 			}
+			DateTimeOffset dateTimeOffset = DateTimeOffset.UtcNow;
 
 			try
 			{
@@ -1204,10 +1272,11 @@ namespace HistWeb.Controllers
 					{
 						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "Insert into archives (url, html, image) VALUES (@url, @html, @image)";
+						cmd.CommandText = "Insert into archives (url, html, image, dateadded) VALUES (@url, @html, @image, @dateadded)";
 						cmd.Parameters.AddWithValue("url", sanitizer.Sanitize(URL));
 						cmd.Parameters.AddWithValue("html", HTML);
 						cmd.Parameters.AddWithValue("image", image);
+						cmd.Parameters.AddWithValue("dateadded", dateTimeOffset.ToUnixTimeSeconds());
 						cmd.ExecuteNonQuery();
 
 					}

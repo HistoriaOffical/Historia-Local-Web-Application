@@ -15,6 +15,11 @@
             border-color: #2196F3;
         }
 
+        .dt-body-left {
+            text-align: left;
+        }
+
+
         /* non selected btn css */
         .btn-group-toggle .btn {
             color: #fff;
@@ -410,95 +415,52 @@
                 <div class="row">
                     <div class="col-12">
                         <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
-                            <li class="nav-item"><a href="#versions" data-target="#versions" data-toggle="tab" role="tab" class="nav-link small text-uppercase active">Versions</a></li>
-                            <li class="nav-item"><a href="#evidence" data-target="#evidence" data-toggle="tab" role="tab" class="nav-link small text-uppercase">Evidence</a></li>
-                            <li class="nav-item"><a href="#topics" data-target="#topics" data-toggle="tab" role="tab" class="nav-link small text-uppercase">Topics</a></li>
+                            <li class="nav-item"><a id="topicsTab" href="#topics" data-target="#topics" data-toggle="tab" role="tab" class="nav-link small text-uppercase active">Topics</a></li>
+                            <li class="nav-item"><a id="evidenceTab" href="#evidence" data-target="#evidence" data-toggle="tab" role="tab" class="nav-link small text-uppercase">Evidence</a></li>
+                            <li class="nav-item"><a id="versionsTab" href="#versions" data-target="#versions" data-toggle="tab" role="tab" class="nav-link small text-uppercase">Versions</a></li>
                         </ul>
                         <div class="tab-content">
-                            <div id="versions" class="tab-pane fade show active">
-                                <div id="accordionV" class="verison-button-details">
-                                    <div class="card">
-                                        <div class="card-header" id="headingOne">
-                                            <h5 class="mb-0">
-                                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                                    Verisons
-                                                </button>
-                                            </h5>
-                                        </div>
 
-                                        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionV">
-
-                                            <div class="list-group">
-                                                <table class="table table-striped w-100" id="versionsTable">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Date Added</th>
-                                                            <th>Name</th>
-                                                            <th>IPFS</th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div id="topics" class="tab-pane fade show active">
+                                <div class="list-group">
+                                    <table class="table table-striped w-100" id="topicsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Date Added</th>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
                                 </div>
                             </div>
+
 
                             <div id="evidence" class="tab-pane fade show">
-                                <div id="accordionE" class="evidence-button-details">
-                                    <div class="card">
-                                        <div class="card-header" id="headingOne">
-                                            <h5 class="mb-0">
-                                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                                    Evidence
-                                                </button>
-                                            </h5>
-                                        </div>
-
-                                        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionE">
-
-                                            <div class="list-group">
-                                                <table class="table table-striped w-100" id="evidenceTable">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Date Added</th>
-                                                            <th>Name</th>
-                                                            <th>IPFS</th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="list-group">
+                                    <table class="table table-striped w-100" id="evidenceTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Date Added</th>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
                                 </div>
                             </div>
 
-                            <div id="topics" class="tab-pane fade show">
-                                <div id="accordionT" class="topic-button-details">
-                                    <div class="card">
-                                        <div class="card-header" id="headingOne">
-                                            <h5 class="mb-0">
-                                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                                    Topics
-                                                </button>
-                                            </h5>
-                                        </div>
-
-                                        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionT">
-
-                                            <div class="list-group">
-                                                <table class="table table-striped w-100" id="topicsTable">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Date Added</th>
-                                                            <th>Name</th>
-                                                            <th>IPFS</th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div id="versions" class="tab-pane fade show">
+                                <div class="list-group">
+                                    <table class="table responsive table-striped w-100" id="versionsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Date Added</th>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
                                 </div>
                             </div>
 
@@ -685,6 +647,135 @@
         });
 
         $(document).ready(function () {
+            setTimeout(function () {
+                $('#topicsTab').trigger('shown.bs.tab');
+            }, 100); // Adjust the delay as needed
+
+            var IpfsPid = "@Model.CurrentModel.Hash";
+            $('#versionsTab').on('shown.bs.tab', function (e) {
+                if ($('#versionsTab').hasClass('active')) {
+                    $.getJSON('@Url.Action("GetVersionsDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData1) {
+
+                        var verisonsTable = $('#versionsTable').DataTable({
+                            destroy: true,
+                            data: JSON.parse(tableData1),
+                            order: [[0, '']],
+                            info: false,
+                            searching: false,
+                            fixedHeader: false,
+                            lengthChange: false,
+                            autoWidth: true,
+                            responsive: true,
+                            columnDefs: [
+                                {
+                                    targets: '_all', // Apply to all columns
+                                    className: 'dt-body-left'
+                                }
+                            ],
+                            columns: [
+                                { data: "DateAdded" },
+                                {
+                                    data: null,
+                                    render: function (data, type, full, meta) {
+
+                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a href>');
+                                    }
+                                },
+                                {
+                                    data: null,
+                                    render: function (data, type, full, meta) {
+
+                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a href>');
+                                    }
+                                }
+
+                            ],
+                        });
+                    });
+                }
+            });
+
+            $('#evidenceTab').on('shown.bs.tab', function (e) {
+                if ($('#evidenceTab').hasClass('active')) {
+                    $.getJSON('@Url.Action("GetEvidenceDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData2) {
+
+                        var evidenceTable = $('#evidenceTable').DataTable({
+                            destroy: true,
+                            data: JSON.parse(tableData2),
+                            order: [[0, '']],
+                            info: false,
+                            searching: false,
+                            fixedHeader: false,
+                            lengthChange: false,
+                            autoWidth: false,
+                            responsive: true,
+                            columnDefs: [
+                                {
+                                    targets: '_all', // Apply to all columns
+                                    className: 'dt-body-left'
+                                }
+                            ],
+                            columns: [
+                                { data: "DateAdded" },
+                                {
+                                    data: null,
+                                    render: function (data, type, full, meta) {
+
+                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a href>');
+                                    }
+                                },
+                                {
+                                    data: null,
+                                    render: function (data, type, full, meta) {
+
+                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a href>');
+                                    }
+                                }
+
+                            ],
+                        });
+                    });
+                }
+            });
+
+            $('#topicsTab').on('shown.bs.tab', function (e) {
+                if ($('#topicsTab').hasClass('active')) {
+                    $.getJSON('@Url.Action("GetTopicsDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData3) {
+                        var topicsTable = $('#topicsTable').DataTable({
+                            destroy: true,
+                            data: JSON.parse(tableData3),
+                            order: [[0, '']],
+                            info: false,
+                            searching: false,
+                            fixedHeader: false,
+                            lengthChange: false,
+                            autoWidth: false,
+                            responsive: true,
+                            columnDefs: [
+                                {
+                                    targets: '_all', // Apply to all columns
+                                    className: 'dt-body-left'
+                                }
+                            ],
+                            columns: [
+                                { data: "DateAdded" },
+                                {
+                                    data: null,
+                                    render: function (data, type, full, meta) {
+                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a>');
+                                    }
+                                },
+                                {
+                                    data: null,
+                                    render: function (data, type, full, meta) {
+                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a>');
+                                    }
+                                }
+                            ],
+                        });
+                    });
+                }
+            });
 
             $('#btnSEU').on('click', function () {
 
@@ -864,7 +955,7 @@
             });
 
 
-            var IpfsPid = "@Model.CurrentModel.Hash";
+
             var verisonsTable = $('#versionsTable').DataTable({
                 data: null,
                 info: false,
@@ -876,12 +967,12 @@
 			    columns: [
                     { data: "DateAdded" },
                     { data: "Name" },
-                    { data: "IPFSHash" }
+                    { data: "Description" }
 
 			    ],
             });
 
-            var verisonsTable = $('#evidenceTable').DataTable({
+            var evidenceTable = $('#evidenceTable').DataTable({
                 data: null,
                 info: false,
                 searching: false,
@@ -892,12 +983,12 @@
                 columns: [
                     { data: "DateAdded" },
                     { data: "Name" },
-                    { data: "IPFSHash" }
+                    { data: "Description" }
 
                 ],
             });
 
-            var verisonsTable = $('#topicsTable').DataTable({
+            var topicsTable = $('#topicsTable').DataTable({
                 data: null,
                 info: false,
                 searching: false,
@@ -908,91 +999,11 @@
                 columns: [
                     { data: "DateAdded" },
                     { data: "Name" },
-                    { data: "IPFSHash" }
+                    { data: "Description" }
 
                 ],
             });
 
-            $.getJSON('@Url.Action("GetVersions", "Proposals", new { Area = "Proposals" })', { IpfsPid: IpfsPid }, function (tableData) {
-
-                        var verisonsTable = $('#versionsTable').DataTable({
-                        destroy: true,
-                        data: JSON.parse(tableData),
-                        order: [[0, '']],
-                        info: false,
-                        searching: false,
-				        fixedHeader: false,
-				        lengthChange: false,
-				        autoWidth: false,
-				        responsive: true,
-				        columns: [
-                            { data: "DateAdded" },
-					        { data: "Name" },
-                            {
-                            data: null,
-                            render: function (data, type, full, meta) {
-
-                                    return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.IPFSHash + '</a href>');
-                                }
-                            }
-
-				        ],
-			        });
-                });
-
-                $.getJSON('@Url.Action("GetEvidence", "Proposals", new { Area = "Proposals" })', { IpfsPid: IpfsPid }, function( tableData ) {
-
-                        var verisonsTable = $('#evidenceTable').DataTable({
-                        destroy: true,
-                        data: JSON.parse(tableData),
-                        order: [[0, '']],
-                        info: false,
-                        searching: false,
-				        fixedHeader: false,
-				        lengthChange: false,
-				        autoWidth: false,
-				        responsive: true,
-				        columns: [
-                            { data: "DateAdded" },
-					        { data: "Name" },
-                            {
-                            data: null,
-                            render: function (data, type, full, meta) {
-
-                                    return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.IPFSHash + '</a href>');
-                                }
-                            }
-
-				        ],
-			        });
-                });
-
-                $.getJSON('@Url.Action("GetTopics", "Proposals", new { Area = "Proposals" })', { IpfsPid: IpfsPid}, function( tableData ) {
-
-                        var verisonsTable = $('#topicsTable').DataTable({
-                        destroy: true,
-                        data: JSON.parse(tableData),
-                        order: [[0, '']],
-                        info: false,
-                        searching: false,
-				        fixedHeader: false,
-				        lengthChange: false,
-				        autoWidth: false,
-				        responsive: true,
-				        columns: [
-                            { data: "DateAdded" },
-					        { data: "Name" },
-                            {
-                            data: null,
-                            render: function (data, type, full, meta) {
-
-                                    return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.IPFSHash + '</a href>');
-                                }
-                            }
-
-				        ],
-			        });
-                });
 
 
 

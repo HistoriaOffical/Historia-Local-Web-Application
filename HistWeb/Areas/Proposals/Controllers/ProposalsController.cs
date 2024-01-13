@@ -128,7 +128,7 @@ namespace HistWeb.Controllers
 
 						pm.CachedFunding = bool.Parse(record.Value.fCachedFunding.ToString());
 						pm.PaymentAmount = decimal.Parse(proposal1.payment_amount.ToString());
-						pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposal1.start_epoch.ToString())).ToString("MM/dd/yyyy");
+						pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposal1.start_epoch.ToString())).ToString("MMM dd, yyyy");
 						DateTime EndDateTemp = UnixTimeStampToDateTime(double.Parse(proposal1.end_epoch.ToString()));
 						pm.PaymentEndDate = EndDateTemp.AddDays(-2);
 						pm.ProposalDate = pm.PaymentDate;
@@ -201,7 +201,486 @@ namespace HistWeb.Controllers
 			return sortedRecords;
 		}
 
-		public JsonResult GetVersions(string IpfsPid)
+		public JsonResult GetVersionsDetails(string phash, int level)
+		{
+			string IPFSHash = "";
+			string ParentIPFSCid = "", url = "";
+			int pid = 0;
+			List<PreviousVersionsModel> previousVersions = new List<PreviousVersionsModel>();
+			try
+			{
+				//Get first parent hash based on Record View information.
+				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT ParentIPFSCID, ipfscid, id FROM items WHERE proposalhash = @phash";
+						cmd.Parameters.AddWithValue("phash", phash);
+
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								ParentIPFSCid = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString(rdr.GetOrdinal("ParentIPFSCID")) : string.Empty;
+								pid = !rdr.IsDBNull(rdr.GetOrdinal("id")) ? rdr.GetInt32(rdr.GetOrdinal("id")) : 0;
+								url = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString(rdr.GetOrdinal("ipfscid")) : string.Empty;
+
+							}
+						}
+						conn.Close();
+					}
+				}
+				List<int> numbersList = new List<int>();
+
+				if (!string.IsNullOrEmpty(ParentIPFSCid))
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT proposalid FROM proposalmatrix where url = @ParentIPFSCid or ParentIPFS = @ParentIPFSCid or url = @url or ParentIPFS = @url";
+							cmd.Parameters.AddWithValue("ParentIPFSCid", ParentIPFSCid);
+							cmd.Parameters.AddWithValue("url", url);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									numbersList.Add(!rdr.IsDBNull(rdr.GetOrdinal("proposalid")) ? rdr.GetInt32(rdr.GetOrdinal("proposalid")) : 0);
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+				else
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT url FROM proposalmatrix where proposalmatrixid = @pid";
+							cmd.Parameters.AddWithValue("pid", pid);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									url = !rdr.IsDBNull(rdr.GetOrdinal("url")) ? rdr.GetString(rdr.GetOrdinal("url")) : string.Empty;
+								}
+							}
+							conn.Close();
+						}
+					}
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT proposalid FROM proposalmatrix where url = @url or ParentIPFS = @url";
+							cmd.Parameters.AddWithValue("url", url);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									numbersList.Add(!rdr.IsDBNull(rdr.GetOrdinal("proposalid")) ? rdr.GetInt32(rdr.GetOrdinal("proposalid")) : 0);
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+				foreach (int id in numbersList)
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT * FROM items WHERE id = @id AND (cidtype IS NULL OR cidtype = 0)";
+
+							cmd.Parameters.AddWithValue("id", id); // Use the current id from the list
+
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+									var hash = rdr.GetString(rdr.GetOrdinal("proposalhash"));
+									previousVersion.Id = !rdr.IsDBNull(rdr.GetOrdinal("Id")) ? rdr.GetInt32(rdr.GetOrdinal("Id")) : 0;
+									previousVersion.IPFSHash = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString(rdr.GetOrdinal("ipfscid")) : rdr.GetString(rdr.GetOrdinal("ipfscid"));
+									previousVersion.ParentIPFSCid = rdr.GetString(rdr.GetOrdinal("ParentIPFSCid"));
+									previousVersion.Name = rdr.GetString(rdr.GetOrdinal("Name"));
+									previousVersion.Summary = rdr.GetString(rdr.GetOrdinal("Summary"));
+									double dateAdded = double.Parse(rdr.GetString(rdr.GetOrdinal("dateadded")));
+									previousVersion.DateAdded = UnixTimeStampToDateTime(dateAdded).ToString("MMM dd, yyyy HH:mm:ss");
+									previousVersion.ProposalHash = rdr.GetString(rdr.GetOrdinal("proposalhash"));
+									if (phash == previousVersion.ProposalHash)
+									{
+										previousVersion.Summary = previousVersion.Summary + " <b>(Current document)</b>";
+									}
+									previousVersion.cidtype = rdr.GetString(rdr.GetOrdinal("cidtype")); ;
+
+									previousVersions.Add(previousVersion);  //Add to list
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+
+				if (previousVersions.Count > 1)
+				{
+					//Dedup.
+					List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
+					AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+					AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
+					//Sort
+					if (AllVersions != null && AllVersions.Count > 0)
+						AllVersions = AllVersions.OrderBy(p => p.DateAdded).ToList();
+					return Json(JsonConvert.SerializeObject(AllVersions));
+				}
+				else
+				{
+					dynamic prepJson = JObject.Parse("{success: false}");
+					return Json(prepJson);
+				}
+			}
+			catch (Exception ex)
+			{
+				dynamic prepBadRespJson = JObject.Parse("{success: false}");
+				return Json(prepBadRespJson);
+			}
+
+		}
+
+		public JsonResult GetEvidenceDetails(string phash, int level)
+		{
+			string IPFSHash = "";
+			string ParentIPFSCid = "", url = "";
+			int pid = 0;
+			List<PreviousVersionsModel> previousVersions = new List<PreviousVersionsModel>();
+			try
+			{
+				//Get first parent hash based on Record View information.
+				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT ParentIPFSCID, ipfscid, id FROM items WHERE proposalhash = @phash";
+						cmd.Parameters.AddWithValue("phash", phash);
+
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								ParentIPFSCid = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString(rdr.GetOrdinal("ParentIPFSCID")) : string.Empty;
+								pid = !rdr.IsDBNull(rdr.GetOrdinal("id")) ? rdr.GetInt32(rdr.GetOrdinal("id")) : 0;
+								url = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString(rdr.GetOrdinal("ipfscid")) : string.Empty;
+
+							}
+						}
+						conn.Close();
+					}
+				}
+				List<int> numbersList = new List<int>();
+
+				if (!string.IsNullOrEmpty(ParentIPFSCid))
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT proposalid FROM proposalmatrix where url = @ParentIPFSCid or ParentIPFS = @ParentIPFSCid or url = @url or ParentIPFS = @url";
+							cmd.Parameters.AddWithValue("ParentIPFSCid", ParentIPFSCid);
+							cmd.Parameters.AddWithValue("url", url);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									numbersList.Add(!rdr.IsDBNull(rdr.GetOrdinal("proposalid")) ? rdr.GetInt32(rdr.GetOrdinal("proposalid")) : 0);
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+				else
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT url FROM proposalmatrix where proposalmatrixid = @pid";
+							cmd.Parameters.AddWithValue("pid", pid);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									url = !rdr.IsDBNull(rdr.GetOrdinal("url")) ? rdr.GetString(rdr.GetOrdinal("url")) : string.Empty;
+								}
+							}
+							conn.Close();
+						}
+					}
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT proposalid FROM proposalmatrix where url = @url or ParentIPFS = @url";
+							cmd.Parameters.AddWithValue("url", url);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									numbersList.Add(!rdr.IsDBNull(rdr.GetOrdinal("proposalid")) ? rdr.GetInt32(rdr.GetOrdinal("proposalid")) : 0);
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+				foreach (int id in numbersList)
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT * FROM items WHERE id = @id AND (cidtype = 1 OR cidtype IS NULL OR cidtype = 0)";
+
+							cmd.Parameters.AddWithValue("id", id); // Use the current id from the list
+
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+									var hash = rdr.GetString(rdr.GetOrdinal("proposalhash"));
+									previousVersion.Id = !rdr.IsDBNull(rdr.GetOrdinal("Id")) ? rdr.GetInt32(rdr.GetOrdinal("Id")) : 0;
+									previousVersion.IPFSHash = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString(rdr.GetOrdinal("ipfscid")) : rdr.GetString(rdr.GetOrdinal("ipfscid"));
+									previousVersion.ParentIPFSCid = rdr.GetString(rdr.GetOrdinal("ParentIPFSCid"));
+									previousVersion.Name = rdr.GetString(rdr.GetOrdinal("Name"));
+									previousVersion.Summary = rdr.GetString(rdr.GetOrdinal("Summary"));
+									double dateAdded = double.Parse(rdr.GetString(rdr.GetOrdinal("dateadded")));
+									previousVersion.DateAdded = UnixTimeStampToDateTime(dateAdded).ToString("MMM dd, yyyy HH:mm:ss");
+									previousVersion.ProposalHash = rdr.GetString(rdr.GetOrdinal("proposalhash"));
+									if (phash == previousVersion.ProposalHash)
+									{
+										previousVersion.Summary = previousVersion.Summary + " <b>(Current document)</b>";
+									}
+									previousVersion.cidtype = rdr.GetString(rdr.GetOrdinal("cidtype")); ;
+
+									previousVersions.Add(previousVersion);  //Add to list
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+
+				if (previousVersions.Count > 1)
+				{
+					//Dedup.
+					List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
+					AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+					AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
+					//Sort
+					if (AllVersions != null && AllVersions.Count > 0)
+						AllVersions = AllVersions.OrderBy(p => p.DateAdded).ToList();
+					return Json(JsonConvert.SerializeObject(AllVersions));
+				}
+				else
+				{
+					dynamic prepJson = JObject.Parse("{success: false}");
+					return Json(prepJson);
+				}
+			}
+			catch (Exception ex)
+			{
+				dynamic prepBadRespJson = JObject.Parse("{success: false}");
+				return Json(prepBadRespJson);
+			}
+
+
+		}
+
+		public JsonResult GetTopicsDetails(string phash, int level)
+		{
+			string IPFSHash = "";
+			string ParentIPFSCid = "", url = "";
+			int pid = 0;
+			List<PreviousVersionsModel> previousVersions = new List<PreviousVersionsModel>();
+			try
+			{
+				//Get first parent hash based on Record View information.
+				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT ParentIPFSCID, ipfscid, id FROM items WHERE proposalhash = @phash";
+						cmd.Parameters.AddWithValue("phash", phash);
+
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								ParentIPFSCid = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString(rdr.GetOrdinal("ParentIPFSCID")) : string.Empty;
+								pid = !rdr.IsDBNull(rdr.GetOrdinal("id")) ? rdr.GetInt32(rdr.GetOrdinal("id")) : 0;
+								url = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString(rdr.GetOrdinal("ipfscid")) : string.Empty;
+
+							}
+						}
+						conn.Close();
+					}
+				}
+				List<int> numbersList = new List<int>();
+
+				if (!string.IsNullOrEmpty(ParentIPFSCid))
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT proposalid FROM proposalmatrix where url = @ParentIPFSCid or ParentIPFS = @ParentIPFSCid or url = @url or ParentIPFS = @url";
+							cmd.Parameters.AddWithValue("ParentIPFSCid", ParentIPFSCid);
+							cmd.Parameters.AddWithValue("url", url);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									numbersList.Add(!rdr.IsDBNull(rdr.GetOrdinal("proposalid")) ? rdr.GetInt32(rdr.GetOrdinal("proposalid")) : 0);
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+				else
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT url FROM proposalmatrix where proposalmatrixid = @pid";
+							cmd.Parameters.AddWithValue("pid", pid);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									url = !rdr.IsDBNull(rdr.GetOrdinal("url")) ? rdr.GetString(rdr.GetOrdinal("url")) : string.Empty;
+								}
+							}
+							conn.Close();
+						}
+					}
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT proposalid FROM proposalmatrix where url = @url or ParentIPFS = @url";
+							cmd.Parameters.AddWithValue("url", url);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									numbersList.Add(!rdr.IsDBNull(rdr.GetOrdinal("proposalid")) ? rdr.GetInt32(rdr.GetOrdinal("proposalid")) : 0);
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+				foreach (int id in numbersList)
+				{
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+						using (var cmd = conn.CreateCommand())
+						{
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT * FROM items WHERE id = @id AND (cidtype = 2 OR cidtype IS NULL OR cidtype = 0)";
+
+							cmd.Parameters.AddWithValue("id", id); // Use the current id from the list
+
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								while (rdr.Read())
+								{
+									PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+									var hash = rdr.GetString(rdr.GetOrdinal("proposalhash"));
+									previousVersion.Id = !rdr.IsDBNull(rdr.GetOrdinal("Id")) ? rdr.GetInt32(rdr.GetOrdinal("Id")) : 0;
+									previousVersion.IPFSHash = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString(rdr.GetOrdinal("ipfscid")) : rdr.GetString(rdr.GetOrdinal("ipfscid"));
+									previousVersion.ParentIPFSCid = rdr.GetString(rdr.GetOrdinal("ParentIPFSCid"));
+									previousVersion.Name = rdr.GetString(rdr.GetOrdinal("Name"));
+									previousVersion.Summary = rdr.GetString(rdr.GetOrdinal("Summary"));
+									double dateAdded = double.Parse(rdr.GetString(rdr.GetOrdinal("dateadded")));
+									previousVersion.DateAdded = UnixTimeStampToDateTime(dateAdded).ToString("MMM dd, yyyy HH:mm:ss");
+									previousVersion.ProposalHash = rdr.GetString(rdr.GetOrdinal("proposalhash"));
+									if (phash == previousVersion.ProposalHash)
+									{
+										previousVersion.Summary = previousVersion.Summary + " <b>(Current document)</b>";
+									}
+									previousVersion.cidtype = rdr.GetString(rdr.GetOrdinal("cidtype")); ;
+
+									previousVersions.Add(previousVersion);  //Add to list
+								}
+							}
+							conn.Close();
+						}
+					}
+				}
+
+				if (previousVersions.Count > 1)
+				{
+					//Dedup.
+					List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
+					AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+					AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
+					//Sort
+					if (AllVersions != null && AllVersions.Count > 0)
+						AllVersions = AllVersions.OrderBy(p => p.DateAdded).ToList();
+					return Json(JsonConvert.SerializeObject(AllVersions));
+				}
+				else
+				{
+					dynamic prepJson = JObject.Parse("{success: false}");
+					return Json(prepJson);
+				}
+			}
+			catch (Exception ex)
+			{
+				dynamic prepBadRespJson = JObject.Parse("{success: false}");
+				return Json(prepBadRespJson);
+			}
+
+
+		}
+
+		public JsonResult GetVersions(string phash, int level)
 		{
 			List<ProposalModel> AllRecords = LoadAllRecords();
 			string IPFSHash = "";
@@ -210,29 +689,30 @@ namespace HistWeb.Controllers
 
 			foreach (var record in AllRecords)
 			{
-				if (record.cidtype == "0")
-				{
-					//Get current record from All Records
-					if (record.Hash == IpfsPid)
-					{
-						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
-						previousVersion.IPFSHash = record.ParentIPFSCID;
-						if (string.IsNullOrEmpty(previousVersion.IPFSHash))
-						{
-							IPFSHash = record.ProposalDescriptionUrl;
-						}
-						else
-						{
-							IPFSHash = previousVersion.IPFSHash;
-						}
 
-						previousVersion.Name = record.ProposalName;
-						previousVersion.DateAdded = record.ProposalDate;
-						previousVersion.ProposalHash = record.Hash;
-						previousVersion.cidtype = record.cidtype;
-						previousVersions.Add(previousVersion);  //Add to list
+					//Get current record from All Records
+				if (record.Hash == phash)
+				{
+					PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+					previousVersion.IPFSHash = record.ParentIPFSCID;
+					if (string.IsNullOrEmpty(previousVersion.IPFSHash))
+					{
+						IPFSHash = record.ProposalDescriptionUrl;
 					}
+					else
+					{
+						IPFSHash = previousVersion.IPFSHash;
+					}
+
+					previousVersion.Name = record.ProposalName;
+					previousVersion.Summary = record.ProposalSummary;
+					previousVersion.DateAdded = record.ProposalDate;
+					previousVersion.ProposalHash = record.Hash;
+					previousVersion.cidtype = record.cidtype;
+					previousVersion.ParentIPFSCid = record.ParentIPFSCID;
+					previousVersions.Add(previousVersion);  //Add to list
 				}
+	
 			}
 
 			foreach (var record in AllRecords)
@@ -245,9 +725,11 @@ namespace HistWeb.Controllers
 						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
 						previousVersion.IPFSHash = record.ParentIPFSCID;
 						previousVersion.Name = record.ProposalName;
+						previousVersion.Summary = record.ProposalSummary;
 						previousVersion.DateAdded = record.ProposalDate;
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
 				}
@@ -263,9 +745,11 @@ namespace HistWeb.Controllers
 						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
 						previousVersion.IPFSHash = record.ParentIPFSCID;
 						previousVersion.Name = record.ProposalName;
-						previousVersion.DateAdded = record.ProposalDate;
+						previousVersion.Summary = record.ProposalSummary;
+						previousVersion.DateAdded = record.ProposalDate; 
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
 				}
@@ -275,7 +759,7 @@ namespace HistWeb.Controllers
 			{
 				//Dedup.
 				List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
-				AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+				AllVersions = previousVersions.GroupBy(x => x.ProposalHash).Select(x => x.Last()).ToList();
 				AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
 				//Sort
 				if (AllVersions != null && AllVersions.Count > 0)
@@ -287,9 +771,9 @@ namespace HistWeb.Controllers
 			//return Json(JsonConvert.SerializeObject(previousVersions));
 			dynamic prepBadRespJson1 = JObject.Parse("{success: false}");
 			return Json(prepBadRespJson1);
-		}
 
-		public JsonResult GetEvidence(string IpfsPid)
+		}
+		public JsonResult GetEvidence(string phash, int level)
 		{
 			List<ProposalModel> AllRecords = LoadAllRecords();
 			string IPFSHash = "";
@@ -298,29 +782,30 @@ namespace HistWeb.Controllers
 
 			foreach (var record in AllRecords)
 			{
-				if (record.cidtype == "1")
-				{
-					//Get current record from All Records
-					if (record.Hash == IpfsPid)
-					{
-						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
-						previousVersion.IPFSHash = record.ParentIPFSCID;
-						if (string.IsNullOrEmpty(previousVersion.IPFSHash))
-						{
-							IPFSHash = record.ProposalDescriptionUrl;
-						}
-						else
-						{
-							IPFSHash = previousVersion.IPFSHash;
-						}
 
-						previousVersion.Name = record.ProposalName;
-						previousVersion.DateAdded = record.ProposalDate;
-						previousVersion.ProposalHash = record.Hash;
-						previousVersion.cidtype = record.cidtype;
-						previousVersions.Add(previousVersion);  //Add to list
+					//Get current record from All Records
+				if (record.Hash == phash)
+				{
+					PreviousVersionsModel previousVersion = new PreviousVersionsModel();
+					previousVersion.IPFSHash = record.ParentIPFSCID;
+					if (string.IsNullOrEmpty(previousVersion.IPFSHash))
+					{
+						IPFSHash = record.ProposalDescriptionUrl;
 					}
+					else
+					{
+						IPFSHash = previousVersion.IPFSHash;
+					}
+
+					previousVersion.Name = record.ProposalName;
+					previousVersion.Summary = record.ProposalSummary;
+					previousVersion.DateAdded = record.ProposalDate;
+					previousVersion.ProposalHash = record.Hash;
+					previousVersion.cidtype = record.cidtype;
+					previousVersion.ParentIPFSCid = record.ParentIPFSCID;
+					previousVersions.Add(previousVersion);  //Add to list
 				}
+
 			}
 
 			foreach (var record in AllRecords)
@@ -333,9 +818,11 @@ namespace HistWeb.Controllers
 						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
 						previousVersion.IPFSHash = record.ParentIPFSCID;
 						previousVersion.Name = record.ProposalName;
+						previousVersion.Summary = record.ProposalSummary;
 						previousVersion.DateAdded = record.ProposalDate;
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
 				}
@@ -351,9 +838,11 @@ namespace HistWeb.Controllers
 						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
 						previousVersion.IPFSHash = record.ParentIPFSCID;
 						previousVersion.Name = record.ProposalName;
+						previousVersion.Summary = record.ProposalSummary;
 						previousVersion.DateAdded = record.ProposalDate;
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
 				}
@@ -363,7 +852,7 @@ namespace HistWeb.Controllers
 			{
 				//Dedup.
 				List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
-				AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+				AllVersions = previousVersions.GroupBy(x => x.ProposalHash).Select(x => x.Last()).ToList();
 				AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
 				//Sort
 				if (AllVersions != null && AllVersions.Count > 0)
@@ -377,8 +866,7 @@ namespace HistWeb.Controllers
 			return Json(prepBadRespJson1);
 
 		}
-
-		public JsonResult GetTopics(string IpfsPid)
+		public JsonResult GetTopics(string phash, int level)
 		{
 			List<ProposalModel> AllRecords = LoadAllRecords();
 			string IPFSHash = "";
@@ -387,10 +875,9 @@ namespace HistWeb.Controllers
 
 			foreach (var record in AllRecords)
 			{
-				if (record.cidtype == "2")
-				{
+
 					//Get current record from All Records
-					if (record.Hash == IpfsPid)
+					if (record.Hash == phash)
 					{
 						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
 						previousVersion.IPFSHash = record.ParentIPFSCID;
@@ -404,12 +891,14 @@ namespace HistWeb.Controllers
 						}
 
 						previousVersion.Name = record.ProposalName;
-						previousVersion.DateAdded = record.ProposalDate;
+						previousVersion.Summary = record.ProposalSummary;
+						previousVersion.DateAdded = record.ProposalDate; 
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
-				}
+				
 			}
 
 			foreach (var record in AllRecords)
@@ -422,9 +911,11 @@ namespace HistWeb.Controllers
 						PreviousVersionsModel previousVersion = new PreviousVersionsModel();
 						previousVersion.IPFSHash = record.ParentIPFSCID;
 						previousVersion.Name = record.ProposalName;
+						previousVersion.Summary = record.ProposalSummary;
 						previousVersion.DateAdded = record.ProposalDate;
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
 				}
@@ -443,6 +934,7 @@ namespace HistWeb.Controllers
 						previousVersion.DateAdded = record.ProposalDate;
 						previousVersion.ProposalHash = record.Hash;
 						previousVersion.cidtype = record.cidtype;
+						previousVersion.ParentIPFSCid = record.ParentIPFSCID;
 						previousVersions.Add(previousVersion);  //Add to list
 					}
 				}
@@ -452,7 +944,7 @@ namespace HistWeb.Controllers
 			{
 				//Dedup.
 				List<PreviousVersionsModel> AllVersions = new List<PreviousVersionsModel>();
-				AllVersions = previousVersions.GroupBy(x => x.IPFSHash).Select(x => x.Last()).ToList();
+				AllVersions = previousVersions.GroupBy(x => x.ProposalHash).Select(x => x.Last()).ToList();
 				AllVersions = AllVersions.GroupBy(x => x.DateAdded).Select(x => x.Last()).ToList();
 				//Sort
 				if (AllVersions != null && AllVersions.Count > 0)
@@ -466,6 +958,8 @@ namespace HistWeb.Controllers
 			return Json(prepBadRespJson1);
 
 		}
+
+
 
 		public int OG(string url, string ipfscid)
 		{

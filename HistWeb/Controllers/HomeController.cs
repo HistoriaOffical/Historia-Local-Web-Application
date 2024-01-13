@@ -147,10 +147,22 @@ namespace HistWeb.Controllers
 						var ds = record.Value.DataString;
 						string p1 = ds;
 						dynamic proposal1 = JObject.Parse(p1);
-
+						string hash = "";
+						hash = record.Value.Hash;
 						string hostname = _ipfsUrl;
+						string cidtype;
+						if (proposal1.ipfscidtype != null && !string.IsNullOrEmpty(proposal1.ipfscidtype.ToString()))
+						{
+							cidtype = proposal1.ipfscidtype.ToString();
+						} else
+						{
+							cidtype = "0";
+						}
 
-						GetHtmlSourceAsync(HttpUtility.HtmlEncode(proposal1.summary.name.ToString()), HttpUtility.HtmlEncode(proposal1.summary.description.ToString()), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString());
+						string payment_amount =  proposal1.payment_amount.ToString();
+						string payment_address =  proposal1.payment_address.ToString();
+						string dateadded = proposal1.start_epoch.ToString();
+						GetHtmlSourceAsync(HttpUtility.HtmlEncode(proposal1.summary.name.ToString()), HttpUtility.HtmlEncode(proposal1.summary.description.ToString()), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString(), hash, proposal1.ipfspid.ToString(), cidtype, payment_amount, payment_address, dateadded);
 
 					}
 				}
@@ -319,7 +331,7 @@ namespace HistWeb.Controllers
 		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
 
 		[HttpGet]
-		public JsonResult LoadRecords(string recordType, int pageIndex, string query)
+		public JsonResult LoadRecords(string recordType, int pageIndex, string query, int numberToLoad = 5)
 		{
 
 			int? dbRecordType = null;
@@ -327,7 +339,12 @@ namespace HistWeb.Controllers
 			{
 				case "proposals": dbRecordType = 1; break;
 				case "records": dbRecordType = 4; break;
+				case "tree": dbRecordType = 4; break;
 
+			}
+			if (recordType == "tree")
+			{
+				recordType = "records";
 			}
 			int toggle = GetDeepSearch();
 			List<ProposalRecordModel> records = new List<ProposalRecordModel>();
@@ -348,7 +365,7 @@ namespace HistWeb.Controllers
 				}
 				else
 				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, (pageIndex * 5) + 1, (pageIndex + 1) * 5);
+					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, (pageIndex * 5) + 1, (pageIndex + 1) * numberToLoad);
 				}
 
 				// serialize json for the request
@@ -377,9 +394,10 @@ namespace HistWeb.Controllers
 						pm.DataString = record.Value.DataString;
 						pm.Hostname = hostname;
 						pm.IPFSUrl = _ipfsUrl;
-
+						
 						pm.IPFSWebPort = _ipfsWebPort;
 						pm.Hash = record.Value.Hash;
+
 						pm.ProposalName = HttpUtility.HtmlEncode(proposal1.summary.name.ToString());
 						pm.ProposalSummary = HttpUtility.HtmlEncode(proposal1.summary.description.ToString());
 						var en = new System.Globalization.CultureInfo("en-US");
@@ -558,10 +576,27 @@ namespace HistWeb.Controllers
 							}
 
 						}
-
+						using (var conn = new SqliteConnection("Data Source=basex.db"))
+						{
+							using (var cmd = conn.CreateCommand())
+							{
+								conn.Open();
+								cmd.CommandType = System.Data.CommandType.Text;
+								cmd.CommandText = "SELECT id FROM items where proposalhash = @proposalhash";
+								cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
+								using (SqliteDataReader rdr = cmd.ExecuteReader())
+								{
+									if (rdr.Read())
+									{
+										pm.Id = rdr.GetInt32(rdr.GetOrdinal("id"));
+									}
+								}
+							}
+						}
+						
 						if (toggle == 1)
 						{
-							GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposal1.ipfscid.ToString());
+							GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposal1.ipfscid.ToString(), pm.Hash, pm.ParentIPFSCID, pm.cidtype, pm.PaymentAmount.ToString(), pm.PaymentAddress, proposal1.start_epoch.ToString());
 						}
 
 
@@ -582,7 +617,7 @@ namespace HistWeb.Controllers
 			return Json(rep);
 		}
 
-		public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid)
+		public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded)
 		{
 			int toggle = GetDeepSearch();
 			if (toggle == 0)
@@ -634,13 +669,17 @@ namespace HistWeb.Controllers
 								{
 									conn.Open();
 									cmd.CommandType = System.Data.CommandType.Text;
-									cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, imported) " +
-										"VALUES (@Name, @Summary, @html, @ipfscid, 1)";
+									cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, proposalhash, ParentIPFSCID, cidtype, PaymentAddress, PaymentAmount, dateadded, imported) VALUES (@Name, @Summary, @html, @ipfscid, @proposalhash, @ParentIPFSCID, @cidtype, @PaymentAddress, @PaymentAmount, @dateadded, 1)";
 									cmd.Parameters.AddWithValue("Name", Name);
 									cmd.Parameters.AddWithValue("Summary", Summary);
 									cmd.Parameters.AddWithValue("html", html);
 									cmd.Parameters.AddWithValue("ipfscid", ipfscid);
-
+									cmd.Parameters.AddWithValue("proposalhash", proposalhash);
+									cmd.Parameters.AddWithValue("ParentIPFSCID", ParentIPFSCID);
+									cmd.Parameters.AddWithValue("cidtype", cidtype);
+									cmd.Parameters.AddWithValue("PaymentAddress", paymentAddress);
+									cmd.Parameters.AddWithValue("PaymentAmount", paymentAmount);
+									cmd.Parameters.AddWithValue("dateadded", dateadded);
 									cmd.ExecuteNonQuery();
 
 								}

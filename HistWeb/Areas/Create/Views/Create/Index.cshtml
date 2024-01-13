@@ -29,15 +29,43 @@
                     </div>
                 </div>
             </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-2"><h3>Archive Queue</h3></div>
+                    <div class="col-10 text-right">
+                        <label><small>Limited to the previous 10 archives</small></label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <table class="table table-striped my-4 w-100" id="archiveTable">
+                            <thead>
+                                <tr>
+                                    <th>URL</th>
+                                    <th>Date</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
-
     </div>
-</div>
+    <div class="row">
+        &nbsp;
+    </div>
+    <div class="row">
+        &nbsp;
+    </div>
+    <div class="row">
+        &nbsp;
+    </div>
 
+    @section Scripts {
 
-@section Scripts {
-
-    <script type="text/javascript">
+        <script type="text/javascript">
         var url = "";
         $(document).ready(function () {
 
@@ -77,6 +105,38 @@
                 });
             });
 
+            $.getJSON('@Url.Action("GetArchiveDrafts", "Create", new { Area = "Create" })', function (tableData) {
+
+
+                var draftsTable = $('#archiveTable').DataTable({
+                    data: JSON.parse(tableData),
+                    info: false,
+                    fixedHeader: false,
+                    lengthChange: false,
+                    autoWidth: true,
+                    responsive: true,
+                    columnDefs: [
+                        { "width": "10%", "targets": 2 }
+                    ],
+                    columns: [
+
+                        { data: "draftName" },
+                        { data: "date" },
+                        {
+                            data: null,
+                    	    render: function(data, type, full, meta)
+                            {
+                                var url = "";
+                                url = "/Create/Create/CreateBuilder?Id=" + data.Id + "&Type=5";
+
+                                return '<a href="' + url + '" class="btn btn-secondary btn active" role="button" aria-pressed="true">Open</a>';
+
+                            }
+                        },
+                    ],
+                });
+            });
+
         });
 
 
@@ -90,13 +150,12 @@
                         inputOptions: {
                             proposal: 'Proposal',
                             record: 'Record',
-                            archive: 'Archive',
                         },
                         inputPlaceholder: 'Select a type',
                         showCancelButton: true,
                         inputValidator: (value) => {
                             return new Promise((resolve) => {
-                                if (value === 'proposal' || value === 'record' || value === 'archive') {
+                                if (value === 'proposal' || value === 'record') {
                                     resolve()
                                 } else {
                                     resolve('You need to select a type :)')
@@ -161,14 +220,11 @@
                             window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=wiki';
 
                         }
-
-                    } else if (type === "archive") {
-                        window.location = '/Create/Create/CreateBuilder?Id=0&Type=5';
                     }
 
                 })()
 
                 return false;
             });
-    </script>
-}
+        </script>
+    }

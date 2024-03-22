@@ -819,6 +819,10 @@ namespace HistWeb.Controllers
 			}
 		}
 
+		public IActionResult Tokenomics()
+		{
+			return View();
+		}
 
 		public IActionResult Index()
 		{

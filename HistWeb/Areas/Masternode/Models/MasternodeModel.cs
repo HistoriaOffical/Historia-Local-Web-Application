@@ -17,5 +17,6 @@ namespace HistWeb.Areas.Masternode.Models
         public string Payee { get; set; }
         public string ActiveSeconds { get; set; }
         public string LastSeen { get; set; }
+        public string Identity { get; internal set; }
     }
 }

@@ -272,12 +272,16 @@ namespace HistWeb.Controllers
                     string[] substrings = Regex.Split(data, "\\s+");    // Split on hyphens
 
                     MasternodeModel masternode = new MasternodeModel();
-                    masternode.Status = substrings[1];
-                    masternode.Payee = substrings[2];
-                    masternode.LastSeen = substrings[3];
-                    masternode.ActiveSeconds = substrings[3];
-                    masternode.IPAddress = substrings[5].Trim(']');
-                    masternodes.Add(masternode);
+                    if (substrings[1] == "ENABLED" || substrings[1] == "POSE_BANNED")
+                    {
+                        masternode.Status = substrings[1];
+                        masternode.Payee = substrings[2];
+                        masternode.LastSeen = substrings[3];
+                        masternode.ActiveSeconds = substrings[3];
+                        masternode.IPAddress = substrings[5];
+                        masternode.Identity = "https://" + substrings[6].Trim(']');
+                        masternodes.Add(masternode);
+                    }
                 }
                 var json1 = JsonConvert.SerializeObject(masternodes);
 

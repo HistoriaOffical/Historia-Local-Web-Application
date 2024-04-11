@@ -189,7 +189,7 @@
                         <span contenteditable='false' class='og_@Model.CurrentModel.oglinksid'>
                             <div class='card'>
                                 <div class='card-horizontal'>
-                                    <img class='' style="width: 250px; height:auto; object-fit: cover" src='@Model.CurrentModel.oglinksimageurl'>
+                                    <img class='' style="width: 250px; height:auto; object-fit: cover" src='@Model.CurrentModel.oglinksimageurl' onerror="this.onerror=null; this.src='/images/lighthta.svg'">
                                     <div class='card-body'>
                                         <h4 class='card-title'>@Model.CurrentModel.oglinkstitle</h4>
                                         <p class='card-text'>@Model.CurrentModel.oglinksdescription</p>
@@ -198,7 +198,7 @@
                                     </div>
                                 </div>
                                 <div class='card-vertical'>
-                                    <img class='' style="width: 100%; height:auto; object-fit: cover" src='@Model.CurrentModel.oglinksimageurl'>
+                                    <img class='' style="width: 100%; height:auto; object-fit: cover" src='@Model.CurrentModel.oglinksimageurl' onerror="this.onerror=null; this.src='/images/lighthta.svg'">
                                     <div class='card-body'>
                                         <h4 class='card-title'>@Model.CurrentModel.oglinkstitle</h4>
                                         <p class='card-text'>@Model.CurrentModel.oglinksdescription</p>
@@ -519,19 +519,44 @@
                         <div class="row">
                             <div class="col">
                                 <div class="form-group">
-                                    <label>Proposal Voting Guidelines</label>
                                     <ul>
-                                        <li>Does it add value to Historia?</li>
-                                        <li>Is the cost appropriate?</li>
+                                        <li>If it's a record, should it be permanently added?</li>
+                                        <li>Is accurate?</li>
                                         <li>Is it nicely formatted?</li>
-                                        <li>Do you want this implemented?</li>
+                                        <li>Is the requested amount appropriate?</li>
                                     </ul>
-                                    <label>Record Voting Guidelines</label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col">
+                                <b>Voting with these Masternode(s):</b><br />
+                                <div id="masternodes" class="form-group">
+
                                     <ul>
-                                        <li>Should it be permanently added?</li>
-                                        <li>Is factual correct?</li>
-                                        <li>Is it nicely formatted?</li>
                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col">
+                                <b>Marketing</b><br>For the best chance to get this document passed by the voters, market and lobby for it!<br><br>Share on social media:<br><br>
+                                <div class="row">
+                                    <div class="col-sm"><a href="http://x.com/share?text=@Model.CurrentModel.ProposalName-@Model.CurrentModel.ProposalSummary&url=https://historia.network/id/@Model.CurrentModel.Hash&hashtags=#historia,#blockchain,#altcoins,#history,@@historiasys" target="_blank"><i class="fa-brands fa-twitter"></i> X.com</a></div>
+                                    <div class="col-sm"><a href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/@Model.CurrentModel.Hash" target="_blank"><i class="fa-brands fa-facebook-f"></i> Facebook</a></div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm"><a href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a></div>
+
+                                    <div class="col-sm">  <a href="https://t.me/share/url?url=https://historia.network/id/@Model.CurrentModel.Hash" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram</a></div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm"><a href="https://www.reddit.com/submit?url=https://historia.network/id/@Model.CurrentModel.Hash" target="_blank"><i class="fa-brands fa-reddit"></i> Reddit</a></div>
+                                    <div class="col-sm"><a href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/@Model.CurrentModel.Hash"><i class="fa fa-envelope" aria-hidden="true"></i> Via Email</a></div>
                                 </div>
                             </div>
                         </div>
@@ -563,6 +588,11 @@
         function getRandomInt(min, max) {
           return Math.floor(Math.random() * (max - min + 1) + min);
         }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
 
         var UTC = new Date().getTime();
         function localUTCDateC(id, submittedAt) {
@@ -619,15 +649,20 @@
 
         var hasMN = false;
 
+        masternodeNames = [];
         function GetMyMasternodes()
         {
-            var test;
             $.get('@Url.Action("GetMyMasternodes", "Masternode", new { Area = "Masternode" })', null, function (data) {
                 if (data.length == 0) {
                     hasMN = false;
+                } else {
+                    data.forEach(function (masternodes) {
+                        masternodeNames.push(masternodes.name);
+                    });
+                    hasMN = true;
                 }
             });
-            hasMN = true;
+
         }
 
         var votingProposalId = @Model.CurrentModel.Id;
@@ -783,6 +818,7 @@
                     title: 'What is Suggested Evidence Update?',
                     type: 'alert',
                     html: "Suggested Evidence Update is a new record, that is supporting or opposing the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -792,6 +828,7 @@
                     title: 'What is a Proposal?',
                     type: 'alert',
                     html: "A proposal is a temporary object that lets voters decide the direction of the Historia Network blockchain. <br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -801,6 +838,7 @@
                     title: 'What is Record?',
                     type: 'alert',
                     html: "A record is a object that if the voters approve, then will be a permanently added to the Historia Network blockchain.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -810,6 +848,7 @@
                     title: 'What is a Archive?',
                     type: 'alert',
                     html: "An Archive is similar to a record, but is used to archive a web page at the current point in time.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -820,6 +859,7 @@
                     title: 'What is Suggested Topic Update?',
                     type: 'alert',
                     html: "Suggested Topic Update is a new record, that adding a topic to the original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -830,6 +870,7 @@
                     title: 'What is Suggested Record Update?',
                     type: 'alert',
                     html: "Suggested Record Update is a new record, that is suggest an edit to a original record.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -839,6 +880,7 @@
                     title: 'What is Suggested Archive Evidence Update?',
                     type: 'alert',
                     html: "Suggested Archive Evidence Update is a new record, that is supporting or opposing the original record with a new archive.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -848,6 +890,7 @@
                     title: 'What is Suggested Archive Topic Update?',
                     type: 'alert',
                     html: "Suggested Archive Topic Update is a new record, that adding a topic to the original record with a new archive.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -857,6 +900,7 @@
                     title: 'What is Suggested Archive Update?',
                     type: 'alert',
                     html: "Suggested Archive Update is a new record, that is shows the original record archive has been updated. This is rare.<br><br>Learn more <a href='/Home/HowTo' style='text-decoration: underline;'>here</a>",
+                    confirmButtonColor: "#48B5C4",
                     confirmButtonText: 'Ok'
                 });
             });
@@ -1014,13 +1058,25 @@
             var output = "";
 
             GetMyMasternodes();
-            $('#btnVoteManual_' + @(Model.CurrentModel.Id)).popover('enable');
+
+            $('#btnVoteManual_@(Model.CurrentModel.Id)').on('click', function() {
+                Swal.fire({
+                    title: "Manual Vote",
+                    html: '<div style="text-align: left;">If you have a voting node setup in your HistoriaCore Desktop wallet, you can vote manually by going to HistoriaCore -> Tools -> Debug Console and copying/pasting one of these options from below:<br><br><b>To vote Yes:</b> gobject vote-many @Model.CurrentModel.Hash funding yes<br><br><b>To vote No:</b> gobject vote-many @Model.CurrentModel.Hash funding no<br><br><b>To Abstain:</b> gobject vote-many @Model.CurrentModel.Hash funding abstain</div>',
+                    confirmButtonColor: "#48B5C4",
+                    confirmButtonText: 'Ok'
+               });
+            });
 
             $('#btnVoteYes_@Model.CurrentModel.Id').on('click', function () {
                 if (hasMN == true) {
                     $('#voteYes').parent().addClass('active').siblings().removeClass('active');
                     $('#voteYes').prop("checked", true);
                     $('#voteModal').appendTo("body").modal('show');
+                    $("#masternodes ul").empty();
+                    masternodeNames.forEach(function (name) {
+                        $("#masternodes ul").append("<li>" + name + "</li>");
+                    });
                     votingProposalId = @Model.CurrentModel.Id;
                     votingParentHash = '@Model.CurrentModel.Hash';
                     vote = 'yes';
@@ -1029,6 +1085,7 @@
                         title: 'Error!',
                         text: 'You do not have any nodes registered to vote with. Add you voting keys on the My Masternodes page',
                         type: 'error',
+                        confirmButtonColor: "#48B5C4",
                         confirmButtonText: 'Ok'
                     });
                 }
@@ -1038,6 +1095,10 @@
                     $('#voteYes').parent().addClass('active').siblings().removeClass('active');
                     $('#voteYes').prop("checked", true);
                     $('#voteModal').appendTo("body").modal('show');
+                    $("#masternodes ul").empty();
+                    masternodeNames.forEach(function (name) {
+                        $("#masternodes ul").append("<li>" + name + "</li>");
+                    });
                     votingProposalId = @Model.CurrentModel.Id;
                     votingParentHash = '@Model.CurrentModel.Hash';
                     vote = 'no';
@@ -1046,6 +1107,7 @@
                         title: 'Error!',
                         text: 'You do not have any nodes registered to vote with. Add you voting keys on the My Masternodes page.',
                         type: 'error',
+                        confirmButtonColor: "#48B5C4",
                         confirmButtonText: 'Ok'
                     });
                 }
@@ -1055,6 +1117,10 @@
                     $('#voteYes').parent().addClass('active').siblings().removeClass('active');
                     $('#voteYes').prop("checked", true);
                     $('#voteModal').appendTo("body").modal('show');
+                    $("#masternodes ul").empty();
+                    masternodeNames.forEach(function (name) {
+                        $("#masternodes ul").append("<li>" + name + "</li>");
+                    });
                     votingProposalId = @Model.CurrentModel.Id;
                     votingParentHash = '@Model.CurrentModel.Hash';
                     vote = 'abstain';
@@ -1063,6 +1129,7 @@
                         title: 'Error!',
                         text: 'You do not have any nodes registered to vote with. Add you voting keys on the My Masternodes page.',
                         type: 'error',
+                        confirmButtonColor: "#48B5C4",
                         confirmButtonText: 'Ok'
                     });
                 }
@@ -1136,9 +1203,54 @@
                             }
 
                         } else if (type === "archive") {
-                            window.location = '/Create/Create/CreateEdit?Id=0&Type=5&Pid=@Model.CurrentModel.Hash&CidType=1&ipfs=@Model.CurrentModel.ProposalDescriptionUrl';
-                        }
+                            $.getJSON('@Url.Action("GetArchiveDrafts", "Create", new { Area = "Create" })', async function (tableData) {
+                                var drafts = JSON.parse(tableData); // Assuming this is an array of objects
 
+                                // Check if there are no drafts and inform the user if so
+                                if (drafts.length === 0) {
+                                    Swal.fire({
+                                        title: 'No Queued Archives',
+                                        text: 'You have no queued archives.',
+                                        type: 'info',
+                                        confirmButtonColor: "#48B5C4",
+                                        confirmButtonText: 'Ok'
+                                    });
+                                    return; // Exit the function early
+                                }
+
+                                // Convert drafts into a format that can be used by inputOptions
+                                var inputOptions = { none: 'None' }; // Initialize with a 'None' option
+                                drafts.forEach(function (draft) {
+                                    inputOptions[draft.Id] = draft.draftName; // Use draft ID as the key and draftName as the value
+                                });
+
+                                const { value: templateId } = await Swal.fire({
+                                    title: 'Select Queued Archive',
+                                    input: 'select',
+                                    confirmButtonColor: "#48B5C4",
+                                    inputOptions: inputOptions, // Use the dynamically created options
+                                    inputPlaceholder: 'Select a queued archive',
+                                    showCancelButton: true,
+                                    inputValidator: (value) => {
+                                        return new Promise((resolve) => {
+                                            if (value === 'none' || Object.keys(inputOptions).includes(value)) {
+                                                resolve();
+                                            } else {
+                                                resolve('You need to select a queued archive');
+                                            }
+                                        });
+                                    }
+                                });
+                                if (templateId && templateId !== 'none') {
+                                    window.location.href = `/Create/Create/CreateBuilder?Id=${templateId}&Type=5&Template=none&CidType=1&Pid=@Model.CurrentModel.Hash`;
+                                }
+                                //window.location = '/Create/Create/CreateEdit?Id=0&Type=5&Pid=@Model.CurrentModel.Hash&CidType=1&ipfs=@Model.CurrentModel.ProposalDescriptionUrl';
+
+                            }).fail(function (jqXHR, textStatus, errorThrown) {
+                                console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+
+                            });
+                        }
                     })()
 
                     return false;
@@ -1238,8 +1350,54 @@
                             }
 
                         } else if (type === "archive") {
-                            window.location = '/Create/Create/CreateEdit?Id=0&Type=5&Pid=@Model.CurrentModel.Hash&CidType=2&ipfs=@Model.CurrentModel.ProposalDescriptionUrl';
-                        }
+                            $.getJSON('@Url.Action("GetArchiveDrafts", "Create", new { Area = "Create" })', async function (tableData) {
+                                var drafts = JSON.parse(tableData); // Assuming this is an array of objects
+
+                                // Check if there are no drafts and inform the user if so
+                                if(drafts.length === 0) {
+                                    Swal.fire({
+                                        title: 'No Queued Archives',
+                                        text: 'You have no queued archives.',
+                                        type: 'info',
+                                        confirmButtonColor: "#48B5C4",
+                                        confirmButtonText: 'Ok'
+                                    });
+                                    return; // Exit the function early
+                                }
+
+                                // Convert drafts into a format that can be used by inputOptions
+                                var inputOptions = {none: 'None'}; // Initialize with a 'None' option
+                                drafts.forEach(function(draft) {
+                                    inputOptions[draft.Id] = draft.draftName; // Use draft ID as the key and draftName as the value
+                                });
+
+                                const { value: templateId } = await Swal.fire({
+                                    title: 'Select Queued Archive',
+                                    input: 'select',
+                                    confirmButtonColor: "#48B5C4",
+                                    inputOptions: inputOptions, // Use the dynamically created options
+                                    inputPlaceholder: 'Select a queued archive',
+                                    showCancelButton: true,
+                                    inputValidator: (value) => {
+                                        return new Promise((resolve) => {
+                                            if (value === 'none' || Object.keys(inputOptions).includes(value)) {
+                                                resolve();
+                                            } else {
+                                                resolve('You need to select a queued archive');
+                                            }
+                                        });
+                                    }
+                                });
+
+                                if (templateId && templateId !== 'none') {
+                                    window.location.href = `/Create/Create/CreateBuilder?Id=${templateId}&Type=5&Template=none&CidType=2&Pid=@Model.CurrentModel.Hash`;
+
+                                }
+
+                            }).fail(function (jqXHR, textStatus, errorThrown) {
+                                console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
+
+                            });
 
                     })()
                     return false;
@@ -1252,6 +1410,7 @@
                     title: "Add Translation - Coming Soon",
                         html: '<h5>This will allow you to add a translation</h5>',
                         type: "warning",
+                        confirmButtonColor: "#48B5C4",
                         allowOutsideClick: false,
                         allowEscapeKey: false,
                         closeOnClickOutside: false,
@@ -1274,30 +1433,58 @@
 
         });
 
-        $('#btnSubmitVote').on('click', function (evt) {
-            evt.stopPropagation();
+        var voteDataArray = [];
+        $('#btnSubmitVote').on('click', async function (evt) {
+            evt.preventDefault(); // Use preventDefault to stop the form from submitting
+            //evt.stopPropagation();
+            // Async function to get masternode private key
+            async function getMasternodePrivKey() {
+                try {
+                    let response = await $.getJSON('@(Url.Action("GetMasternodePrivKey", "Proposals"))');
+                    return response; // This returns the data directly
+                } catch (error) {
+                    console.error("Failed to get masternode private key:", error);
+                    throw error; // Rethrow error to be caught by the caller
+                }
+            }
+
+            // Async function to submit masternode vote
+            async function submitMasternodeVote(voteDataArray) {
+                try {
+                    let response = await $.post('@Url.Action("SubmitMasternodeVote", "Proposals")', {
+                        voteData: JSON.stringify(voteDataArray)
+                    });
+                    return response;
+                } catch (error) {
+                    console.error("Failed to submit masternode vote:", error);
+                    throw error;
+                }
+            }
+
+           evt.stopPropagation();
 
             var form = $('#frmSubmitVote');
             if (form[0].checkValidity() === false) {
                 form.addClass('was-validated');
+
                 return false;
             }
             else
-            form.removeClass('was-validated');
+                form.removeClass('was-validated');
 
             $('#tbProposalId').val(votingProposalId);
-            $.getJSON('@(Url.Action("GetMasternodePrivKey", "Masternode", new { area = "Masternode" }))', function (data) {
+            try {
+                let dataset = await getMasternodePrivKey();
 
-                data.forEach(function (data) {
 
+                for (let data of dataset) {
+                    var signature = "";
                     var passPhrase = $('#tbPassphrase').val();
                     var decrypted;
                     if (data.privateKey) {
                         decrypted = hex2a(CryptoJS.AES.decrypt(data.privateKey, passPhrase));
-                        console.log('decrypted priv key: ' + hex2a(decrypted))
                     } else {
                         decrypted = data.subscriberPrivateKey;
-                        console.log('decrypted sub priv key: ' + decrypted);
                     }
                     var voteOutcome = 3;
                     var voteSanitized = 'abstain';
@@ -1314,57 +1501,79 @@
                     var seconds = Math.round(d.getTime() / 1000);
 
                     var vinMasternode = data.collateralHash + '-' + data.collateralIndex;
-                    var voteSignal = 1;
+                    var voteSignal = 1; //funding (should always be 1)
+
                     var message = vinMasternode + '|' + votingParentHash + '|' + voteSignal + '|' + voteOutcome + '|' + seconds;
+                    console.log("GMP3:", decrypted.toString());
 
-                    $.getJSON('@Url.Action("SignMessage", "Masternode", new { area = "Masternode" })', { message: message, privateKey: decrypted.toString()}, function (signData) {
-                        console.log('signData: ' + JSON.stringify(signData));
-                        try {
-                            var signature = signData.result;
-                            var voteData = { "vinMasternode": data.collateralHash, "collateralIndex": data.collateralIndex, "parentHash": votingParentHash, "voteSignal": voteSignal, "voteOutcome": voteOutcome, "time": seconds, "signature": signature };
-
-                            if (typeof signature === 'undefined') {
-                                console.log("signature is undefined");
-                                Swal.fire({
-                                    title: 'Failure!',
-                                    text: 'Something went wrong. Probably incorrect passphrase!',
-                                    type: 'error',
-                                    confirmButtonText: 'Ok'
-                                });
-
-                            } else {
-
-                                $.post('@Url.Action("SubmitMasternodeVote", "Masternode", new { area = "Masternode" })', { voteData: JSON.stringify(voteData) }, function (data) {
-                                    console.log(data.success);
-                                    if (data.success) {
-                                        Swal.fire({
-                                            title: 'Success!',
-                                            text: 'Your vote has been submitted to the network!',
-                                            confirmButtonColor: "#48B5C4",
-                                            type: 'success',
-                                            confirmButtonText: 'Ok'
-                                        });
-                                    } else {
-                                        Swal.fire({
-                                            title: 'Failure!',
-                                            text: data.message,
-                                            type: 'error',
-                                            confirmButtonText: 'Ok'
-                                        });
-                                    }
-                                });
-                            }
-                        }
-                        catch (err) {
-
-                        }
+                    let signData = await $.ajax({
+                        url: '@Url.Action("SignMessage", "Masternode", new { area = "Masternode" })',
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({ message: message, privateKey: decrypted.toString() }),
                     });
-                })
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
-            });
-        });
 
+                    signature = signData.result;
+                    console.log("signature", signature);
+                    var voteData = {
+                        "vinMasternode": data.collateralHash,
+                        "collateralIndex": data.collateralIndex,
+                        "parentHash": votingParentHash,
+                        "voteSignal": voteSignal,
+                        "voteOutcome": voteOutcome,
+                        "time": seconds,
+                        "signature": signature
+                    };
+
+                    voteDataArray.push(voteData);
+
+                    if (typeof signature === 'undefined') {
+                        Swal.fire({
+                            title: 'Failure!',
+                            text: 'Something went wrong. Probably incorrect passphrase!',
+                            type: 'error',
+                            confirmButtonColor: "#48B5C4",
+                            confirmButtonText: 'Ok'
+                        });
+                        return;
+                    }
+                }
+
+                if (voteDataArray.length > 0) {
+                    console.log("SUBMITVOTE");
+                    let submitResponse = await submitMasternodeVote(voteDataArray);
+                    if (submitResponse.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Your vote has been submitted to the network!',
+                            type: 'success',
+                            confirmButtonColor: "#48B5C4",
+                            confirmButtonText: 'Ok'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: submitResponse.message,
+                            type: 'error',
+                            confirmButtonColor: "#48B5C4",
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                } else {
+                    console.log("SUBMITVOTE FAIL");
+                }
+            } catch {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An error occurred while processing your vote.',
+                    type: 'error',
+                    confirmButtonColor: "#48B5C4",
+                    confirmButtonText: 'Ok'
+                });
+            }
+
+        });
 
     </script>
 

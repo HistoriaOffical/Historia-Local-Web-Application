@@ -323,9 +323,18 @@ namespace HistWeb.Controllers
             return Json(prepRespJson);
         }
 
-        [HttpGet]
-        public JsonResult SignMessage(string message, string privateKey)
+        public class SignMessageModel
         {
+            public string Message { get; set; }
+            public string PrivateKey { get; set; }
+        }
+
+
+        [HttpPost]
+        public JsonResult SignMessage([FromBody] SignMessageModel model)
+        {
+            string message = model.Message;
+            string privateKey = model.PrivateKey;
             try
             {
                 //Prepare call
@@ -360,117 +369,137 @@ namespace HistWeb.Controllers
         [HttpPost]
         public JsonResult SubmitMasternodeVote(string voteData)
         {
+            Console.WriteLine("SubmitMasternodeVote:: " + voteData);
+            bool skipToNextVd = false;
             try
             {
-                dynamic vd = JObject.Parse(voteData);
 
-                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
-                webRequest.Credentials = new NetworkCredential(_userName, _password);
-                webRequest.ContentType = "application/json-rpc";
-                webRequest.Method = "POST";
-                webRequest.Timeout = 5000;
-                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [";
-                jsonstring += "\"getcurrentvotes\",";
-                jsonstring += $"\"{vd.parentHash}\"";
-                jsonstring += "]}";
-
-                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-                webRequest.ContentLength = byteArray.Length;
-                Stream dataStream = webRequest.GetRequestStream();
-                dataStream.Write(byteArray, 0, byteArray.Length);
-                dataStream.Close();
-
-                WebResponse webResponse = webRequest.GetResponse();
-                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-                string getResp = sr.ReadToEnd();
-                Debug.WriteLine("getCurrentVotes: ", getResp);
-
-                JObject obj = JObject.Parse(getResp);
-
-                string CollateralHash = vd.vinMasternode.ToString();
-                string Signal = vd.voteOutcome.ToString();
-                string Govhash = vd.parentHash.ToString();
-                string VoteTime = vd.time.ToString();
-
-                var voteOutcome = "yes";
-                switch (vd.voteOutcome.ToString())
+                var voteDataList = JsonConvert.DeserializeObject<List<dynamic>>(voteData);
+                foreach (var vd in voteDataList)
                 {
-                    case "2": voteOutcome = "no"; break;
-                    case "3": voteOutcome = "abstain"; break;
-                }
 
-                foreach (var x in obj)
-                {
-                    string name = x.Key;
-                    JToken value = x.Value;
+                    HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                    webRequest.Credentials = new NetworkCredential(_userName, _password);
+                    webRequest.ContentType = "application/json-rpc";
+                    webRequest.Method = "POST";
+                    webRequest.Timeout = 5000;
+                    string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [";
+                    jsonstring += "\"getcurrentvotes\",";
+                    jsonstring += $"\"{vd.parentHash}\"";
+                    jsonstring += "]}";
 
-                    if (name == "result")
+                    byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                    webRequest.ContentLength = byteArray.Length;
+                    Stream dataStream = webRequest.GetRequestStream();
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                    dataStream.Close();
+
+                    WebResponse webResponse = webRequest.GetResponse();
+                    StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                    string getResp = sr.ReadToEnd();
+                    Debug.WriteLine("getCurrentVotes: ", getResp);
+
+                    JObject obj = JObject.Parse(getResp);
+
+                    string CollateralHash = vd.vinMasternode.ToString();
+                    string Signal = vd.voteOutcome.ToString();
+                    string Govhash = vd.parentHash.ToString();
+                    string VoteTime = vd.time.ToString();
+
+                    var voteOutcome = "yes";
+                    switch (vd.voteOutcome.ToString())
                     {
-                        JObject mn = JObject.Parse(x.Value.ToString());
-                        foreach (JProperty y in (JToken)mn)
-                        { 
-                            string key = y.Name;
-                            JToken mnResult = y.Value;
+                        case "2": voteOutcome = "no"; break;
+                        case "3": voteOutcome = "abstain"; break;
+                    }
 
-                            var res = mnResult.ToString().Split(":");
-                            string mnVin = res[0].Split("-")[0];
-                            string voteTime = res[1];
-                            string voteSignal = res[2];
+                    foreach (var x in obj)
+                    {
+                        string name = x.Key;
+                        JToken value = x.Value;
 
-                            if (vd.vinMasternode == mnVin)
+                        if (name == "result")
+                        {
+                            JObject mn = JObject.Parse(x.Value.ToString());
+                            foreach (JProperty y in (JToken)mn)
                             {
-                                long voteEpoch = DateTimeOffset.Now.ToUnixTimeSeconds();
-                                long startEpoch = long.Parse(voteTime);
-                                long elasped = voteEpoch - startEpoch;
+                                string key = y.Name;
+                                JToken mnResult = y.Value;
 
-                                if (voteSignal == voteOutcome)
+                                var res = mnResult.ToString().Split(":");
+                                string mnVin = res[0].Split("-")[0];
+                                string voteTime = res[1];
+                                string voteSignal = res[2];
+
+                                if (vd.vinMasternode == mnVin)
                                 {
-                                    var resp = new { Success = false, Message = "You have already cast your vote as '" + voteOutcome + "'" };
-                                    return Json(resp);
+                                    long voteEpoch = DateTimeOffset.Now.ToUnixTimeSeconds();
+                                    long startEpoch = long.Parse(voteTime);
+                                    long elasped = voteEpoch - startEpoch;
+
+                                    if (voteSignal == voteOutcome)
+                                    {
+                                        skipToNextVd = true;
+                                        var resp = new { Success = false, Message = "You have already cast your vote as '" + voteOutcome + "'" };
+      
+                                    }
+
+                                    if (elasped < (60 * 60))
+                                    {
+                                        var resp = new { Success = false, Message = "You are voting too quickly. Please only vote once per proposal or record per hour" };
+                                        return Json(resp);
+                                    }
                                 }
 
-                                if (elasped < (60 * 60))
-                                {
-                                    var resp = new { Success = false, Message = "You are voting too quickly. Please only vote once per proposal or record per hour" };
-                                    return Json(resp);
-                                }
+                                Debug.WriteLine("MNVin: " + mnVin + "; voteTime: " + voteTime);
                             }
-
-                            Debug.WriteLine("MNVin: " + mnVin + "; voteTime: " + voteTime);
                         }
                     }
+
+
+                    if (skipToNextVd)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        //Prepare call
+                        HttpWebRequest webRequest1 = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                        webRequest1.Credentials = new NetworkCredential(_userName, _password);
+                        webRequest1.ContentType = "application/json-rpc";
+                        webRequest1.Method = "POST";
+                        webRequest1.Timeout = 5000;
+
+                        jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"voteraw\", \"params\": [";
+                        jsonstring += $"\"{vd.vinMasternode}\",";
+                        jsonstring += $"{vd.collateralIndex},";
+                        jsonstring += $"\"{vd.parentHash}\",";
+                        jsonstring += $"\"funding\",";
+                        jsonstring += $"\"{voteOutcome}\",";
+                        jsonstring += $"{vd.time},";
+                        jsonstring += $"\"{vd.signature}\"";
+                        jsonstring += "]}";
+
+                        // serialize json for the request
+                        byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                        webRequest1.ContentLength = byteArray.Length;
+                        dataStream = webRequest1.GetRequestStream();
+                        dataStream.Write(byteArray, 0, byteArray.Length);
+                        dataStream.Close();
+
+                        webResponse = webRequest1.GetResponse();
+                        sr = new StreamReader(webResponse.GetResponseStream());
+                        getResp = sr.ReadToEnd();
+                        Debug.WriteLine("submit voteRaw Response: ", getResp);
+                    }
+                    catch (Exception ex)
+                    {
+                        var rep = new { Success = false, Error = ex.ToString() };
+                        Console.WriteLine("SubmitMasternodeVote::Failed Voting ");
+                        return Json(rep);
+                    }
                 }
-
-
-                //Prepare call
-                HttpWebRequest webRequest1 = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
-                webRequest1.Credentials = new NetworkCredential(_userName, _password);
-                webRequest1.ContentType = "application/json-rpc";
-                webRequest1.Method = "POST";
-                webRequest1.Timeout = 5000;
-
-                jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"voteraw\", \"params\": [";
-                jsonstring += $"\"{vd.vinMasternode}\",";
-                jsonstring += $"{vd.collateralIndex},";
-                jsonstring += $"\"{vd.parentHash}\",";
-                jsonstring += $"\"funding\",";
-                jsonstring += $"\"{voteOutcome}\",";
-                jsonstring += $"{vd.time},";
-                jsonstring += $"\"{vd.signature}\"";
-                jsonstring += "]}";
-
-                // serialize json for the request
-                byteArray = Encoding.UTF8.GetBytes(jsonstring);
-                webRequest1.ContentLength = byteArray.Length;
-                dataStream = webRequest1.GetRequestStream();
-                dataStream.Write(byteArray, 0, byteArray.Length);
-                dataStream.Close();
-
-                webResponse = webRequest1.GetResponse();
-                sr = new StreamReader(webResponse.GetResponseStream());
-                getResp = sr.ReadToEnd();
-                Debug.WriteLine("submit voteRaw Response: ", getResp);
-
                 var prepRespJson = new { Success = true };
                 return Json(prepRespJson);
             }

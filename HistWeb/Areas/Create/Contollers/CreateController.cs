@@ -31,6 +31,7 @@ using System.Threading;
 using System.Web;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
+using System.Security.Cryptography;
 
 namespace HistWeb.Controllers
 {
@@ -129,6 +130,12 @@ namespace HistWeb.Controllers
 			return View();
 		}
 
+		[HttpGet]
+		public IActionResult CreateMedia([FromQuery(Name = "Id")] string Id)
+		{
+
+			return View();
+		}
 
 		[HttpGet]
 		public IActionResult CreateBuilderBlank()
@@ -195,6 +202,321 @@ namespace HistWeb.Controllers
 			return Json(new { Success = false, Error = "Can not load" });
 		}
 
+		[HttpGet]
+		public IActionResult GetUploadedMedia(string filename)
+		{
+			string filetype = "";
+			Console.WriteLine("Exception GetUploadedMedia: filename: " + filename);
+			try
+			{
+				if (!string.IsNullOrEmpty(filename))
+				{
+
+					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					{
+
+
+						conn.Open();
+						using (var cmd = conn.CreateCommand())
+						{
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "SELECT filetype FROM mediafiles WHERE filename = @FileName";
+							cmd.Parameters.AddWithValue("@FileName", filename);
+							using (SqliteDataReader rdr = cmd.ExecuteReader())
+							{
+								if (rdr.Read())
+								{
+									filetype = !rdr.IsDBNull(rdr.GetOrdinal("filetype")) ? rdr.GetString(rdr.GetOrdinal("filetype")) : "";
+								}
+							}
+						}
+					}
+					string filePath = Path.Combine("wwwroot", "media", filename); 
+					Console.WriteLine("Exception GetUploadedMedia: filePath: " + filePath);
+					// Check if the file exists
+					if (System.IO.File.Exists(filePath))
+					{
+						// Read the file content as bytes
+						byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
+						long size1 = fileBytes.Length;
+						// Convert the bytes to base64
+						string base64String = Convert.ToBase64String(fileBytes);
+						long size2 = fileBytes.Length;
+						// Return base64 in JSON response
+						return Json(new { filetype = filetype, base64 = base64String });
+					}
+					else
+					{
+						// Handle file not found
+						Console.WriteLine("Exception GetUploadedMedia: filePath: File not found.");
+						return Json(new { Success = false, Message = "File not found." });
+					}
+
+				}
+				else
+				{
+					// Handle no file uploaded
+					Console.WriteLine("Exception GetUploadedMedia: filePath: File not found #2");
+					return Json(new { Success = "false" });
+				}
+			}
+			catch (Exception ex)
+			{
+				// Handle any exceptions that may occur during the upload process
+				Console.WriteLine("Exception GetUploadedMedia: filePath: File exception.");
+				return Json(new { Success = "false" });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult UploadMedia(IFormCollection formCollection)
+		{
+			try
+			{
+				IFormFile file = formCollection.Files.First();
+				// Check if the request contains file data
+				if (file.Length > 0 && file.Length <= 10485760) // 10MB limit
+				{
+
+					// Generate a GUID for the new filename
+					string guid = Guid.NewGuid().ToString();
+					string originalFileName = Path.GetFileName(file.FileName);
+					string extension = Path.GetExtension(originalFileName);
+
+					string fileName = $"{guid}{extension}";
+					Console.WriteLine("Exception UploadMedia: filename: " + fileName);
+
+					// Set the file path where you want to store the file
+					string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "media", fileName);
+					string filePathDB = Path.Combine("wwwroot", "media", fileName);
+
+					using (var stream = new FileStream(filePath, FileMode.Create))
+					{
+						file.CopyTo(stream);
+					}
+
+
+					string filetype = DetermineFileType(filePath, fileName);
+					if (filetype != "unknown")
+					{
+						// Save the file to the server
+						Console.WriteLine("Exception UploadMedia: filePath: " + filePath);
+						UpdateMediaDatabase(fileName, filePath, file.Length.ToString(), filetype);
+						return Json(new { Success = "true", FilePath = "/wwwroot/media/" + filePathDB, filename = fileName });
+
+					}
+					else
+					{
+						Console.WriteLine("Exception UploadMedia: Delete: " + filePath);
+						System.IO.File.Delete(filePath);
+						return Json(new { Success = "false" });
+					}
+
+				}
+				else
+				{
+					// Handle no file uploaded
+					Console.WriteLine("Exception UploadMedia:File size exceeds the limit");
+					return Json(new { Message = "File size exceeds the limit (10MB)." });
+				}
+			}
+			catch (Exception ex)
+			{
+				// Handle any exceptions that may occur during the upload process
+				Console.WriteLine("Exception UploadMedia:EX:" + ex.Message);
+				return Json(new { Message = "Error uploading file. " + ex.Message });
+			}
+		}
+
+		private string CalculateFileHash(Stream stream)
+		{
+			using (var sha256 = SHA256.Create())
+			{
+				byte[] hashBytes = sha256.ComputeHash(stream);
+				return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+			}
+		}
+		private void UpdateMediaDatabase(string fileName, string filePath, string filesize, string filetype)
+		{
+			var connString = _configuration.GetConnectionString("HistoriaContextConnection");
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				conn.Open();
+				using (var cmd = conn.CreateCommand())
+				{
+					cmd.CommandType = System.Data.CommandType.Text;
+					cmd.CommandText = "INSERT INTO mediafiles (filename, filepath, fileSize, filetype, dateadded) VALUES (@FileName, @FilePath, @FileSize, @FileType, datetime('now'))";
+					cmd.Parameters.AddWithValue("@FileName", fileName);
+					cmd.Parameters.AddWithValue("@FilePath", filePath);
+					cmd.Parameters.AddWithValue("@FileSize", filesize);
+					cmd.Parameters.AddWithValue("@FileType", filetype);
+					cmd.ExecuteNonQuery();
+				}
+			}
+		}
+
+		string DetermineFileType(string filePath, string filename)
+		{
+			using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+			{
+				byte[] buffer = new byte[512]; // Adjust the buffer size as needed
+				int bytesRead = fileStream.Read(buffer, 0, buffer.Length);
+
+				// Determine file type
+				return IdentifyFileType(buffer, bytesRead, filename);
+			}
+		}
+
+		string IdentifyFileType(byte[] buffer, int bytesRead, string filename)
+		{
+			// Check for PDF
+			if (IsPdf(buffer, bytesRead))
+			{
+				return "pdf";
+			}
+
+			// Check for video
+			if (IsVideo(buffer, bytesRead) || GetVideoTypeFromExtension(filename))
+			{
+				return "video"; // Specify the actual video type if known
+			}
+
+			// Check for image
+			if (IsImage(buffer, bytesRead) || GetImageTypeFromExtension(filename))
+			{
+				return "image"; // Specify the actual image type if known
+			}
+
+			// Check for audio
+			if (IsAudio(buffer, bytesRead) || GetAudioTypeFromExtension(filename))
+			{
+				return "audio"; // Specify the actual audio type if known
+			}
+
+			// Default to unknown type
+			return "unknown";
+		}
+
+
+		// Example method to get video type from extension
+		private bool GetVideoTypeFromExtension(string filename)
+		{
+			string extension = Path.GetExtension(filename).ToLower();
+			switch (extension)
+			{
+				case ".mp4": return true;
+				case ".avi": return true;
+				default: return false;
+			}
+		}
+
+		// Example method to get image type from extension
+		private bool GetImageTypeFromExtension(string filename)
+		{
+			string extension = Path.GetExtension(filename).ToLower();
+			switch (extension)
+			{
+				case ".jpg": return true;
+				case ".jpeg": return true;
+				case ".png": return true;
+				// Add more cases as needed
+				default: return true;
+			}
+		}
+
+		// Example method to get audio type from extension
+		private bool GetAudioTypeFromExtension(string filename)
+		{
+			string extension = Path.GetExtension(filename).ToLower();
+			switch (extension)
+			{
+				case ".mp3": return true;
+				case ".wav": return true;
+				// Add more cases as needed
+				default: return true;
+			}
+		}
+
+
+		bool IsPdf(byte[] buffer, int bytesRead)
+		{
+			// PDF files typically start with '%PDF'
+			return bytesRead >= 4 &&
+				   buffer[0] == 0x25 && // %
+				   buffer[1] == 0x50 && // P
+				   buffer[2] == 0x44 && // D
+				   buffer[3] == 0x46;   // F
+		}
+
+		bool IsVideo(byte[] buffer, int bytesRead)
+		{
+			// Check for common video file types
+			// MP4: 00 00 00 18 66 74 79 70 33 67 00
+			// MP4: 00 00 00 18 66 74 79 70 69 73 6F 6D 00
+			// MP4: 66 74 79 70 69 73 6F 6D
+			// WebM: 1A 45 DF A3
+			// AVI: 52 49 46 46
+			// Additional magic numbers for MP4
+			// MP4 (another variation): 00 00 00 20 66 74 79 70 4D 53 4E 56 01
+			// MP4 (another variation): 00 00 00 20 66 74 79 70 4D 53 4E 56 20 00 00 00 00 00 00 00 01 69 73 6F 6D
+
+			return CheckMagicNumber(buffer, bytesRead, "00 00 00 18 66 74 79 70 33 67 00") ||
+				   CheckMagicNumber(buffer, bytesRead, "00 00 00 18 66 74 79 70 69 73 6F 6D 00") ||
+				   CheckMagicNumber(buffer, bytesRead, "00 00 00 0D 66 74 79 70 69 73 6F 6D") ||
+				   CheckMagicNumber(buffer, bytesRead, "66 74 79 70 69 73 6F 6D") ||
+				   CheckMagicNumber(buffer, bytesRead, "1A 45 DF A3") ||
+				   CheckMagicNumber(buffer, bytesRead, "52 49 46 46") ||
+				   CheckMagicNumber(buffer, bytesRead, "00 00 00 20 66 74 79 70 4D 53 4E 56 01") ||
+				   CheckMagicNumber(buffer, bytesRead, "00 00 00 20 66 74 79 70 4D 53 4E 56 20 00 00 00 00 00 00 00 01 69 73 6F 6D");
+
+		}
+
+		bool IsImage(byte[] buffer, int bytesRead)
+		{
+			// Check for common image file types
+			// JPEG: FF D8 FF E0
+			// PNG: 89 50 4E 47 0D 0A 1A 0A
+			// GIF: 47 49 46 38
+			// You may need to extend this list based on your requirements
+			return CheckMagicNumber(buffer, bytesRead, "FF D8 FF E0") ||
+				   CheckMagicNumber(buffer, bytesRead, "89 50 4E 47 0D 0A 1A 0A") ||
+				   CheckMagicNumber(buffer, bytesRead, "47 49 46 38");
+		}
+
+		bool IsAudio(byte[] buffer, int bytesRead)
+		{
+			// Check for common audio file types
+			// MP3: 49 44 33
+			// WAV: 52 49 46 46
+			// OGG: 4F 67 67 53
+			// You may need to extend this list based on your requirements
+			return CheckMagicNumber(buffer, bytesRead, "49 44 33") ||
+				   CheckMagicNumber(buffer, bytesRead, "52 49 46 46") ||
+				   CheckMagicNumber(buffer, bytesRead, "4F 67 67 53");
+		}
+
+		bool CheckMagicNumber(byte[] buffer, int bytesRead, string magicNumber)
+		{
+			// Convert the string representation of the magic number to byte array
+			string[] bytes = magicNumber.Split(' ');
+			byte[] magicBytes = Array.ConvertAll(bytes, s => Convert.ToByte(s, 16));
+			Console.WriteLine("Exception CheckMagicNumber: bytes" + bytes);
+
+			// Compare the magic number in the buffer
+			if (bytesRead >= magicBytes.Length)
+			{
+				for (int i = 0; i < magicBytes.Length; i++)
+				{
+					if (buffer[i] != magicBytes[i])
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+
+			return false;
+		}
 
 		[HttpGet]
 		public async Task<IActionResult> CreateBuilderLoadEdit(string id, string Type, string Template, string pid, string ipfspid, string cidtype, string isDraft)

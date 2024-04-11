@@ -14,6 +14,7 @@
                     <div class="col-10 text-right">
                         <label><small>Don't know where to start? Read <a asp-area="" asp-controller="Home" asp-action="HowTo" style="text-decoration: underline">here</a>.</small></label>
                     </div>
+                    <input type="file" id="fileInput" accept=".jpg, .jpeg, .png, .gif, .mp3, .mp4, .pdf" style="display:none;">
                 </div>
                 <div class="row">
                     <div class="col-12">
@@ -147,15 +148,17 @@
                     const { value: type } = await Swal.fire({
                         title: 'Select Create Type',
                         input: 'select',
+                        confirmButtonColor: "#48B5C4",
                         inputOptions: {
                             proposal: 'Proposal',
                             record: 'Record',
+                            media: 'Media',
                         },
                         inputPlaceholder: 'Select a type',
                         showCancelButton: true,
                         inputValidator: (value) => {
                             return new Promise((resolve) => {
-                                if (value === 'proposal' || value === 'record') {
+                                if (value === 'proposal' || value === 'record' || value === 'media') {
                                     resolve()
                                 } else {
                                     resolve('You need to select a type :)')
@@ -220,6 +223,76 @@
                             window.location = '/Create/Create/CreateBuilder?Id=0&Type=4&Template=wiki';
 
                         }
+                    }  else if (type === "media") {
+
+                        const fileInput = $('#fileInput');
+
+
+                        fileInput.click();
+
+                        fileInput.on('change', function () {
+                            const files = this.files;
+
+                            if (files.length > 0) {
+                                const file = files[0];
+                                const fileSize = file.size;
+                                const maxSizeInBytes = 10485760;
+
+                                if (fileSize > maxSizeInBytes) {
+                                    Swal.fire({
+                                        title: 'File size too big',
+                                        type: 'error',
+                                        confirmButtonColor: "#48B5C4",
+                                        confirmButtonText: 'Ok'
+                                    });
+                                } else {
+                                    const fileName = file.name;
+
+
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    formData.append('filename', fileName);
+
+                                    const fileReader = new FileReader();
+
+                                    fileReader.onload = function (e) {
+                                        const fileContent = e.target.result;
+
+                                        const fileInfo = {
+                                            fileName: file.name,
+                                            fileSize: file.size,
+                                            fileContent: fileContent
+                                        };
+
+                                    };
+
+                                    fileReader.readAsDataURL(file);
+
+                                    $.ajax({
+                                        url: '@Url.Action("UploadMedia", "Create", new { Area = "Create" })',
+                                        type: 'POST',
+                                        data: formData,
+                                        contentType: false,
+                                        processData: false,
+                                        success: function (response) {
+                                        window.location = '/Create/Create/CreateMedia?Id=0&Type=4.1&Template=none&filename=' + response.filename;
+       
+                                        },
+                                        error: function (xhr, status, error) {
+                                            Swal.fire({
+                                                title: 'Could Not Upload Media',
+                                                type: 'error',
+                                                confirmButtonColor: "#48B5C4",
+                                                confirmButtonText: 'Ok'
+                                            });
+                                            console.error('Error loading images:', error);
+                                            sessionStorage.removeItem('uploadedFile');
+                                        }
+                                    });
+                                }
+                            }
+                        });
+
                     }
 
                 })()

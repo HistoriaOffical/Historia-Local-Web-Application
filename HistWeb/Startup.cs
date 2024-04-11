@@ -159,6 +159,19 @@ namespace HistWeb
 						createCmd.ExecuteNonQuery();
 
 
+						createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS mediafiles (
+                                                  Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                  filename TEXT,
+                                                  filepath TEXT,
+                                                  dateadded TEXT,
+                                                  filesize TEXT,
+                                                  filetype TEXT,
+                                                  hash TEXT
+                                                );";
+						createCmd.CommandType = System.Data.CommandType.Text;
+						createCmd.ExecuteNonQuery();
+
+
 
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.CommandText = "INSERT INTO templates (name, html, css) VALUES(@type, @TemplateHtml, @TemplateCss)" +

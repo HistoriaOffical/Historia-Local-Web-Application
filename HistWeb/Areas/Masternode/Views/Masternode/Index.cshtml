@@ -13,6 +13,7 @@
                         <table class="table table-striped my-5 w-100" id="masternodesTable">
                             <thead>
                                 <tr>
+                                    <th>URL</th>
                                     <th>IP Address</th>
                                     <th>Status</th>
                                     <th>Payee</th>
@@ -38,17 +39,28 @@
 			lengthChange: false,
 			autoWidth: false,
 			responsive: false,
-			columns: [
+            columns: [
+                { data: "identity" },
 				{ data: "ipAddress" },
 				{ data: "status" },
 				{ data: "payee" },
 
 			],
-		});
+        });
+
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                Swal.showLoading();
+            },
+        });
 
 		$.getJSON( '@Url.Action("GetMasterNodes", "Masternode", new { Area = "Masternode" })', function( tableData ) {
             console.log('masternode data: ' + JSON.stringify(JSON.parse(tableData)));
-
+            Swal.close();
 			var jsonRet = [];
 			for (var prop in tableData.result) {
                 var pval = tableData.result[prop].trim().split(/\s+/);
@@ -68,7 +80,14 @@
 				lengthChange: false,
 				autoWidth: false,
 				responsive: true,
-				columns: [
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, full, meta) {
+
+                            return ('<a href="' + data.Identity + '/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html">' + data.Identity + '</a href>');
+                        }
+                    },
                     { data: "IPAddress" },
 					{ data: "Status" },
 					{ data: "Payee" },

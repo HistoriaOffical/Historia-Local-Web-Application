@@ -1228,13 +1228,19 @@ namespace HistWeb.Controllers
 
 				if (pm.Type == "4")
 				{
-					string jsonString = CallAPI("https://www.historia.network/home/rogai?ipfs=" + proposal1.ipfscid.ToString()).GetAwaiter().GetResult();
-					OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
-					if (data.isArchive == "1")
+					try {
+						string jsonString = CallAPI("https://historia.network/home/rogai?ipfs=" + proposal1.ipfscid.ToString()).GetAwaiter().GetResult();
+						OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
+						if (data.isArchive == "1")
+						{
+							pm.Type = "5";
+							pm.orgUrl = data.OGUrl;
+						}
+					} catch (Exception ex)
 					{
-						pm.Type = "5";
-						pm.orgUrl = data.OGUrl;
+
 					}
+
 				}
 
 				int Oid = OG(pm.orgUrl, proposal1.ipfscid.ToString());

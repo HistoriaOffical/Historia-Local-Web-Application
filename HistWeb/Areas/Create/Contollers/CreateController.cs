@@ -87,7 +87,7 @@ namespace HistWeb.Controllers
 					{
 						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT * FROM items and imported !=0";
+						cmd.CommandText = "SELECT * FROM items WHERE imported !=0";
 
 						using (SqliteDataReader rdr = cmd.ExecuteReader())
 						{

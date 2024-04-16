@@ -756,9 +756,11 @@
                     var ipfsurl = result[0].summaryname;
                     var cidtype = paramArr[3];
                     var pid = paramArr[4];
-                    $('#parentid').show();
-                    $('#tbParentIPFSCID').html("<u><a href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + ipfsurl + "</a></u>");
-                    $('#tbParentIPFSCIDhidden').val(ipfsurl);
+                    if (pid !== null && pid !== undefined && pid !== "") {
+                        $('#parentid').show();
+                        $('#tbParentIPFSCID').html("<u><a href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + ipfsurl + "</a></u>");
+                        $('#tbParentIPFSCIDhidden').val(ipfsurl);
+                    }
                     if (cidtype == 0) {
                         $('#type').text("Archive - Suggest an Edit");
                     } else if (cidtype == 1) {

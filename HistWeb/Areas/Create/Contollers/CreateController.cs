@@ -369,36 +369,63 @@ namespace HistWeb.Controllers
 
 		string IdentifyFileType(byte[] buffer, int bytesRead, string filename)
 		{
-			// Check for PDF
-			if (IsPdf(buffer, bytesRead))
+			string type = ""; 
+			//Check via file extension first
+			if (GetPDfFromExtension(filename))
 			{
-				return "pdf";
+				type = "pdf";
 			}
 
-			// Check for video
-			if (IsVideo(buffer, bytesRead) || GetVideoTypeFromExtension(filename))
+			if (GetVideoTypeFromExtension(filename))
 			{
-				return "video"; // Specify the actual video type if known
+				type = "video";
 			}
 
-			// Check for image
-			if (IsImage(buffer, bytesRead) || GetImageTypeFromExtension(filename))
+			if (GetImageTypeFromExtension(filename))
 			{
-				return "image"; // Specify the actual image type if known
+				type = "image";
 			}
 
-			// Check for audio
-			if (IsAudio(buffer, bytesRead) || GetAudioTypeFromExtension(filename))
+			if (GetAudioTypeFromExtension(filename))
 			{
-				return "audio"; // Specify the actual audio type if known
+				type = "audio";
 			}
 
-			// Default to unknown type
-			return "unknown";
+			switch (type)
+			{
+				case "pdf":
+					if (IsPdf(buffer, bytesRead))
+					{
+						return "pdf";
+					}
+					break;
+				case "video":
+					if (IsVideo(buffer, bytesRead))
+					{
+						return "video"; 
+					} 
+					break;
+				case "audio":
+					if (IsAudio(buffer, bytesRead))
+					{
+						return "audio";
+					}
+					break;
+				case "image":
+					if (IsImage(buffer, bytesRead))
+					{
+						return "image"; 
+					}
+					break;
+				default:
+					return type;
+					break;
+			}
+			return type; // This is a catch all to attempt to return media, in case the CheckMagicBytes function fails.
 		}
 
 
-		// Example method to get video type from extension
+		// Get video type from extension
 		private bool GetVideoTypeFromExtension(string filename)
 		{
 			string extension = Path.GetExtension(filename).ToLower();
@@ -410,7 +437,17 @@ namespace HistWeb.Controllers
 			}
 		}
 
-		// Example method to get image type from extension
+		private bool GetPDfFromExtension(string filename)
+		{
+			string extension = Path.GetExtension(filename).ToLower();
+			switch (extension)
+			{
+				case ".pdf": return true;
+				default: return false;
+			}
+		}
+
+		// Get image type from extension
 		private bool GetImageTypeFromExtension(string filename)
 		{
 			string extension = Path.GetExtension(filename).ToLower();
@@ -420,11 +457,11 @@ namespace HistWeb.Controllers
 				case ".jpeg": return true;
 				case ".png": return true;
 				// Add more cases as needed
-				default: return true;
+				default: return false;
 			}
 		}
 
-		// Example method to get audio type from extension
+		// Get audio type from extension
 		private bool GetAudioTypeFromExtension(string filename)
 		{
 			string extension = Path.GetExtension(filename).ToLower();
@@ -433,7 +470,7 @@ namespace HistWeb.Controllers
 				case ".mp3": return true;
 				case ".wav": return true;
 				// Add more cases as needed
-				default: return true;
+				default: return false;
 			}
 		}
 

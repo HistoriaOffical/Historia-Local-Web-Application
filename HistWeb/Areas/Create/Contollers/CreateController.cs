@@ -1103,6 +1103,48 @@ namespace HistWeb.Controllers
 		[HttpPost]
 		public async Task<JsonResult> Submit(IFormCollection formCollection)
 		{
+
+			try
+			{
+
+				Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{ApplicationSettings.IPFSApiHost}:{ApplicationSettings.IPFSApiPort}");
+
+				string HtmlTest = "<html><body>Test Connection to IPFS API1</body></html>";
+				string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", ""));
+				Directory.CreateDirectory(tempDirectory);
+
+				var filePath = tempDirectory;
+				using (var stream = new FileStream(Path.Combine(filePath, "index.html"), FileMode.Create))
+				{
+					byte[] info = new UTF8Encoding(true).GetBytes(HtmlTest);
+					stream.Write(info, 0, info.Length);
+				}
+
+				//Add test file/directory to IPFS API.
+				Ipfs.CoreApi.AddFileOptions options = new Ipfs.CoreApi.AddFileOptions() { Pin = true };
+				Ipfs.IFileSystemNode ret = await client.FileSystem.AddFileAsync(filePath + "/index.html", options);
+
+				string IpfsCidTemp = ret.Id.Hash.ToString();
+				if (!string.IsNullOrEmpty(IpfsCidTemp))
+				{
+					//return Json(new { success = true });
+				}
+				else
+				{
+					dynamic prepRespJsonFail = new { Success = false, Error = "IPFS API is not running or not accessible. Enable IPFS API on Settings Page -> Advanced Settings -> Enable IPFS API Server" };
+					return Json(prepRespJsonFail);
+				}
+
+			}
+			catch (Exception ex)
+			{
+				dynamic prepRespJsonFail = new { Success = false, Error = "IPFS API is not running or not accessible. Enable IPFS API on Settings Page -> Advanced Settings -> Enable IPFS API Server" };
+				return Json(prepRespJsonFail);
+			}
+
+
+
+
 			var sanitizer = new HtmlSanitizer();
 			string html = formCollection["html"];
 			string css = sanitizer.Sanitize(formCollection["css"]);

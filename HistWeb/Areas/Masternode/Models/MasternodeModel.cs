@@ -18,5 +18,9 @@ namespace HistWeb.Areas.Masternode.Models
         public string ActiveSeconds { get; set; }
         public string LastSeen { get; set; }
         public string Identity { get; internal set; }
+        public string Country { get; internal set; }
+        public long PingTime { get; internal set; }
+        public bool HttpsAvailable { get; internal set; }
+
     }
 }

@@ -21,6 +21,7 @@ using HistWeb.Areas.Masternode.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
+using System.Net.Http;
 
 namespace HistWeb.Controllers
 {
@@ -294,6 +295,147 @@ namespace HistWeb.Controllers
             }
 
         }
+
+        [HttpGet]
+        public JsonResult GetMasterNodesSetup()
+        {
+            try
+            {
+                //Prepare call
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+
+                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"masternodelist\", \"params\": [\"full\"] }";
+                System.Diagnostics.Debug.WriteLine("GetMasterNodes: " + jsonstring);
+
+                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                Stream dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+
+                WebResponse webResponse = webRequest.GetResponse();
+
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+
+                var expConverter = new ExpandoObjectConverter();
+                dynamic json = JsonConvert.DeserializeObject<ExpandoObject>(getResp, expConverter);
+
+                List<MasternodeModel> masternodes = new List<MasternodeModel>();
+                foreach (var mn in json.result)
+                {
+                    var data = mn.ToString();
+                    string[] substrings = Regex.Split(data, "\\s+");    // Split on hyphens
+
+                    MasternodeModel masternode = new MasternodeModel();
+                    if (substrings[1] == "ENABLED")
+                    {
+                        masternode.Status = substrings[1];
+                        masternode.Payee = substrings[2];
+                        masternode.LastSeen = substrings[3];
+                        masternode.ActiveSeconds = substrings[3];
+                        masternode.IPAddress = substrings[5];
+                        masternode.Identity = "https://" + substrings[6].Trim(']');
+                        masternodes.Add(masternode);
+                    }
+                }
+                var json1 = JsonConvert.SerializeObject(masternodes);
+
+                return Json(json1);
+            }
+            catch (Exception ex)
+            {
+                var prepRespJson1 = new { Success = false, Error = ex.ToString() };
+                return Json(prepRespJson1);
+            }
+
+        }
+
+
+        [HttpGet]
+        public async Task<JsonResult> TestMasterNode(string Identity)
+        {
+            try
+            {
+                string cleanIdentity = Identity.Replace("https://", "");
+                long PingTime = PingMasternode(cleanIdentity);
+                bool HTTPSEnabled = CheckHttpsAvailability(Identity);
+
+                var prepRespJson = new { pingtime = PingTime, identity = Identity, httpsenabled = HTTPSEnabled, success = true };
+                return Json(prepRespJson);
+            }
+            catch (Exception ex)
+            {
+                var prepRespJson1 = new { Success = false, Error = ex.ToString() };
+                return Json(prepRespJson1);
+            }
+        }
+
+
+        public static async Task<string> GetPublicIPAddress()
+        {
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    string url = "https://httpbin.org/ip";
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        var ipInfo = Newtonsoft.Json.Linq.JObject.Parse(json);
+                        return ipInfo["origin"].ToString();
+                    }
+                    return "Unable to get public IP";
+                }
+                catch (Exception ex)
+                {
+                    return $"Error: {ex.Message}";
+                }
+            }
+        }
+
+        private long PingMasternode(string ipAddress)
+        {
+            try
+            {
+				System.Net.NetworkInformation.Ping ping = new System.Net.NetworkInformation.Ping();
+				System.Net.NetworkInformation.PingReply reply = ping.Send(ipAddress, 1000); // 1 second timeout
+                if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
+                {
+                    return reply.RoundtripTime;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions or unreachable hosts
+                return 999; // Return max value if ping fails
+            }
+            return 999; // Return max value if ping fails
+        }
+
+        private bool CheckHttpsAvailability(string url)
+        {
+            try
+            {
+                string fullUrl = url + "/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html";
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(fullUrl);
+                request.Timeout = 5000; 
+                request.Method = "GET"; 
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                {
+                    return response.StatusCode == HttpStatusCode.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false; 
+            }
+        }
+
 
         [HttpGet]
         public JsonResult DeleteRegisteredMasternode(string id)

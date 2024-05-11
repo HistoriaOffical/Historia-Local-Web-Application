@@ -19,125 +19,209 @@
 }
 <div>
     <form id="profile-form" method="post">
-        <div class="card">
+        <div class="text-center">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-2">
-                        <h5>Historia Core Setup</h5>
-
-                    </div>
-                    <div class="col-4">
-                        <div class="form-group float-right">
-                            <button id="btnTestHistoriaClient" type="button" class="btn btn-secondary btn-sm">Test Connection to Historia Client</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-
-                        <div class="form-group">
-                            <label id="HistoriaClientIPAddressLabel">Historia Core Client IP Address</label>
-                            <input asp-for="HistoriaClientIPAddress" class="form-control" value="@Model.HistoriaClientIPAddress" />
-                        </div>
-                        <div class="form-group">
-                            <label id="HistoriaRPCPortLabel">Historia Core Client RPC Port</label>
-                            <input asp-for="HistoriaRPCPort" class="form-control" value="@Model.HistoriaRPCPort" />
-                        </div>
-
-                        <div class="form-group">
-                            <label id="HistoriaRPCUserNameLabel">Historia Core Client Username</label>
-                            <input asp-for="HistoriaRPCUserName" class="form-control" value="@Model.HistoriaRPCUserName" />
-                        </div>
-
-                        <div class="form-group">
-                            <label id="HistoriaRPCPasswordLabel">Historia Core Client Password</label>
-                            <input asp-for="HistoriaRPCPassword" class="form-control" value="@Model.HistoriaRPCPassword" />
-                        </div>
-                    </div>
-                </div>
-                <br />
-                <div class="w-100"></div>
-                <div class="row">
-                    <div class="col-2">
-                        <h5>IPFS Gateway Setup</h5>
-                    </div>
-                    <div class="col-4">
-                        <div class="form-group float-right">
-                            <button id="btnTestIPFS" type="button" class="btn btn-secondary btn-sm">Test Connection to IPFS Server</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label id="IPFSHostLabel">IPFS Host</label>
-                            <input asp-for="IPFSHost" class="form-control" value="@Model.IPFSHost" />
-                        </div>
-                        <div class="form-group">
-                            <label id="IPFSPortLabel">IPFS Port</label>
-                            <input id="IPFSPort" class="form-control" value="@Model.IPFSPort" />
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-2">
-                        <h5>IPFS API Setup</h5>
-                    </div>
-                    <div class="col-4">
-                        <div class="form-group float-right">
-                            <button id="btnTestIPFSApi" type="button" class="btn btn-secondary btn-sm">Test Connection to IPFS API Server</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label id="IPFSApiHostLabel">IPFS API Host</label>
-                            <input asp-for="IPFSApiHost" class="form-control" value="@Model.IPFSApiHost" />
-                        </div>
-                        <div class="form-group">
-                            <label id="IPFSApiPortLabel">IPFS API Port</label>
-                            <input asp-for="IPFSApiPort" class="form-control" value="@Model.IPFSApiPort" />
-                        </div>
-
-                    </div>
-                </div>
-
-                <br />
-
-                <div class="row">
-                    <div class="col-1">
-                        <div class="custom-control custom-switch float-left">
-                            <input type="checkbox" class="custom-control-input" id="btnImportHistoriaRecords">
-                            <label class="custom-control-label" id="btnImportHistoriaRecordsLabel" for="btnImportHistoriaRecords">Off</label>
-                        </div>
-                    </div>
-                    <div class="col-2">
-                        <label><b>Enable Deep Search</b></label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        "Deep Search" runs at startup to load records that have not yet been fully downloaded, as well while the user is browsing the home page. If you are on a slow Internet connection this could cause slower responsive times. This will also increase the amount of bandwidth used. If you want full search capabilities of not only the blockchain objects (IE proposals, records, and archives) but the contents of the blockchain objects you should enable this.
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-12">
-                        <div class="form-group float-right">
-                            <button id="btnSaveSettings" type="button" class="btn btn-secondary btn">Save Settings</button>&nbsp;
-                            <button id="btnInstructions" type="button" class="btn btn-secondary btn">
-                                <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="color:white;">Setup Instructions</a>
-                            </button>
+                        <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                            <li class="nav-item"><a id="gatewayTab" href="#gateway" data-target="#gateway" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="">Masternode Gateway</a></li>
+                            <li class="nav-item"><a id="coreTab" href="#core" data-target="#core" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Historia Core Setup</a></li>
+                            <li class="nav-item"><a id="ipfsapiTab" href="#ipfsapi" data-target="#ipfsapi" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Advanced Settings</a></li>
+                        </ul>
+                        <br />
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="tab-content">
+                                    <div id="gateway" class="tab-pane fade show active">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <h5 style="text-align: left;">Masternode Gateway Setup</h5>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    Because Historia Network is a distributed network, you have to choose a Content Distribution Masternode HTTPS server to connect for you to receive content.
 
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table class="table table-striped my-5 w-100" id="masternodesTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>URL</th>
+                                                            <th>IP Address</th>
+                                                            <th>Status</th>
+
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                       
+
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group">
+                                                    <h6 id="IPFSHostLabel" style="text-align: left !important;">IPFS Host</h6>
+                                                    <input asp-for="IPFSHost" class="form-control" value="@Model.IPFSHost" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <h6 id="IPFSPortLabel" style="text-align: left !important;">IPFS Port</h6>
+                                                    <input id="IPFSPort" class="form-control" value="@Model.IPFSPort" />
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestIPFS" type="button" class="btn btn-secondary btn-sm">Test & Save IPFS Server</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="core" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <h5 style="text-align: left;">Historia Core Setup</h5>
+
+                                            </div>
+
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    This is how this web application connects to the Historia Core Wallet. We have imported these settings from the Historia Core Wallet, we don't recommend changing them unless you know what you are doing or unless something is broken.
+
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaClientIPAddressLabel" style="text-align: left;">Historia Core Client IP Address</h6>
+                                                    <input asp-for="HistoriaClientIPAddress" class="form-control" value="@Model.HistoriaClientIPAddress" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaRPCPortLabel" style="text-align: left;">Historia Core Client RPC Port</h6>
+                                                    <input asp-for="HistoriaRPCPort" class="form-control" value="@Model.HistoriaRPCPort" />
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaRPCUserNameLabel" style="text-align: left;">Historia Core Client Username</h6>
+                                                    <input asp-for="HistoriaRPCUserName" class="form-control" value="@Model.HistoriaRPCUserName" />
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaRPCPasswordLabel" style="text-align: left;">Historia Core Client Password</h6>
+                                                    <input asp-for="HistoriaRPCPassword" class="form-control" value="@Model.HistoriaRPCPassword" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestHistoriaClient" type="button" class="btn btn-secondary btn-sm">Test & Save Historia Core Wallet connection</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="ipfsapi" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <h5 style="text-align: left;">Advanced Setttings</h5>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    These are advanced settings that most users don't need to enable.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <h6 style="text-align: left !important;">Enable IPFS API Server</h6>
+                                            </div>
+                                            <div class="col-2">
+                                                <div class="custom-control custom-switch float-right">
+                                                    <input type="checkbox" class="custom-control-input" id="btnEnabledIpfsApi">
+                                                    <label class="custom-control-label" id="btnEnabledIpfsApiLabel" for="btnEnabledIpfsApi">Off</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left !important;">
+                                                    If you want to use the Create process, you must enable the IPFS API server to submit to the network. We have imported the settings below, and you should not have to change these settings. This will open a seperate command prompt window. Do NOT close this window until you are are done submitting via the Create process.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group">
+                                                    <h6 id="IPFSApiHostLabel" style="text-align: left !important;">IPFS API IP Address</h6>
+                                                    <input asp-for="IPFSApiHost" class="form-control" value="@Model.IPFSApiHost" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <h6 id="IPFSApiPortLabel" style="text-align: left !important;">IPFS API Port</h6>
+                                                    <input asp-for="IPFSApiPort" class="form-control" value="@Model.IPFSApiPort" />
+                                                </div>
+                                                <br />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestIPFSApi" type="button" class="btn btn-secondary btn-sm">Test & Save Connection to IPFS API Server</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <h6 style="text-align: left !important;">Enable Deep Search</h6>
+                                            </div>
+                                            <div class="col-2">
+                                                <div class="custom-control custom-switch float-right">
+                                                    <input type="checkbox" class="custom-control-input" id="btnImportHistoriaRecords">
+                                                    <label class="custom-control-label" id="btnImportHistoriaRecordsLabel" for="btnImportHistoriaRecords">Off</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left !important;">
+                                                    "Deep Search" runs at startup to load records that have not yet been fully downloaded, as well while the user is browsing the home page. If you are on a slow Internet connection this could cause slower responsive times. This will also increase the amount of bandwidth used. If you want full search capabilities of not only the blockchain objects (IE proposals, records, and archives) but the contents of the blockchain objects you should enable this.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group float-right">
+                                                    <button id="btnSaveSettings" type="button" class="btn btn-secondary btn">Save Settings</button>&nbsp;
+                                                    <button id="btnInstructions" type="button" class="btn btn-secondary btn">
+                                                        <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="color:white;">Setup Instructions</a>
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <br /> <br /> <br />
-
-
+        </div>
     </form>
 </div>
 
@@ -145,8 +229,16 @@
 
 @section Scripts {
     <script type="text/javascript">
-        window.addEventListener('DOMContentLoaded', function () {
+        function initializeHLWA() {
+            console.log("Initializing page...");
 
+            $.get('@Url.Action("InitializeHLWA", "Home", new { Area = "Home" })', null, function (data) {
+                console.log("Initializing page...");
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
+            initializeHLWA();
 
             $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
                 if (data.value == 0) {
@@ -158,44 +250,109 @@
                 }
             });
 
+           $.get('@Url.Action("GetIpfsApiValue", "Home", new { Area = "Home" })', null, function (data) {
+                if (data.value == 0) {
+                    $('#btnEnabledIpfsApiLabel').html("Off");
+                    $('#btnEnabledIpfsApi').prop('checked', false);
+                } else {
+                    $('#btnEnabledIpfsApiLabel').html("On");
+                    $('#btnEnabledIpfsApi').prop('checked', true);
+                }
+            });
+
             document.getElementById('btnTestIPFS').onclick = (e) => {
                 var data = {
                     IPFSHost: $('#IPFSHost').val(),
                     IPFSPort: $('#IPFSPort').val(),
                 };
-                $.ajax({
-                    url: "/Home/TestIPFS",
-                    type: "POST",
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    data: JSON.stringify(data),
-                    success: function (resp) {
-                        if (resp.success) {
+                $.getJSON('@Url.Action("TestMasterNode", "Masternode", new { Area = "Masternode" })', { Identity: $('#IPFSHost').val() }, function(data) {
+                    try {
+                        // Attempt to parse JSON if it's a JSON string, not an object
+                        var responseData = typeof data === "string" ? JSON.parse(data) : data;
+
+                        // Construct message for Swal alert
+                        var message = `
+                            Identity: <b>${responseData.identity}</b><br>
+                            Ping Time: <b>${responseData.pingtime} ms</b><br>
+                            HTTPS Enabled: ${responseData.httpsenabled ? '<span style="color: green;"><b>Yes</b></span>' : '<span style="color: red;"><b>No</b></span>'}<br>
+                        `;
+
+                        // If HTTPS is enabled, change the text of the OK button to "Save" and attach the click event
+                        if (responseData.httpsenabled) {
                             Swal.fire({
-                                title: 'IPFS tested successfully!',
-                                text: 'IPFS tested successfully!',
-                                type: 'success',
-                                confirmButtonText: 'Ok'
+                                title: 'Test Result',
+                                html: message,
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'Save',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                   var data = {
+                                        IPFSHost: $('#IPFSHost').val(),
+                                        IPFSPort: $('#IPFSPort').val(),
+                                    };
+                                    $.ajax({
+                                        url: "/Home/SaveMasternodeSettings",
+                                        type: "POST",
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: "json",
+                                        data: JSON.stringify(data),
+                                        success: function (resp) {
+                                            if (resp.success) {
+                                                Swal.fire({
+                                                    title: 'Mastenode Settings Saved!',
+                                                    text: 'Your choice has been updated!',
+                                                    type: 'success',
+                                                    confirmButtonText: 'Ok'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        location.reload();
+                                                    }
+                                                });
+                                            }
+                                            else {
+                                                Swal.fire({
+                                                    title: 'Error!',
+                                                    text: 'Please check all fields and try again',
+                                                    type: 'error',
+                                                    confirmButtonText: 'Ok'
+                                                });
+                                            }
+                                        },
+                                        error: function (req, status, error) {
+                                            alert(error);
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            // If HTTPS is not enabled, show only an informative alert
+                            Swal.fire({
+                                title: 'Test Result',
+                                html: message,
+                                icon: 'info',
+                                confirmButtonText: 'OK'
                             });
                         }
-                        else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'Please check all fields and try again',
-                                type: 'error',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                    },
-                    error: function (req, status, error) {
+                    } catch (error) {
+                        console.error('Error processing masternode data:', error);
                         Swal.fire({
+                            icon: 'error',
                             title: 'Error!',
-                            text: 'Please check all fields and try again',
-                            type: 'error',
-                            confirmButtonText: 'Ok'
+                            text: 'Could not process masternode data.'
                         });
                     }
+                }).fail(function(jqXHR, textStatus, error) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to fetch masternode data: ' + error,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 });
+
+
             };
             document.getElementById('btnTestIPFSApi').onclick = (e) => {
                 var data = {
@@ -211,13 +368,53 @@
                     success: function (resp) {
                         if (resp.success) {
                             Swal.fire({
-                                title: 'IPFS API tested successfully!',
-                                text: 'IPFS  API  tested successfully!',
+                                title: 'IPFS API Server Successful Tested!',
+                                text: 'Do you want to save the settings?',
                                 type: 'success',
-                                confirmButtonText: 'Ok'
+                                showCancelButton: true,
+                                confirmButtonText: 'Save',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        url: "/Home/SaveIPFSApiSettings",
+                                        type: "POST",
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: "json",
+                                        data: JSON.stringify(data),
+                                        success: function (saveResp) {
+                                            if (saveResp.success) {
+                                                Swal.fire({
+                                                    title: 'IPFS API Server Settings Saved!',
+                                                    text: 'Your settings have been updated!',
+                                                    type: 'success',
+                                                    confirmButtonText: 'Ok'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        location.reload();
+                                                    }
+                                                });
+                                            } else {
+                                                Swal.fire({
+                                                    title: 'Error!',
+                                                    text: 'Failed to save Core Wallet settings.',
+                                                    type: 'error',
+                                                    confirmButtonText: 'Ok'
+                                                });
+                                            }
+                                        },
+                                        error: function (req, status, error) {
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'Failed to save Core Wallet  settings: ' + error,
+                                                type: 'error',
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
+                                    });
+                                }
                             });
-                        }
-                        else {
+                        } else {
                             Swal.fire({
                                 title: 'Error!',
                                 text: 'Please check all fields and try again',
@@ -254,12 +451,52 @@
                         if (resp.success) {
                             Swal.fire({
                                 title: 'Historia Client tested successfully!',
-                                text: 'Historia Client tested successfully!',
+                                text: 'Do you want to save the settings?',
                                 type: 'success',
-                                confirmButtonText: 'Ok'
+                                showCancelButton: true,
+                                confirmButtonText: 'Save',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        url: "/Home/SaveCoreSettings",
+                                        type: "POST",
+                                        contentType: "application/json; charset=utf-8",
+                                        dataType: "json",
+                                        data: JSON.stringify(data),
+                                        success: function (saveResp) {
+                                            if (saveResp.success) {
+                                                Swal.fire({
+                                                    title: 'Historia Core Settings Saved!',
+                                                    text: 'Your settings have been updated!',
+                                                    type: 'success',
+                                                    confirmButtonText: 'Ok'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        location.reload();
+                                                    }
+                                                });
+                                            } else {
+                                                Swal.fire({
+                                                    title: 'Error!',
+                                                    text: 'Failed to save Core Wallet settings.',
+                                                    type: 'error',
+                                                    confirmButtonText: 'Ok'
+                                                });
+                                            }
+                                        },
+                                        error: function (req, status, error) {
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'Failed to save Core Wallet  settings: ' + error,
+                                                type: 'error',
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
+                                    });
+                                }
                             });
-                        }
-                        else {
+                        } else {
                             Swal.fire({
                                 title: 'Error!',
                                 text: 'Please check all fields and try again',
@@ -278,6 +515,7 @@
                     }
                 });
             };
+
 
             document.getElementById('btnImportHistoriaRecords').onclick = (e) => {
 
@@ -408,6 +646,42 @@
 
             }
 
+            document.getElementById('btnEnabledIpfsApi').onclick = (e) => {
+
+                const isChecked = e.target.checked;
+                $('#btnEnabledIpfsApiLabel').html(isChecked ? "On" : "Off");
+                if (isChecked || !isChecked) {  // Weird work around on a bug concerning the btnEnabledIpfsApiLabel checkbox
+                    Swal.fire({
+                        title: 'Enable IPFS API Server?',
+                        html: 'This will open a separate command line prompt window. Do not shut the window until you close the app.<br>',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ok',
+                        cancelButtonText: 'Cancel',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.get('@Url.Action("ToggleIpfsApiValue", "Home", new { Area = "Home" })', null, function (data) {
+                                $('#btnEnabledIpfsApiLabel').html(data.value == 0 ? "Off" : "On");
+                                $('#btnEnabledIpfsApi').prop('checked', data.value != 0);
+                            });
+                        }
+                    });
+                    return false;
+                }
+
+                var IPFSApiHost = "@Model.IPFSApiHost";
+                if (typeof IPFSApiHost === "undefined" || IPFSApiHost === "") {
+                    Swal.fire({
+                        title: 'IPFS API Server settings not found',
+                        html: 'Please set an IPFS Host and IPFS Port, and hit the Save button before attempting to import.<br>',
+                        icon: 'warning',
+                        confirmButtonText: 'Ok',
+                    });
+                    return false;
+                }
+            }
+
 
             document.getElementById('btnSaveSettings').onclick = (e) => {
                 var data = {
@@ -453,7 +727,77 @@
                     }
                 });
             };
+        });
+
+    $(document).ready(function () {
+
+        var masternodesTable = $('#masternodesTable').DataTable({
+            data: null,
+            info: false,
+            fixedHeader: false,
+            lengthChange: false,
+            autoWidth: false,
+            responsive: false,
+            pageLength: 5, // Set the number of results per page to 5
+            columns: [
+                { data: "identity" },
+                { data: "ipAddress" },
+                { data: "status" },
+            ],
+        });
+
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+		$.getJSON( '@Url.Action("GetMasterNodesSetup", "Masternode", new { Area = "Masternode" })', function( tableData ) {
+            console.log('masternode data: ' + JSON.stringify(JSON.parse(tableData)));
+            Swal.close();
+			var jsonRet = [];
+			for (var prop in tableData.result) {
+                var pval = tableData.result[prop].trim().split(/\s+/);
+				var masterNode = {};
+				masterNode.status = pval[0];
+				var d = new Date(pval[2] * 1000);
+				masterNode.ipAddress = pval[4];
+				jsonRet.push(masterNode);
+            }
+
+            // Add click event listener to table rows
+            $('#masternodesTable tbody').on('click', 'tr', function () {
+                // Get data of the clicked row
+                var rowData = masternodesTable.row(this).data();
+
+                // Display data in JavaScript alert
+                if (rowData) {
+                    // Set values to input fields
+                    $('#IPFSHost').val(rowData.Identity);
+                    $('#IPFSPort').val(rowData.IPAddress);
+                    $('#IPFSPort').val(443);
+                }
             });
+            var masternodesTable = $('#masternodesTable').DataTable({
+                destroy: true,
+                data: JSON.parse(tableData),
+				info: false,
+				fixedHeader: false,
+				lengthChange: false,
+				autoWidth: false,
+				responsive: true,
+                columns: [
+                    { data: "Identity" },
+                    { data: "IPAddress" },
+					{ data: "Status" },
+				],
+			});
+        });
+    });
     </script>
 
     <partial name="_ValidationScriptsPartial" />

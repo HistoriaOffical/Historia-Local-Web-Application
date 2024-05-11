@@ -1181,7 +1181,11 @@ namespace HistWeb.Controllers
 		[HttpPost]
 		public IActionResult SaveMasternodeSettings([FromBody] SettingsParams settings)
 		{
-			ApplicationSettings.IPFSHost = settings.IPFSHost;
+			if (settings.IPFSHost.StartsWith("http://"))
+				ApplicationSettings.IPFSHost = settings.IPFSHost.Substring(7); 
+			else if (settings.IPFSHost.StartsWith("https://"))
+				ApplicationSettings.IPFSHost = settings.IPFSHost.Substring(8);
+
 			ApplicationSettings.IPFSPort = settings.IPFSPort;
 			ApplicationSettings.SaveConfig();
 			return Json(new { success = true });

@@ -204,8 +204,7 @@
                 }
             });
 
-
-            $('#searchSubmit').on('click', function (evt) {
+             $('#searchSubmit').on('click', function (evt) {
 
                     var selectedType = "search";
                     clearRecords();
@@ -336,10 +335,10 @@
                  else {
                      $('#submit').removeClass('disabled');
                      $('#submit').removeAttr('disabled');
-                     $('#submit').show();
+                     //$('#submit').show();
                      $('#submitArchive').removeClass('disabled');
                      $('#submitArchive').removeAttr('disabled');
-                     $('#submitArchive').show();
+                     //$('#submitArchive').show();
                  }
 
                 $('#currentBlock').html(result.result.currentBlock);

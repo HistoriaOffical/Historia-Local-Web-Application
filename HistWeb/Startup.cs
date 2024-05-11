@@ -65,8 +65,16 @@ namespace HistWeb
                                                     HistoriaRPCPort INTEGER NOT NULL,
                                                     HistoriaRPCUserName TEXT NOT NULL,
                                                     HistoriaRPCPassword TEXT NOT NULL,
-													DeepSearch INTEGER DEFAULT 0
+													DeepSearch INTEGER DEFAULT 0,
+													InitializedHLWA INTEGER DEFAULT 0,
+													InitializedIPFS INTEGER DEFAULT 0,
+													IpfsApi INTEGER DEFAULT 0,
+													IpfsApiStarted INTEGER DEFAULT 0
                                                 );";
+						createCmd.CommandType = System.Data.CommandType.Text;
+						createCmd.ExecuteNonQuery();
+
+						createCmd.CommandText = @"UPDATE basexConfiguration SET IpfsApiStarted = 0 WHERE Id = 1;";
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
 
@@ -79,6 +87,7 @@ namespace HistWeb
 												);";
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
+
 
 						createCmd.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS idx_proposalmatrix_url ON proposalmatrix(url);";
 						createCmd.ExecuteNonQuery();

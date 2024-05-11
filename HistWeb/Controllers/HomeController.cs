@@ -45,8 +45,11 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Microsoft.Data.Sqlite;
 using SQLitePCL;
-
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.IO;
+
+
 
 namespace HistWeb.Controllers
 {
@@ -219,6 +222,49 @@ namespace HistWeb.Controllers
 		}
 
 		[HttpGet]
+		public JsonResult ToggleIpfsApiValue()
+		{
+			int toggleValue = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "UPDATE basexConfiguration SET IpfsApi = NOT IpfsApi WHERE Id = 1";
+						cmd.ExecuteNonQuery();
+					}
+
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT IpfsApi FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							}
+						}
+					}
+
+
+					var rep = new { Success = true, value = toggleValue };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = toggleValue };
+					return Json(rep);
+				}
+			}
+		}
+
+		[HttpGet]
 		public JsonResult ToggleDeepValue()
 		{
 			int toggleValue = 0;
@@ -295,6 +341,42 @@ namespace HistWeb.Controllers
 				}
 			}
 		}
+
+		[HttpGet]
+		public JsonResult GetIpfsApiValue()
+		{
+			int toggleValue = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT IpfsApi FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							}
+						}
+					}
+
+
+					var rep = new { Success = true, value = toggleValue };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = 0 };
+					return Json(rep);
+				}
+			}
+		}
+		
 		private static int GetDeepSearch()
 		{
 			int toggleValue = 0;
@@ -326,6 +408,193 @@ namespace HistWeb.Controllers
 				}
 			}
 		}
+
+
+		private static Dictionary<string, string> ReadHistoriaConfig(string filePath)
+		{
+			var config = new Dictionary<string, string>();
+
+			using (StreamReader reader = new StreamReader(filePath))
+			{
+				string line;
+				while ((line = reader.ReadLine()) != null)
+				{
+					// Ignore comments and empty lines
+					if (!string.IsNullOrEmpty(line) && !line.Trim().StartsWith("#"))
+					{
+						string[] parts = line.Split('=');
+						if (parts.Length == 2)
+						{
+							string key = parts[0].Trim();
+							string value = parts[1].Trim();
+							config[key] = value;  // Add or update dictionary entry
+						}
+					}
+				}
+			}
+
+			return config;
+		}
+
+
+		static string[] GetCommandsBasedOnOS()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return new string[]
+				{
+					"ipfs.exe init",
+					"ipfs.exe bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
+					"ipfs.exe bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
+					"ipfs.exe bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
+					"ipfs.exe bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
+					"ipfs.exe bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
+					"ipfs.exe bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+					"ipfs.exe config --json Datastore.StorageMax \"50GB\"",
+					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers \"[\\\"X-Requested-With\\\", \\\"Access-Control-Expose-Headers\\\", \\\"Range\\\", \\\"Authorization\\\"]\"",
+					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods \"[\\\"POST\\\", \\\"GET\\\"]\"",
+					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"",
+					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers \"[\\\"Location\\\", \\\"Ipfs-Hash\\\"]\"",
+					"ipfs.exe config --json Gateway.HTTPHeaders.X-Special-Header \"[\\\"Access-Control-Expose-Headers: Ipfs-Hash\\\"]\"",
+					"ipfs.exe config --json Gateway.NoFetch \"false\"",
+					"ipfs.exe config --json Swarm.ConnMgr.HighWater \"500\"",
+					"ipfs.exe config --json Swarm.ConnMgr.LowWater \"200\"",
+					"ipfs.exe config --json Datastore.StorageMax \"50GB\"",
+					"ipfs.exe config --json Gateway.Writable true",
+
+				};
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				return new string[]
+				{
+					"ipfs init -p server",
+					"ipfs bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
+					"ipfs bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
+					"ipfs bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
+					"ipfs bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
+					"ipfs bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
+					"ipfs bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+
+					"ipfs config --json Datastore.StorageMax '\"50GB\"'",
+					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '[\"X-Requested-With\", \"Access-Control-Expose-Headers\", \"Range\", \"Authorization\"]'",
+					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '[\"POST\", \"GET\"]'",
+					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '[\"*\"]'",
+					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers '[\"Location\", \"Ipfs-Hash\"]'",
+					"ipfs config --json Gateway.HTTPHeaders.X-Special-Header '[\"Access-Control-Expose-Headers: Ipfs-Hash\"]'",
+					"ipfs config --json Gateway.NoFetch false",
+					"ipfs config --json Swarm.ConnMgr.HighWater '500'",
+					"ipfs config --json Swarm.ConnMgr.LowWater '200'",
+					"ipfs config --json Gateway.Writable true",
+
+				};
+			}
+			else
+			{
+				throw new InvalidOperationException("Unsupported operating system");
+			}
+		}
+
+		static string GetShellName()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return "cmd.exe";
+			}
+			else
+			{
+				return "/bin/bash";
+			}
+		}
+
+		static string GetShellArguments(string command)
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return $"/c {command}";
+			}
+			else
+			{
+				return $"-c \"{command}\""; 
+			}
+		}
+
+		[HttpGet]
+		public JsonResult InitializeHLWA()
+		{
+			int Initialized = 0;
+			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								Initialized = rdr.GetInt32(rdr.GetOrdinal("Initialized"));
+							}
+						}
+					}
+					if (Initialized == 0)
+					{
+
+
+						Initialized = 1;
+						using (var cmd = conn.CreateCommand())
+						{
+							string configFilePath = "";
+							if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+							{
+								string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+								configFilePath = Path.Combine(appDataPath, "HistoriaCore", "historia.conf");
+
+							}
+							else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+							{
+								// Linux-specific path
+								configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "historia.conf");
+							}
+							else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+							{
+								// macOS-specific path
+								configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "historia.conf");
+							}
+
+							var settings = ReadHistoriaConfig(configFilePath);
+							//ApplicationSettings.IPFSHost = ""; // User must select a default server
+							//ApplicationSettings.IPFSPort = 443; // User must select a default server
+							ApplicationSettings.IPFSApiHost = "127.0.0.1";
+							ApplicationSettings.IPFSApiPort = 5001;
+							ApplicationSettings.HistoriaClientIPAddress = "127.0.0.1";
+							ApplicationSettings.HistoriaRPCPort =  Int32.Parse(settings["rpcport"]);
+							ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
+							ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
+							ApplicationSettings.SaveConfig();
+
+							conn.Open();
+							cmd.CommandType = System.Data.CommandType.Text;
+							cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
+							//cmd.ExecuteNonQuery();
+						}
+					}
+
+					var rep = new { Success = true, value = Initialized };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = 0 };
+					return Json(rep);
+				}
+			}
+		}
+
 
 		[DllImport("sqlite3.dll", EntryPoint = "sqlite3_load_extension")]
 		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
@@ -910,6 +1179,35 @@ namespace HistWeb.Controllers
 		}
 
 		[HttpPost]
+		public IActionResult SaveMasternodeSettings([FromBody] SettingsParams settings)
+		{
+			ApplicationSettings.IPFSHost = settings.IPFSHost;
+			ApplicationSettings.IPFSPort = settings.IPFSPort;
+			ApplicationSettings.SaveConfig();
+			return Json(new { success = true });
+		}
+
+		[HttpPost]
+		public IActionResult SaveCoreSettings([FromBody] SettingsParams settings)
+		{
+			ApplicationSettings.HistoriaClientIPAddress = settings.HistoriaClientIPAddress;
+			ApplicationSettings.HistoriaRPCPort = settings.HistoriaRPCPort;
+			ApplicationSettings.HistoriaRPCUserName = settings.HistoriaRPCUserName;
+			ApplicationSettings.HistoriaRPCPassword = settings.HistoriaRPCPassword;
+			ApplicationSettings.SaveConfig();
+			return Json(new { success = true });
+		}
+
+		[HttpPost]
+		public IActionResult SaveIpfsApiSettings([FromBody] SettingsParams settings)
+		{
+			ApplicationSettings.IPFSApiHost = settings.IPFSApiHost;
+			ApplicationSettings.IPFSApiPort = settings.IPFSApiPort;
+			ApplicationSettings.SaveConfig();
+			return Json(new { success = true });
+		}
+
+		[HttpPost]
 		public async Task<IActionResult> TestIPFSAsync([FromBody] SettingsParams settings)
 		{
 			try
@@ -963,6 +1261,47 @@ namespace HistWeb.Controllers
 				return Json(new { success = false });
 			}
 		}
+
+		[HttpGet]
+		public async Task<IActionResult> TestIPFSAPIDefault()
+		{
+			try
+			{
+
+				Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{ApplicationSettings.IPFSApiHost}:{ApplicationSettings.IPFSApiPort}");
+
+				string HtmlTest = "<html><body>Test Connection to IPFS API1</body></html>";
+				string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", ""));
+				Directory.CreateDirectory(tempDirectory);
+
+				var filePath = tempDirectory;
+				using (var stream = new FileStream(Path.Combine(filePath, "index.html"), FileMode.Create))
+				{
+					byte[] info = new UTF8Encoding(true).GetBytes(HtmlTest);
+					stream.Write(info, 0, info.Length);
+				}
+
+				//Add test file/directory to IPFS API.
+				Ipfs.CoreApi.AddFileOptions options = new Ipfs.CoreApi.AddFileOptions() { Pin = true };
+				Ipfs.IFileSystemNode ret = await client.FileSystem.AddFileAsync(filePath + "/index.html", options);
+
+				string IpfsCid = ret.Id.Hash.ToString();
+				if (!string.IsNullOrEmpty(IpfsCid))
+				{
+					return Json(new { success = true });
+				}
+				else
+				{
+					return Json(new { success = false });
+				}
+
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false });
+			}
+		}
+
 
 		[HttpPost]
 		public IActionResult TestHistoriaClient([FromBody] SettingsParams settings)

@@ -37,12 +37,13 @@ using System.Net.Mime;
 using System.Net.Http;
 using OpenGraphNet;
 using Microsoft.Data.Sqlite;
+using System.Runtime.InteropServices;
 
 public class RecurringJobService : BackgroundService
 {
 	private Timer timer;
 	private IConfiguration _configuration = null;
-
+	private static Process _ipfsProcess;
 	private readonly Dictionary<Func<Task>, (TimeSpan Interval, string CronExpression)> recurringFunctions;
 
 	public RecurringJobService(IConfiguration config)
@@ -53,6 +54,7 @@ public class RecurringJobService : BackgroundService
 		{
 			//Prod
 			{ () => GenerateProposalMatrix(_configuration), (TimeSpan.FromMinutes(1), "*/5 * * * *") },
+			{ () => ToggleIpfsApi(_configuration, _ipfsProcess), (TimeSpan.FromMinutes(1), "* * * * *") },
 
 		};
 
@@ -126,6 +128,137 @@ public class RecurringJobService : BackgroundService
 				await kvp.Key.Invoke();
 			}
 		}
+	}
+
+	private static void StartIpfsDaemon(Process ipfsProcess)
+	{
+		try
+		{
+			string executablePath;
+			string fileName;
+			string arguments;
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				executablePath = @"C:\Program Files\HistoriaCore\ipfs\ipfs.exe";
+				fileName = "cmd.exe";  // Use cmd to open command prompt
+									   // Properly enclose the executable path in quotes to handle spaces
+				arguments = $"/K \"\"{executablePath}\" daemon\"";  // Use double quotes around the executable path
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				// Using the base directory of the application to find IPFS
+				executablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ipfs/ipfs");
+				fileName = "/bin/bash";
+				arguments = $"-c \"{executablePath} daemon; exec bash\"";  // Keep bash open after IPFS starts
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				// Correct path for IPFS within the macOS app bundle
+				executablePath = AppDomain.CurrentDomain.BaseDirectory + "/Contents/Resources/ipfs/ipfs";
+				fileName = "/bin/bash";  // Use bash to open a terminal window
+										 // Properly format the command for bash
+				arguments = $"-c \"{executablePath} daemon; exec bash\"";  // exec bash keeps the terminal open
+			}
+			else
+			{
+				throw new InvalidOperationException("Unsupported operating system");
+			}
+
+			// Configure the process start info
+			ProcessStartInfo processStartInfo = new ProcessStartInfo
+			{
+				FileName = fileName,
+				Arguments = arguments,
+				WorkingDirectory = Path.GetDirectoryName(executablePath),
+				UseShellExecute = true,  // This must be true to start the process in a new window
+				CreateNoWindow = false  // This must be false to show the new window
+			};
+
+			// Start the IPFS daemon process
+			ipfsProcess = new Process { StartInfo = processStartInfo };
+			ipfsProcess.Start();
+
+			Console.WriteLine("IPFS daemon started successfully in a new command window.");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error starting IPFS daemon: {ex.Message}");
+		}
+	}
+
+	private static async Task ToggleIpfsApi(IConfiguration _configuration, Process ipfsProcess)
+	{
+
+		try
+		{
+			int IpfsApi = 0;
+			int IpfsApiStart = 0;
+			using (
+				var conn = new SqliteConnection("Data Source=basex.db"))
+			{
+				using (var cmd = conn.CreateCommand())
+				{
+					conn.Open();
+					cmd.CommandType = System.Data.CommandType.Text;
+					cmd.CommandText = "SELECT IpfsApi, IpfsApiStarted FROM basexConfiguration where Id = 1";
+					using (SqliteDataReader rdr = cmd.ExecuteReader())
+					{
+						if (rdr.Read())
+						{
+							dynamic result = new System.Dynamic.ExpandoObject();
+
+							IpfsApi = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							IpfsApiStart = rdr.GetInt32(rdr.GetOrdinal("IpfsApiStarted"));
+						}
+					}
+				}
+				if(IpfsApi == 1 && IpfsApiStart == 0)
+				{
+					StartIpfsDaemon(ipfsProcess);
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "Update basexConfiguration SET IpfsApiStarted = 1 where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								dynamic result = new System.Dynamic.ExpandoObject();
+
+								IpfsApi = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							}
+						}
+					}
+				}
+
+				if (IpfsApi == 0 && IpfsApiStart == 1)
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "Update basexConfiguration SET IpfsApiStarted = 0 where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								dynamic result = new System.Dynamic.ExpandoObject();
+
+								IpfsApi = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							}
+						}
+					}
+				}
+			}
+			var rep = new { Success = true };
+		}
+		catch (Exception ex)
+		{
+			var rep = new { Success = false };
+		}
+
 	}
 
 	private static async Task GenerateProposalMatrix(IConfiguration _configuration)

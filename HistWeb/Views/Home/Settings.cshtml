@@ -206,7 +206,6 @@
                                         <div class="row">
                                             <div class="col-12">
                                                 <div class="form-group float-right">
-                                                    <button id="btnSaveSettings" type="button" class="btn btn-secondary btn">Save Settings</button>&nbsp;
                                                     <button id="btnInstructions" type="button" class="btn btn-secondary btn">
                                                         <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="color:white;">Setup Instructions</a>
                                                     </button>
@@ -229,16 +228,33 @@
 
 @section Scripts {
     <script type="text/javascript">
-        function initializeHLWA() {
+        async function initializeHLWA() {
             console.log("Initializing page...");
 
-            $.get('@Url.Action("InitializeHLWA", "Home", new { Area = "Home" })', null, function (data) {
-                console.log("Initializing page...");
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                },
             });
+
+            await $.get('@Url.Action("InitializeHLWA", "Home", new { Area = "Home" })');
+            console.log("Initialization complete.");
+            await sleep(500); // If you need a delay after initialization
         }
 
+        function fillForm(data) {
+            // Remove 'https://' from the identity if it exists
+            var cleanIdentity = data.identity.replace(/^https:\/\//i, '');  // Using regex to ensure case insensitivity
+
+            // Set the cleaned identity to the IPFSHost input
+            $('#IPFSHost').val(cleanIdentity);
+            $('#IPFSPort').val("443");  // Assuming you store port in the DataTable
+        }
         window.addEventListener('DOMContentLoaded', function () {
-            initializeHLWA();
 
             $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
                 if (data.value == 0) {
@@ -729,8 +745,11 @@
             };
         });
 
-    $(document).ready(function () {
-
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    $(document).ready(async function () {
+        await initializeHLWA();
         var masternodesTable = $('#masternodesTable').DataTable({
             data: null,
             info: false,
@@ -738,12 +757,18 @@
             lengthChange: false,
             autoWidth: false,
             responsive: false,
-            pageLength: 5, // Set the number of results per page to 5
+            pageLength: 10, // Set the number of results per page to 5
             columns: [
                 { data: "identity" },
                 { data: "ipAddress" },
                 { data: "status" },
             ],
+        });
+
+        // Event listener for opening a row detail when a row is clicked
+        $('#masternodesTable tbody').on('click', 'tr', function () {
+            var data = masternodesTable.row(this).data();
+            fillForm(data);
         });
 
         Swal.fire({
@@ -755,48 +780,54 @@
                 Swal.showLoading();
             },
         });
+        sleep(5000);
+        $.ajax({
+            url: '@Url.Action("GetMasterNodesSetup", "Masternode", new { Area = "Masternode" })',
+            type: 'GET',
+            dataType: 'json',
+            timeout: 10000, // Set timeout
+            success: function (response) {
+                Swal.close();  // Ensure the Swal is closed in success path
 
-		$.getJSON( '@Url.Action("GetMasterNodesSetup", "Masternode", new { Area = "Masternode" })', function( tableData ) {
-            console.log('masternode data: ' + JSON.stringify(JSON.parse(tableData)));
-            Swal.close();
-			var jsonRet = [];
-			for (var prop in tableData.result) {
-                var pval = tableData.result[prop].trim().split(/\s+/);
-				var masterNode = {};
-				masterNode.status = pval[0];
-				var d = new Date(pval[2] * 1000);
-				masterNode.ipAddress = pval[4];
-				jsonRet.push(masterNode);
-            }
-
-            // Add click event listener to table rows
-            $('#masternodesTable tbody').on('click', 'tr', function () {
-                // Get data of the clicked row
-                var rowData = masternodesTable.row(this).data();
-
-                // Display data in JavaScript alert
-                if (rowData) {
-                    // Set values to input fields
-                    $('#IPFSHost').val(rowData.Identity);
-                    $('#IPFSPort').val(rowData.IPAddress);
-                    $('#IPFSPort').val(443);
+                // Check if the server reported a failure
+                if (!response.success) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Could not connect to Historia Core Wallet, check your settings on the Historia Core Setup tab and try again.',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
                 }
-            });
-            var masternodesTable = $('#masternodesTable').DataTable({
-                destroy: true,
-                data: JSON.parse(tableData),
-				info: false,
-				fixedHeader: false,
-				lengthChange: false,
-				autoWidth: false,
-				responsive: true,
-                columns: [
-                    { data: "Identity" },
-                    { data: "IPAddress" },
-					{ data: "Status" },
-				],
-			});
+
+                // If success, process the data
+                console.log('masternode data: ' + JSON.stringify(response.data));  // Log the data part
+                var jsonRet = [];
+                response.data.forEach(function(item) {  // Assuming response.data is an array of objects
+                    var masterNode = {
+                        identity: item.identity,
+                        status: item.status,
+                        ipAddress: item.ipAddress
+                    };
+                    jsonRet.push(masterNode);
+                });
+
+                // Reinitialize or update the DataTable with new data
+                var masternodesTable = $('#masternodesTable').DataTable();
+                masternodesTable.clear().rows.add(jsonRet).draw();
+            },
+            error: function(xhr, textStatus, error) {
+                Swal.close(); // Close the loading Swal
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Could not connect to Historia Core Wallet, check your settings on the Historia Core Setup tab and try again.',
+                    confirmButtonText: 'OK'
+                });
+                console.error('AJAX error:', textStatus, error);
+            }
         });
+
     });
     </script>
 

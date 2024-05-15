@@ -301,7 +301,7 @@ namespace HistWeb.Controllers
         {
             try
             {
-                //Prepare call
+                // Prepare call
                 HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
                 webRequest.Credentials = new NetworkCredential(_userName, _password);
                 webRequest.ContentType = "application/json-rpc";
@@ -312,47 +312,57 @@ namespace HistWeb.Controllers
 
                 byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
                 webRequest.ContentLength = byteArray.Length;
-                Stream dataStream = webRequest.GetRequestStream();
-                dataStream.Write(byteArray, 0, byteArray.Length);
-                dataStream.Close();
-
-                WebResponse webResponse = webRequest.GetResponse();
-
-                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-                string getResp = sr.ReadToEnd();
-
-                var expConverter = new ExpandoObjectConverter();
-                dynamic json = JsonConvert.DeserializeObject<ExpandoObject>(getResp, expConverter);
-
-                List<MasternodeModel> masternodes = new List<MasternodeModel>();
-                foreach (var mn in json.result)
+                using (Stream dataStream = webRequest.GetRequestStream())
                 {
-                    var data = mn.ToString();
-                    string[] substrings = Regex.Split(data, "\\s+");    // Split on hyphens
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                }
 
-                    MasternodeModel masternode = new MasternodeModel();
-                    if (substrings[1] == "ENABLED")
+                using (WebResponse webResponse = webRequest.GetResponse())
+                {
+                    using (StreamReader sr = new StreamReader(webResponse.GetResponseStream()))
                     {
-                        masternode.Status = substrings[1];
-                        masternode.Payee = substrings[2];
-                        masternode.LastSeen = substrings[3];
-                        masternode.ActiveSeconds = substrings[3];
-                        masternode.IPAddress = substrings[5];
-                        masternode.Identity = "https://" + substrings[6].Trim(']');
-                        masternodes.Add(masternode);
+                        string getResp = sr.ReadToEnd();
+                        var expConverter = new ExpandoObjectConverter();
+                        dynamic json = JsonConvert.DeserializeObject<ExpandoObject>(getResp, expConverter);
+
+                        List<MasternodeModel> masternodes = new List<MasternodeModel>();
+                        foreach (var mn in json.result)
+                        {
+                            var data = mn.ToString();
+                            string[] substrings = Regex.Split(data, "\\s+");  // Split on spaces
+
+                            if (substrings[1] == "ENABLED")
+                            {
+                                MasternodeModel masternode = new MasternodeModel
+                                {
+                                    Status = substrings[1],
+                                    Payee = substrings[2],
+                                    LastSeen = substrings[3],
+                                    ActiveSeconds = substrings[3],
+                                    IPAddress = substrings[5],
+                                    Identity = "https://" + substrings[6].Trim(']')
+                                };
+                                masternodes.Add(masternode);
+                            }
+                        }
+
+                        // Constructing the response object with a success flag
+                        var responseObj = new
+                        {
+                            success = true,
+                            data = masternodes
+                        };
+                        return Json(responseObj);  // Serializing the response object directly
                     }
                 }
-                var json1 = JsonConvert.SerializeObject(masternodes);
-
-                return Json(json1);
             }
             catch (Exception ex)
             {
-                var prepRespJson1 = new { Success = false, Error = ex.ToString() };
-                return Json(prepRespJson1);
+                var prepRespJson = new { success = false, error = ex.Message };
+                return Json(prepRespJson);
             }
-
         }
+
 
 
         [HttpGet]
@@ -362,7 +372,7 @@ namespace HistWeb.Controllers
             {
                 string cleanIdentity = Identity.Replace("https://", "");
                 long PingTime = PingMasternode(cleanIdentity);
-                bool HTTPSEnabled = CheckHttpsAvailability(Identity);
+                bool HTTPSEnabled = CheckHttpsAvailability("https://" + Identity);
 
                 var prepRespJson = new { pingtime = PingTime, identity = Identity, httpsenabled = HTTPSEnabled, success = true };
                 return Json(prepRespJson);

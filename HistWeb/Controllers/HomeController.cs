@@ -419,6 +419,10 @@ namespace HistWeb.Controllers
 				string line;
 				while ((line = reader.ReadLine()) != null)
 				{
+					// Print each line to the console
+					Console.WriteLine("HISTORIA CONF SETTINGS:");
+					Console.WriteLine(line);
+
 					// Ignore comments and empty lines
 					if (!string.IsNullOrEmpty(line) && !line.Trim().StartsWith("#"))
 					{
@@ -435,6 +439,7 @@ namespace HistWeb.Controllers
 
 			return config;
 		}
+
 
 
 		static string[] GetCommandsBasedOnOS()
@@ -519,72 +524,124 @@ namespace HistWeb.Controllers
 			}
 		}
 
-		[HttpGet]
-		public JsonResult InitializeHLWA()
+		private static string GetWorkingDirectoryBasedOnOS()
 		{
-			int Initialized = 0;
+			switch (Environment.OSVersion.Platform)
+			{
+				case PlatformID.Win32NT:
+					return @"C:\Program Files\HistoriaCore\ipfs";
+				case PlatformID.Unix:
+					return @"/path/to/ipfs/unix";
+				case PlatformID.MacOSX:
+					return @"/Applications/Historia-Qt.app/Contents/Resources/ipfs/";
+				default:
+					throw new NotSupportedException("Unsupported operating system");
+			}
+		}
+		[HttpGet]
+		public async Task<JsonResult> InitializeHLWA()
+		{
+			int initialized = 0;
+
 			using (var conn = new SqliteConnection("Data Source=basex.db"))
 			{
 				try
 				{
+					conn.Open();
 					using (var cmd = conn.CreateCommand())
 					{
-
-						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration where Id = 1";
-						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration WHERE Id = 1";
+						using (SqliteDataReader rdr = await cmd.ExecuteReaderAsync())
 						{
 							if (rdr.Read())
 							{
-								Initialized = rdr.GetInt32(rdr.GetOrdinal("Initialized"));
+								initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA")); 
 							}
 						}
 					}
-					if (Initialized == 0)
+
+					if (initialized == 0)
 					{
+						string[] commandsToRun = GetCommandsBasedOnOS();
+						string workingDirectory = GetWorkingDirectoryBasedOnOS();
+
+						foreach (var command in commandsToRun)
+						{
+							var processStartInfo = new ProcessStartInfo
+							{
+								FileName = GetShellName(),
+								Arguments = GetShellArguments(command),
+								WorkingDirectory = workingDirectory,
+								RedirectStandardOutput = true,
+								RedirectStandardError = true,
+								UseShellExecute = false,
+								CreateNoWindow = true
+							};
+
+							var tcs = new TaskCompletionSource<bool>();
+							using (var process = new Process { StartInfo = processStartInfo, EnableRaisingEvents = true })
+							{
+								process.OutputDataReceived += (sender, e) =>
+								{
+									if (e.Data != null)
+									{
+										Console.WriteLine($"Output: {e.Data}");
+									}
+								};
+								process.ErrorDataReceived += (sender, e) =>
+								{
+									if (e.Data != null)
+									{
+										Console.WriteLine($"ERROR: {e.Data}");
+									}
+								};
+
+								process.Exited += (sender, e) => tcs.SetResult(true);
+
+								Console.WriteLine($"Starting process: {processStartInfo.FileName} {processStartInfo.Arguments}");
+
+								bool processStarted = process.Start();
+								if (processStarted)
+								{
+									Console.WriteLine("Process started successfully.");
+									process.BeginOutputReadLine();
+									process.BeginErrorReadLine();
+
+									await tcs.Task;  // Wait for the process to exit
+								}
+								else
+								{
+									Console.WriteLine("Failed to start process.");
+								}
+							}
+						}
 
 
-						Initialized = 1;
+						initialized = 1;
+						string configFilePath = GetConfigFilePath();
+
+						var settings = ReadHistoriaConfig(configFilePath);
+
+						ApplicationSettings.IPFSHost = "127.0.0.1"; // User must select a default server
+						ApplicationSettings.IPFSPort = 443; // User must select a default server
+						ApplicationSettings.IPFSApiHost = "127.0.0.1";
+						ApplicationSettings.IPFSApiPort = 5001;
+						ApplicationSettings.HistoriaClientIPAddress = "127.0.0.1";
+						ApplicationSettings.HistoriaRPCPort = int.Parse(settings["rpcport"]);
+						ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
+						ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
+						ApplicationSettings.SaveConfig();
+
 						using (var cmd = conn.CreateCommand())
 						{
-							string configFilePath = "";
-							if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-							{
-								string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-								configFilePath = Path.Combine(appDataPath, "HistoriaCore", "historia.conf");
-
-							}
-							else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-							{
-								// Linux-specific path
-								configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "historia.conf");
-							}
-							else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-							{
-								// macOS-specific path
-								configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "historia.conf");
-							}
-
-							var settings = ReadHistoriaConfig(configFilePath);
-							//ApplicationSettings.IPFSHost = ""; // User must select a default server
-							//ApplicationSettings.IPFSPort = 443; // User must select a default server
-							ApplicationSettings.IPFSApiHost = "127.0.0.1";
-							ApplicationSettings.IPFSApiPort = 5001;
-							ApplicationSettings.HistoriaClientIPAddress = "127.0.0.1";
-							ApplicationSettings.HistoriaRPCPort =  Int32.Parse(settings["rpcport"]);
-							ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
-							ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
-							ApplicationSettings.SaveConfig();
-
-							conn.Open();
 							cmd.CommandType = System.Data.CommandType.Text;
 							cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
-							//cmd.ExecuteNonQuery();
+							await cmd.ExecuteNonQueryAsync();
 						}
 					}
 
-					var rep = new { Success = true, value = Initialized };
+					var rep = new { Success = true, value = initialized };
 					return Json(rep);
 				}
 				catch (Exception ex)
@@ -592,9 +649,36 @@ namespace HistWeb.Controllers
 					var rep = new { Success = false, value = 0 };
 					return Json(rep);
 				}
+				finally
+				{
+					await conn.CloseAsync();
+				}
 			}
 		}
 
+
+
+		static string GetConfigFilePath()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				return Path.Combine(appDataPath, "HistoriaCore", "historia.conf");
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "historia.conf");
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				string homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				return Path.Combine(homePath, "Library", "Application Support", "HistoriaCore", "historia.conf");
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Unsupported OS");
+			}
+		}
 
 		[DllImport("sqlite3.dll", EntryPoint = "sqlite3_load_extension")]
 		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
@@ -1181,11 +1265,8 @@ namespace HistWeb.Controllers
 		[HttpPost]
 		public IActionResult SaveMasternodeSettings([FromBody] SettingsParams settings)
 		{
-			if (settings.IPFSHost.StartsWith("http://"))
-				ApplicationSettings.IPFSHost = settings.IPFSHost.Substring(7); 
-			else if (settings.IPFSHost.StartsWith("https://"))
-				ApplicationSettings.IPFSHost = settings.IPFSHost.Substring(8);
 
+			ApplicationSettings.IPFSHost = settings.IPFSHost; 
 			ApplicationSettings.IPFSPort = settings.IPFSPort;
 			ApplicationSettings.SaveConfig();
 			return Json(new { success = true });

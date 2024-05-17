@@ -64,12 +64,24 @@
                 height: auto !important;
             }
         }
-    </style>
+        .breadcrumb-back-link {
+            display: inline-block;
+            margin-bottom: 5px;
+            color: #007bff;
+            text-decoration: none;
+            color:darkgray;
+        }
+
+        .breadcrumb-back-link:hover {
+            text-decoration: underline;
+        }
+     </style>
 }
 
 
-<div class="text-left" style="margin-top:50px">
-    <div class="listing-container">
+<div class="text-left" style="margin-top:0px">
+    <a href="#" class="breadcrumb-back-link" onclick="window.history.back();">← Go Back</a>
+    <div class="listing-container" style="margin-top: 0px;">
         <div class="row">
             <div class="col-md-10">
                 <div class="w-clearfix" style="margin-top: 5px;">

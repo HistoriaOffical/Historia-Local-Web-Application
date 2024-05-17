@@ -155,7 +155,7 @@ public class RecurringJobService : BackgroundService
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
 				// Correct path for IPFS within the macOS app bundle
-				executablePath = AppDomain.CurrentDomain.BaseDirectory + "/Contents/Resources/ipfs/ipfs";
+				executablePath = "/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs";
 				fileName = "/bin/bash";  // Use bash to open a terminal window
 										 // Properly format the command for bash
 				arguments = $"-c \"{executablePath} daemon; exec bash\"";  // exec bash keeps the terminal open

@@ -390,7 +390,8 @@ namespace HistWeb.Controllers
             string IPFSHost = "";
             try
             {
-                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
                 {
                     conn.Open();
                     using (var cmd = conn.CreateCommand())
@@ -495,7 +496,8 @@ namespace HistWeb.Controllers
         {
             try
             {
-                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
                 {
                     conn.Open();
                     using (var cmd = conn.CreateCommand())
@@ -713,7 +715,8 @@ namespace HistWeb.Controllers
             {
                 List<AddUpdateMasternode> masterNodes = new List<AddUpdateMasternode>();
 
-                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
                 {
                     conn.Open();
                     using (var cmd = conn.CreateCommand())
@@ -750,7 +753,8 @@ namespace HistWeb.Controllers
             try
             {
 
-                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
                 {
                     conn.Open();
 
@@ -782,7 +786,8 @@ namespace HistWeb.Controllers
             {
                 List<AddUpdateMasternode> masterNodes = new List<AddUpdateMasternode>();
 
-                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
                 {
                     conn.Open();
                     using (var cmd = conn.CreateCommand())
@@ -822,7 +827,8 @@ namespace HistWeb.Controllers
             try
             {
 
-                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
                 {
                     conn.Open();
 

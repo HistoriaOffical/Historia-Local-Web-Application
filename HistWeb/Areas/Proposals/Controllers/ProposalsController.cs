@@ -210,7 +210,8 @@ namespace HistWeb.Controllers
 			try
 			{
 				//Get first parent hash based on Record View information.
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -236,7 +237,7 @@ namespace HistWeb.Controllers
 
 				if (!string.IsNullOrEmpty(ParentIPFSCid))
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -258,7 +259,7 @@ namespace HistWeb.Controllers
 				}
 				else
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -276,7 +277,8 @@ namespace HistWeb.Controllers
 							conn.Close();
 						}
 					}
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -297,7 +299,7 @@ namespace HistWeb.Controllers
 				}
 				foreach (int id in numbersList)
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -369,7 +371,8 @@ namespace HistWeb.Controllers
 			try
 			{
 				//Get first parent hash based on Record View information.
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -395,7 +398,7 @@ namespace HistWeb.Controllers
 
 				if (!string.IsNullOrEmpty(ParentIPFSCid))
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -417,7 +420,7 @@ namespace HistWeb.Controllers
 				}
 				else
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -435,7 +438,8 @@ namespace HistWeb.Controllers
 							conn.Close();
 						}
 					}
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -456,7 +460,8 @@ namespace HistWeb.Controllers
 				}
 				foreach (int id in numbersList)
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -529,7 +534,8 @@ namespace HistWeb.Controllers
 			try
 			{
 				//Get first parent hash based on Record View information.
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -555,7 +561,7 @@ namespace HistWeb.Controllers
 
 				if (!string.IsNullOrEmpty(ParentIPFSCid))
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -577,7 +583,8 @@ namespace HistWeb.Controllers
 				}
 				else
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -595,7 +602,8 @@ namespace HistWeb.Controllers
 							conn.Close();
 						}
 					}
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -616,7 +624,7 @@ namespace HistWeb.Controllers
 				}
 				foreach (int id in numbersList)
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -969,7 +977,8 @@ namespace HistWeb.Controllers
 
 				string desc = "", imageurl = "", type = "", title = "", urltmp = "", sitename = "";
 				int PURL = 0, id = 0;
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -1036,11 +1045,10 @@ namespace HistWeb.Controllers
 
 						if (urltmp != "")
 						{
-							using (var conn = new SqliteConnection("Data Source=basex.db"))
+							using (var conn = new SqliteConnection(connectionString))
 							{
 								using (var cmd = conn.CreateCommand())
 								{
-									//INSERT INTO followers(userid, followerid) VALUES(@userid, @followerid)";
 									conn.Open();
 									cmd.CommandType = System.Data.CommandType.Text;
 									cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid) VALUES(@url, @desc, @imageurl, @type, @title, @sitename);  SELECT LAST_INSERT_ID() as InsertedId";
@@ -1246,7 +1254,8 @@ namespace HistWeb.Controllers
 				int Oid = OG(pm.orgUrl, proposal1.ipfscid.ToString());
 
 
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{

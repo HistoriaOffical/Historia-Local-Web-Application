@@ -38,6 +38,7 @@ using System.Net.Http;
 using OpenGraphNet;
 using Microsoft.Data.Sqlite;
 using System.Runtime.InteropServices;
+using HistWeb;
 
 public class RecurringJobService : BackgroundService
 {
@@ -194,8 +195,8 @@ public class RecurringJobService : BackgroundService
 		{
 			int IpfsApi = 0;
 			int IpfsApiStart = 0;
-			using (
-				var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				using (var cmd = conn.CreateCommand())
 				{
@@ -270,7 +271,8 @@ public class RecurringJobService : BackgroundService
 			string ipfscid;
 			string proposalhash;
 			string ParentIPFSCID;
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				using (var cmd = conn.CreateCommand())
 				{
@@ -295,7 +297,7 @@ public class RecurringJobService : BackgroundService
 						}
 					}
 
-					using (var conn1 = new SqliteConnection("Data Source=basex.db"))
+					using (var conn1 = new SqliteConnection(connectionString))
 					{
 						conn1.Open();
 
@@ -322,7 +324,8 @@ public class RecurringJobService : BackgroundService
 				}
 			}
 			List<dynamic> resultList = new List<dynamic>();
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				using (var cmd = conn.CreateCommand())
 				{
@@ -346,8 +349,7 @@ public class RecurringJobService : BackgroundService
 					}
 				}
 			}
-
-			using (var conn1 = new SqliteConnection("Data Source=basex.db"))
+			using (var conn1 = new SqliteConnection(connectionString))
 			{
 				conn1.Open();
 

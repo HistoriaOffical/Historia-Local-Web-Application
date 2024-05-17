@@ -79,9 +79,8 @@ namespace HistWeb.Controllers
 			try
 			{
 				List<object> items = new List<object>();
-				var connString = _configuration.GetConnectionString("HistoriaContextConnection");
-
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -160,7 +159,8 @@ namespace HistWeb.Controllers
 				Console.WriteLine("Resuming with Id: " + Id);
 				try
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -212,7 +212,8 @@ namespace HistWeb.Controllers
 				if (!string.IsNullOrEmpty(filename))
 				{
 
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 
 
@@ -338,8 +339,8 @@ namespace HistWeb.Controllers
 		}
 		private void UpdateMediaDatabase(string fileName, string filePath, string filesize, string filetype)
 		{
-			var connString = _configuration.GetConnectionString("HistoriaContextConnection");
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				conn.Open();
 				using (var cmd = conn.CreateCommand())
@@ -631,9 +632,8 @@ namespace HistWeb.Controllers
 				}
 				else
 				{
-					var connString = _configuration.GetConnectionString("HistoriaContextConnection");
-
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -703,7 +703,8 @@ namespace HistWeb.Controllers
 			{
 				try
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -750,7 +751,8 @@ namespace HistWeb.Controllers
 
 			try
 			{
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -787,7 +789,8 @@ namespace HistWeb.Controllers
 			{
 				while (items.Count == 0)
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -872,7 +875,8 @@ namespace HistWeb.Controllers
 
 				if (id != "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -923,7 +927,8 @@ namespace HistWeb.Controllers
 
 				if (id != "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -958,7 +963,8 @@ namespace HistWeb.Controllers
 
 				if (id == "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -986,7 +992,8 @@ namespace HistWeb.Controllers
 				else
 				{
 
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -1031,7 +1038,8 @@ namespace HistWeb.Controllers
 			try
 			{
 				List<object> items = new List<object>();
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -1076,7 +1084,8 @@ namespace HistWeb.Controllers
 
 				if (id != "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -1667,7 +1676,8 @@ namespace HistWeb.Controllers
 
 			try
 			{
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{

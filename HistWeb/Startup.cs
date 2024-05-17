@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 using reCAPTCHA.AspNetCore;
 using Microsoft.Data.Sqlite;
+using System.Runtime.InteropServices;
+using System.IO;
 
 namespace HistWeb
 {
@@ -44,12 +46,42 @@ namespace HistWeb
 		public static string HistoriaRPCUserName { get; set; }
 		public static string HistoriaRPCPassword { get; set; }
 
+		public static string DatabasePath { get; set; }
+
+		private static void GetDatabasePath()
+		{
+			string databaseFileName = "basex.db";
+			string basePath;
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HistoriaCore"); // %Appdata%\Roaming\HistoriaCore
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "HistoriaCore"); // /Users/<USERNAME>/Library/Application Support/HistoriaCore
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				basePath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".historiacore"); // /home/<USERNAME>/.historiacore
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Operating system not supported");
+			}
+
+			DatabasePath = Path.Combine(basePath, databaseFileName);
+			Console.WriteLine("DATABASE PATH:",DatabasePath);
+		}
+	
+
 		private static void CreateConfig()
 		{
 			try
 			{
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var connection = new SqliteConnection(connectionString))
 
-				using (var connection = new SqliteConnection("Data Source=basex.db"))
 				{
 					connection.Open();
 
@@ -225,7 +257,8 @@ namespace HistWeb
 		{
 			try
 			{
-				using (var connection = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var connection = new SqliteConnection(connectionString))
 				{
 					connection.Open();
 
@@ -260,8 +293,10 @@ namespace HistWeb
 		{
 			try
 			{
+				GetDatabasePath();
 				CreateConfig();
-				using (var connection = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var connection = new SqliteConnection(connectionString))
 				{
 					connection.Open();
 

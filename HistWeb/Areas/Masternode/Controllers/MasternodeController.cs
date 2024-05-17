@@ -384,6 +384,49 @@ namespace HistWeb.Controllers
             }
         }
 
+        [HttpGet]
+        public JsonResult CheckMasternodeSetup()
+        {
+            string IPFSHost = "";
+            try
+            {
+                using (var conn = new SqliteConnection("Data Source=basex.db"))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        conn.Open();
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT IPFSHost from basexConfiguration WHERE Id = 1";
+
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        {
+                            if (rdr.Read())
+                            {
+                                IPFSHost = rdr.GetString(rdr.GetOrdinal("IPFSHost"));
+                            }
+                        }
+                    }
+                }
+                if(IPFSHost != "127.0.0.1")
+				{
+                    dynamic prepRespJson = JObject.Parse("{success: true}");
+                    return Json(prepRespJson);
+                } else
+				{
+                    dynamic prepRespJson = JObject.Parse("{success: false}");
+                    return Json(prepRespJson);
+                }
+            }
+            catch (Exception ex)
+            {
+                dynamic prepBadRespJson = JObject.Parse("{success: false}");
+                return Json(prepBadRespJson);
+            }
+
+
+        }
+
 
         public static async Task<string> GetPublicIPAddress()
         {

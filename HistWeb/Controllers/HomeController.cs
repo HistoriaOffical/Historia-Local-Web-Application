@@ -419,10 +419,6 @@ namespace HistWeb.Controllers
 				string line;
 				while ((line = reader.ReadLine()) != null)
 				{
-					// Print each line to the console
-					Console.WriteLine("HISTORIA CONF SETTINGS:");
-					Console.WriteLine(line);
-
 					// Ignore comments and empty lines
 					if (!string.IsNullOrEmpty(line) && !line.Trim().StartsWith("#"))
 					{
@@ -533,7 +529,7 @@ namespace HistWeb.Controllers
 				case PlatformID.Unix:
 					return @"/path/to/ipfs/unix";
 				case PlatformID.MacOSX:
-					return @"/Applications/Historia-Qt.app/Contents/Resources/ipfs/";
+					return @"/Applications/Historia-Qt.app/Contents/Resources/ipfs";
 				default:
 					throw new NotSupportedException("Unsupported operating system");
 			}
@@ -914,7 +910,7 @@ namespace HistWeb.Controllers
 												{
 													pm.oglinksimageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
 													pm.oglinkstitle = rdr.GetString(rdr.GetOrdinal("title"));
-													pm.oglinksurl = rdr.GetString(rdr.GetOrdinal("url"));
+													pm.oglinksurl = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
 													pm.oglinkssitename = rdr.GetString(rdr.GetOrdinal("sitename"));
 													pm.oglinksdescription = rdr.GetString(rdr.GetOrdinal("description"));
 												}
@@ -969,6 +965,9 @@ namespace HistWeb.Controllers
 			var rep = new { Success = true, Records = sortedRecords };
 			return Json(rep);
 		}
+
+
+		
 
 		public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded)
 		{

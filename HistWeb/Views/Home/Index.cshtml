@@ -263,7 +263,7 @@
                             <h4 id="oglinkstitle" class="card-title"></h4>
                             <p id="oglinksdescription" class="card-text"></p>
                             <i class="fas fa-link"> </i>
-                            <a id="oglinksurl" href='' target='_blank' class='stretched-link'></a>
+                            <a id="oglinksurl" href='' target='_blank' class='stretched-link' onclick="checkMasternodeSetup(event, this)"></a>
                         </div>
                     </div>
                     <div class='card-vertical'>
@@ -272,7 +272,7 @@
                             <h4 id="oglinkstitle" class='card-title'></h4>
                             <p id="oglinksdescription" class='card-text'></p>
                             <i class='fas fa-link'> </i>
-                            <a id="oglinksurl" href='' target='_blank' class='stretched-link'></a>
+                            <a id="oglinksurl" href='' target='_blank' class='stretched-link' onclick="checkMasternodeSetup(event, this)"></a>
                         </div>
                     </div>
                 </div>
@@ -458,6 +458,23 @@
             for (var i = 0; (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
                 str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
             return str;
+        }
+
+        function checkMasternodeSetup(event, element) {
+            event.preventDefault(); // Prevent the default action of the link
+
+            $.get('@Url.Action("CheckMasternodeSetup", "Masternode", new { area = "Masternode" })', null, function(data) {
+                if (!data.success) {
+                    Swal.fire({
+                        title: 'Error',
+                        icon: "error",
+                        html: "You haven't setup a masternode to access content yet.<br><br>Please select a masternode on the settings page <a href='/Home/Settings' style='text-decoration: underline;'>here</a>",
+                        confirmButtonText: 'Ok'
+                    });
+                } else {
+                    window.open(element.href, '_blank'); // Navigate to the link
+                }
+            });
         }
 
         function getRandomInt(min, max) {

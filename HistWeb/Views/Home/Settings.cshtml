@@ -772,7 +772,7 @@
         });
 
         Swal.fire({
-            title: 'Loading...',
+            title: 'Initializating...',
             text: 'Please wait',
             allowOutsideClick: false,
             showConfirmButton: false,
@@ -792,14 +792,14 @@
                 // Check if the server reported a failure
                 if (!response.success) {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Could not connect to Historia Core Wallet, check your settings on the Historia Core Setup tab and try again.',
+                        icon: 'alert',
+                        title: 'Initalization Complete!',
+                        text: 'Since this was the first time HLWA has run, we had to initialize some things. Before you can use HLWA you must restart Historia Core Wallet, HLWA, and make sure Historia is fully synced',
                         confirmButtonText: 'OK'
                     });
                     return;
                 }
-
+                
                 // If success, process the data
                 console.log('masternode data: ' + JSON.stringify(response.data));  // Log the data part
                 var jsonRet = [];

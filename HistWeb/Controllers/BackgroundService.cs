@@ -155,11 +155,38 @@ public class RecurringJobService : BackgroundService
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
-				// Correct path for IPFS within the macOS app bundle
-				executablePath = "/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs";
+
+				executablePath = @"/Applications/Historia-Qt.app/Contents/Resources/ipfs/startipfs.sh";
+
+				// Ensure the script is executable
+				Process chmodProcess = new Process
+				{
+					StartInfo = new ProcessStartInfo
+					{
+						FileName = "/bin/bash",
+						Arguments = $"-c \"chmod +x '{executablePath}'\"",
+						RedirectStandardOutput = true,
+						RedirectStandardError = true,
+						UseShellExecute = false,
+						CreateNoWindow = true
+					}
+				};
+
+				chmodProcess.Start();
+				chmodProcess.WaitForExit();
+
+				if (chmodProcess.ExitCode != 0)
+				{
+					string error = chmodProcess.StandardError.ReadToEnd();
+					Console.WriteLine("Error making script executable: " + error);
+				}
+
+				// Correct path for the startipfs.sh script within the macOS app bundle
+				executablePath = @"/Applications/Historia-Qt.app/Contents/Resources/ipfs/startipfs.sh";
 				fileName = "/bin/bash";  // Use bash to open a terminal window
 										 // Properly format the command for bash
-				arguments = $"-c \"{executablePath} daemon; exec bash\"";  // exec bash keeps the terminal open
+				arguments = $"-c \"open -a Terminal '{executablePath}'\"";  // exec bash keeps the terminal open
+				Console.WriteLine("IPFS:" + fileName + " " + arguments);
 			}
 			else
 			{

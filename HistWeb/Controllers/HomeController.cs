@@ -446,56 +446,85 @@ namespace HistWeb.Controllers
 
 		static string[] GetCommandsBasedOnOS()
 		{
+			string ipfsDir = GetWorkingDirectoryBasedOnOS();
+			string ipfsExecutable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "ipfs.exe" : "./ipfs";
+			string ipfsPath = System.IO.Path.Combine(ipfsDir, ipfsExecutable);
+
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				return new string[]
 				{
-					"ipfs.exe init",
-					"ipfs.exe bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
-					"ipfs.exe bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
-					"ipfs.exe bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
-					"ipfs.exe bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
-					"ipfs.exe bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
-					"ipfs.exe bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
-					"ipfs.exe config --json Datastore.StorageMax \"50GB\"",
-					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers \"[\\\"X-Requested-With\\\", \\\"Access-Control-Expose-Headers\\\", \\\"Range\\\", \\\"Authorization\\\"]\"",
-					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods \"[\\\"POST\\\", \\\"GET\\\"]\"",
-					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"",
-					"ipfs.exe config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers \"[\\\"Location\\\", \\\"Ipfs-Hash\\\"]\"",
-					"ipfs.exe config --json Gateway.HTTPHeaders.X-Special-Header \"[\\\"Access-Control-Expose-Headers: Ipfs-Hash\\\"]\"",
-					"ipfs.exe config --json Gateway.NoFetch \"false\"",
-					"ipfs.exe config --json Swarm.ConnMgr.HighWater \"500\"",
-					"ipfs.exe config --json Swarm.ConnMgr.LowWater \"200\"",
-					"ipfs.exe config --json Datastore.StorageMax \"50GB\"",
-					"ipfs.exe config --json Gateway.Writable true",
-
+					$"{ipfsPath} init",
+					$"{ipfsPath} bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
+					$"{ipfsPath} bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
+					$"{ipfsPath} bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
+					$"{ipfsPath} bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
+					$"{ipfsPath} bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
+					$"{ipfsPath} bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+					$"{ipfsPath} config --json Datastore.StorageMax \"50GB\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers \"[\\\"X-Requested-With\\\", \\\"Access-Control-Expose-Headers\\\", \\\"Range\\\", \\\"Authorization\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods \"[\\\"POST\\\", \\\"GET\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers \"[\\\"Location\\\", \\\"Ipfs-Hash\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.X-Special-Header \"[\\\"Access-Control-Expose-Headers: Ipfs-Hash\\\"]\"",
+					$"{ipfsPath} config --json Gateway.NoFetch \"false\"",
+					$"{ipfsPath} config --json Swarm.ConnMgr.HighWater \"500\"",
+					$"{ipfsPath} config --json Swarm.ConnMgr.LowWater \"200\"",
+					$"{ipfsPath} config --json Datastore.StorageMax \"50GB\"",
+					$"{ipfsPath} config --json Gateway.Writable true",
 				};
 			}
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
+
+				string scriptPath = "/Applications/Historia-Qt.app/Contents/Resources/ipfs/startipfs.sh";
+				string createScriptCommand = $"/bin/bash -c 'printf \"#!/bin/bash\\n/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs daemon\\nexec bash\\n\" > {scriptPath} && chmod +x {scriptPath}'";
+
+				// Run the command to create the script
+				Process createScriptProcess = new Process
+				{
+					StartInfo = new ProcessStartInfo
+					{
+						FileName = "/bin/bash",
+						Arguments = $"-c \"{createScriptCommand.Replace("\"", "\\\"")}\"",
+						RedirectStandardOutput = true,
+						RedirectStandardError = true,
+						UseShellExecute = false,
+						CreateNoWindow = true
+					}
+				};
+
+				createScriptProcess.Start();
+				createScriptProcess.WaitForExit();
+				Console.WriteLine("SCRIPT: " + createScriptCommand);
+				if (createScriptProcess.ExitCode != 0)
+				{
+					string error = createScriptProcess.StandardError.ReadToEnd();
+					Console.WriteLine("Error creating script: " + error);
+				}
+
 				return new string[]
 				{
-					"ipfs init -p server",
-					"ipfs bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
-					"ipfs bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
-					"ipfs bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
-					"ipfs bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
-					"ipfs bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
-					"ipfs bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+					$"{ipfsPath} init -p server",
+					$"{ipfsPath} bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
+					$"{ipfsPath} bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
+					$"{ipfsPath} bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
+					$"{ipfsPath} bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
+					$"{ipfsPath} bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
+					$"{ipfsPath} bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+					$"{ipfsPath} config --json Datastore.StorageMax '\"50GB\"'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '[\\\"X-Requested-With\\\", \\\"Access-Control-Expose-Headers\\\", \\\"Range\\\", \\\"Authorization\\\"]'",
 
-					"ipfs config --json Datastore.StorageMax '\"50GB\"'",
-					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '[\"X-Requested-With\", \"Access-Control-Expose-Headers\", \"Range\", \"Authorization\"]'",
-					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '[\"POST\", \"GET\"]'",
-					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '[\"*\"]'",
-					"ipfs config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers '[\"Location\", \"Ipfs-Hash\"]'",
-					"ipfs config --json Gateway.HTTPHeaders.X-Special-Header '[\"Access-Control-Expose-Headers: Ipfs-Hash\"]'",
-					"ipfs config --json Gateway.NoFetch false",
-					"ipfs config --json Swarm.ConnMgr.HighWater '500'",
-					"ipfs config --json Swarm.ConnMgr.LowWater '200'",
-					"ipfs config --json Gateway.Writable true",
-
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '[\\\"POST\\\",\\\"GET\\\"]'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '[\\\"*\\\"]'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers '[\\\"Location\\\", \\\"Ipfs-Hash\\\"]'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.X-Special-Header '[\\\"Access-Control-Expose-Headers: Ipfs-Hash\\\"]'",
+					$"{ipfsPath} config --json Gateway.NoFetch false",
+					$"{ipfsPath} config --json Swarm.ConnMgr.HighWater '500'",
+					$"{ipfsPath} config --json Swarm.ConnMgr.LowWater '200'",
+					$"{ipfsPath} config --json Gateway.Writable true",
 				};
-			}
+			} 
 			else
 			{
 				throw new InvalidOperationException("Unsupported operating system");
@@ -507,6 +536,10 @@ namespace HistWeb.Controllers
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				return "cmd.exe";
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				return "/bin/zsh";
 			}
 			else
 			{
@@ -522,24 +555,30 @@ namespace HistWeb.Controllers
 			}
 			else
 			{
-				return $"-c \"{command}\""; 
+				return $"-c \"{command}\"";
 			}
 		}
 
 		private static string GetWorkingDirectoryBasedOnOS()
 		{
-			switch (Environment.OSVersion.Platform)
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				case PlatformID.Win32NT:
-					return @"C:\Program Files\HistoriaCore\ipfs";
-				case PlatformID.Unix:
-					return @"/path/to/ipfs/unix";
-				case PlatformID.MacOSX:
-					return @"/Applications/Historia-Qt.app/Contents/Resources/ipfs";
-				default:
-					throw new NotSupportedException("Unsupported operating system");
+				return @"C:\Program Files\HistoriaCore\ipfs";
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				return @"/path/to/ipfs/unix";
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				return @"/Applications/Historia-Qt.app/Contents/Resources/ipfs";
+			}
+			else
+			{
+				throw new NotSupportedException("Unsupported operating system");
 			}
 		}
+
 		[HttpGet]
 		public async Task<JsonResult> InitializeHLWA()
 		{
@@ -559,7 +598,8 @@ namespace HistWeb.Controllers
 						{
 							if (rdr.Read())
 							{
-								initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA")); 
+								initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA"));
+								Console.WriteLine("InitializeHLWA::initialized:" + initialized);
 							}
 						}
 					}
@@ -568,7 +608,7 @@ namespace HistWeb.Controllers
 					{
 						string[] commandsToRun = GetCommandsBasedOnOS();
 						string workingDirectory = GetWorkingDirectoryBasedOnOS();
-
+						Console.WriteLine("InitializeHLWA::workingDirectory:" + workingDirectory);
 						foreach (var command in commandsToRun)
 						{
 							var processStartInfo = new ProcessStartInfo
@@ -620,12 +660,11 @@ namespace HistWeb.Controllers
 							}
 						}
 
-
 						initialized = 1;
 						string configFilePath = GetConfigFilePath();
 
 						var settings = ReadHistoriaConfig(configFilePath);
-
+						Console.WriteLine("InitializeHLWA::ReadHistoriaConfig:" + configFilePath);
 						ApplicationSettings.IPFSHost = "127.0.0.1"; // User must select a default server
 						ApplicationSettings.IPFSPort = 443; // User must select a default server
 						ApplicationSettings.IPFSApiHost = "127.0.0.1";
@@ -635,7 +674,7 @@ namespace HistWeb.Controllers
 						ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
 						ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
 						ApplicationSettings.SaveConfig();
-
+						Console.WriteLine("InitializeHLWA SAVED:");
 						using (var cmd = conn.CreateCommand())
 						{
 							cmd.CommandType = System.Data.CommandType.Text;
@@ -645,11 +684,13 @@ namespace HistWeb.Controllers
 					}
 
 					var rep = new { Success = true, value = initialized };
+					Console.WriteLine("InitializeHLWA::success:" + initialized);
 					return Json(rep);
 				}
 				catch (Exception ex)
 				{
 					var rep = new { Success = false, value = 0 };
+					Console.WriteLine("InitializeHLWA FAILED:" + ex);
 					return Json(rep);
 				}
 				finally
@@ -658,8 +699,6 @@ namespace HistWeb.Controllers
 				}
 			}
 		}
-
-
 
 		static string GetConfigFilePath()
 		{

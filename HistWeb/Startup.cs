@@ -71,7 +71,7 @@ namespace HistWeb
 			}
 
 			DatabasePath = Path.Combine(basePath, databaseFileName);
-			Console.WriteLine("DATABASE PATH:",DatabasePath);
+			Console.WriteLine("DATABASE PATH:" + DatabasePath);
 		}
 	
 

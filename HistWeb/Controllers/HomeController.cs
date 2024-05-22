@@ -36,7 +36,7 @@ using System.Drawing;
 using HistWeb.Helpers;
 using Microsoft.AspNetCore.Identity;
 using OpenGraphNet;
-using Ganss.XSS;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Data;
 using HistWeb.Home.Views;

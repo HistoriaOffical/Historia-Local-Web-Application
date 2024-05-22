@@ -28,7 +28,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using System.Drawing;
 using HistWeb.Helpers;
 using Microsoft.AspNetCore.Identity;
-using Ganss.XSS;
+using Ganss.Xss;
 using OpenGraphNet;
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;

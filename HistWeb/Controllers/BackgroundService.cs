@@ -28,7 +28,7 @@ using Newtonsoft.Json.Converters;
 using HistWeb.Areas.Masternode.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
-using Ganss.XSS;
+using Ganss.Xss;
 using System.Net.Mail;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Hosting;

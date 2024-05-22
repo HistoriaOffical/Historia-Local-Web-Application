@@ -20,7 +20,7 @@ using Newtonsoft.Json.Converters;
 using HistWeb.Areas.Masternode.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
-using Ganss.XSS;
+using Ganss.Xss;
 using System.Net.Mail;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Hosting;
@@ -232,7 +232,7 @@ namespace HistWeb.Controllers
 							}
 						}
 					}
-					string filePath = Path.Combine("wwwroot", "media", filename); 
+					string filePath = Path.Combine(ApplicationSettings.MediaPath, filename); 
 					Console.WriteLine("Exception GetUploadedMedia: filePath: " + filePath);
 					// Check if the file exists
 					if (System.IO.File.Exists(filePath))
@@ -288,8 +288,8 @@ namespace HistWeb.Controllers
 					Console.WriteLine("Exception UploadMedia: filename: " + fileName);
 
 					// Set the file path where you want to store the file
-					string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "media", fileName);
-					string filePathDB = Path.Combine("wwwroot", "media", fileName);
+					string filePath = Path.Combine(ApplicationSettings.MediaPath, fileName);
+					string filePathDB = Path.Combine(ApplicationSettings.MediaPath, fileName);
 
 					using (var stream = new FileStream(filePath, FileMode.Create))
 					{
@@ -303,7 +303,7 @@ namespace HistWeb.Controllers
 						// Save the file to the server
 						Console.WriteLine("Exception UploadMedia: filePath: " + filePath);
 						UpdateMediaDatabase(fileName, filePath, file.Length.ToString(), filetype);
-						return Json(new { Success = "true", FilePath = "/wwwroot/media/" + filePathDB, filename = fileName });
+						return Json(new { Success = "true", FilePath = ApplicationSettings.MediaPath + filePathDB, filename = fileName });
 
 					}
 					else

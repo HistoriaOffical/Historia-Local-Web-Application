@@ -26,6 +26,7 @@
                         <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
                             <li class="nav-item"><a id="gatewayTab" href="#gateway" data-target="#gateway" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="">Masternode Gateway</a></li>
                             <li class="nav-item"><a id="coreTab" href="#core" data-target="#core" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Historia Core Setup</a></li>
+                            <li class="nav-item"><a id="masternodesTab" href="#masternodes" data-target="#masternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="fillMasternodes()">Your Masternodes & Voting Nodes</a></li>
                             <li class="nav-item"><a id="ipfsapiTab" href="#ipfsapi" data-target="#ipfsapi" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Advanced Settings</a></li>
                         </ul>
                         <br />
@@ -84,6 +85,7 @@
                                         </div>
                                     </div>
 
+
                                     <div id="core" class="tab-pane fade show">
                                         <div class="row">
                                             <div class="col-3">
@@ -131,6 +133,64 @@
                                             </div>
                                         </div>
                                     </div>
+
+
+                                    <div id="masternodes" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <h5 style="text-align: left;">Your Masternodes & Voting Nodes</h5>
+
+                                            </div>
+
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    This is setup page to import your Masternodes & Voting Nodes into the Historia Local Web App (HLWA). Hit the Import button below. If you setup a new Masternode or Voting, run the Import again.
+
+                                                </p>
+                                                <h6 style="text-align: left;">For Advanced Users:</h6>
+                                                <p style="text-align: left;">If you would like to vote, you can setup your own masternode or voting node. Please see the technical documentation site:</p>
+                                                <ul style="text-align: left;">
+                                                    <li style="text-align: left;"><a href="https://docs.historia.network/en/latest/votingnodes/index.html" style="text-decoration:underline" target="_blank">Voting Node Setup</a> - 100 HTA Required</li>
+                                                    <li style="text-align: left;"><a href="https://docs.historia.network/en/latest/masternodes/index.html" style="text-decoration:underline" target="_blank">Masternode Setup</a> - 5000 HTA Required</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-5">
+                                                <h6 style="text-align: left;">Setup Voting Node</h6>
+                                                <p style="text-align: left;">To be able to vote, you must setup your own voting node by hitting the button below (100 HTA Required)</p>
+                                                <div class="form-group">
+                                                    <button id="btnSetupVotingNode" type="button" class="btn btn-secondary btn-sm">Setup Voting Node</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table class="table table-striped my-4 w-100" id="myMasternodesTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Identity</th>
+                                                            <th>Status</th>
+                                                            <th>Collateral Hash</th>
+                                                            <th>Collateral Index</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+   
+       
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestHistoriaClient" type="button" class="btn btn-secondary btn-sm" onclick="ImportMasternodes();">Import Masternodes & Voting Nodes</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div id="ipfsapi" class="tab-pane fade show">
                                         <div class="row">
                                             <div class="col-3">
@@ -254,6 +314,167 @@
             $('#IPFSHost').val(cleanIdentity);
             $('#IPFSPort').val("443");  // Assuming you store port in the DataTable
         }
+
+        function fillMasternodes() {
+            $.get('@Url.Action("GetMyMasternodes", "Masternode", new { Area = "Masternode" })', null, function (data) {
+                myMasternodesTable = $('#myMasternodesTable').DataTable({
+                    data: data,
+                    destroy: true,
+                    info: false,
+                    fixedHeader: false,
+                    lengthChange: false,
+                    autoWidth: false,
+                    responsive: true,
+                    searching: false,
+                    columns: [
+                        {
+                            data: null,
+                            render: function (data, type, full, meta) {
+                                if (data.identity == "VOTER") {
+                                    console.log("VOTER");
+                                    return "VOTER";
+                                } else {
+                                    console.log("NONVOTER");
+                                    return '<a href="' + data.identity + '/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html">' + data.identity + '</a>';
+                                }
+                            }
+                        },
+                        {
+                            data: "status",
+                        },
+                        { data: "collateralHash" },
+                        { data: "collateralIndex" },
+                    ],
+                });
+
+            });
+        }
+
+        function ImportMasternodes() {
+
+            var passphrase;
+            Swal.fire({
+                title: "Are you sure you want to continue?",
+                html:
+                    '<b><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted just hit submit.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, submit this document!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (confirm.value) {
+                    console.log("Pass:" + passphrase);
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "60" }), 
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+
+                                Swal.fire({
+                                    title: 'Loading...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    showConfirmButton: false,
+                                    onBeforeOpen: () => {
+                                        Swal.showLoading();
+                                    },
+                                });
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("ImportMyMasterNodes", "Masternode", new { Area = "Masternode" })',
+                                    success: function (tableData) {
+                                        try {
+                                            var parsedData = JSON.parse(tableData);
+                                            console.log('masternode data:', JSON.stringify(parsedData));
+                                            Swal.close();
+                                            var jsonRet = [];
+
+                                            if (parsedData.result && typeof parsedData.result === 'object') {
+                                                console.log("tableData.result:", parsedData.result);
+                                                for (var prop in parsedData.result) {
+                                                    var mn = parsedData.result[prop];
+                                                    var masterNode = {};
+                                                    masterNode.Status = mn.status;
+                                                    masterNode.Payee = mn.payee;
+                                                    masterNode.LastSeen = new Date(mn.lastpaidtime * 1000);
+                                                    masterNode.IPAddress = mn.address;
+                                                    masterNode.Identity = "https://" + mn.identity;
+
+                                                    jsonRet.push(masterNode);
+                                                }
+                                            } else {
+                                                console.error("Invalid data structure:", parsedData);
+                                            }
+
+                                            var masternodesTable = $('#myMasternodesTableImport').DataTable({
+                                                destroy: true,
+                                                data: jsonRet,
+                                                info: false,
+                                                fixedHeader: false,
+                                                lengthChange: false,
+                                                autoWidth: false,
+                                                responsive: true,
+                                                columns: [
+                                                    {
+                                                        data: null,
+                                                        render: function (data, type, full, meta) {
+                                                            return '<a href="' + data.Identity + '/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html">' + data.Identity + '</a>';
+                                                        }
+                                                    },
+                                                    { data: "IPAddress" },
+                                                    { data: "Status" },
+                                                    { data: "Payee" },
+                                                ],
+                                            });
+                                            Swal.close();
+                                        } catch (e) {
+                                            console.error("Error processing data:", e);
+                                        }
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        console.error("AJAX error:", textStatus, errorThrown);
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.error
+                                });
+                                return false;
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+
+                } else {
+                    return false;
+                }
+            });
+      
+        }
+
         window.addEventListener('DOMContentLoaded', function () {
 
             $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
@@ -532,6 +753,140 @@
                 });
             };
 
+            document.getElementById('btnSetupVotingNode').onclick = (e) => {
+
+                Swal.fire({
+                    title: "Setup Voting Node",
+                    html:
+                        '<b><h5>Are you sure you want to continue? You must have at least 101 HTA in your wallet. You will spend a small bit in transaction fees to register your Voting Node. You must also enter your Historia Core wallet passphrase. If your wallet is not encrypted just hit submit.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                    type: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    closeOnClickOutside: false,
+                    backdrop: true,
+                    showCancelButton: true,
+                    confirmButtonClass: "btn-danger",
+                    confirmButtonText: "Yes, submit this document!",
+                    cancelButtonText: "No, cancel it!",
+                    closeOnConfirm: true,
+                    closeOnCancel: true,
+                    preConfirm: () => {
+                        passphrase = Swal.getPopup().querySelector('#passphrase').value
+                    }
+
+                }).then(function (confirm) {
+                    if (confirm.value) {
+                        $.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                            data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
+                            contentType: 'application/json; charset=utf-8',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+
+                                    Swal.fire({
+                                        title: 'Loading...',
+                                        text: 'Please wait',
+                                        allowOutsideClick: false,
+                                        showConfirmButton: false,
+                                        onBeforeOpen: () => {
+                                            Swal.showLoading();
+                                        },
+                                    });
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '@Url.Action("GetAvaliableBalance", "Masternode", new { Area = "Masternode" })',
+                                        contentType: 'application/json; charset=utf-8',
+                                        success: function (response) {
+                                            if (response.success) {
+                                                if (response.amount < 100) {
+
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '@Url.Action("SetupVotingNode", "Masternode", new { Area = "Masternode" })',
+                                                        data: JSON.stringify(),
+                                                        contentType: 'application/json; charset=utf-8',
+                                                        dataType: 'json',
+                                                        success: function (response) {
+                                                            if (response.success) {
+                                                                Swal.close();
+                                                                Swal.fire({
+                                                                    icon: 'alert',
+                                                                    title: 'Voting Node Has Been Setup!',
+                                                                    text: 'Your voting node has been setup. You can now vote.',
+                                                                    confirmButtonText: 'OK'
+                                                                });
+                                                            } else {
+                                                                Swal.fire({
+                                                                    icon: 'error',
+                                                                    title: 'Error',
+                                                                    text: response.error
+                                                                });
+                                                                return false;
+                                                            }
+                                                        },
+                                                        error: function (xhr, status, error) {
+                                                            Swal.fire({
+                                                                icon: 'error',
+                                                                title: 'Error',
+                                                                text: 'An unexpected error occurred.'
+                                                            });
+                                                        }
+                                                    });
+
+                                                } else {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'You must have at least 101 HTA in your wallet',
+                                                        text: response.error
+                                                    });
+                                                    return false;
+                                                }
+                                            } else {
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Error',
+                                                    text: response.error
+                                                });
+                                                return false;
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: 'An unexpected error occurred.'
+                                            });
+                                        }
+                                    });
+
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Could not unlock wallet',
+                                        text: response.error
+                                    });
+                                    return false;
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An unexpected error occurred.'
+                                });
+                            }
+                        });
+
+
+                       
+ 
+                    }
+                });
+            };
+
+            
 
             document.getElementById('btnImportHistoriaRecords').onclick = (e) => {
 
@@ -748,6 +1103,7 @@
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
+
     $(document).ready(async function () {
         await initializeHLWA();
         var masternodesTable = $('#masternodesTable').DataTable({
@@ -762,6 +1118,22 @@
                 { data: "identity" },
                 { data: "ipAddress" },
                 { data: "status" },
+            ],
+        });
+
+        var masternodesTable = $('#myMasternodesTableImport').DataTable({
+            data: null,
+            info: false,
+            fixedHeader: false,
+            lengthChange: false,
+            autoWidth: false,
+            responsive: false,
+            columns: [
+                { data: "identity" },
+                { data: "ipAddress" },
+                { data: "status" },
+                { data: "payee" },
+
             ],
         });
 

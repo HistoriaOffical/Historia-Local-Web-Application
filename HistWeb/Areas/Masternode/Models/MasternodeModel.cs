@@ -22,5 +22,12 @@ namespace HistWeb.Areas.Masternode.Models
         public long PingTime { get; internal set; }
         public bool HttpsAvailable { get; internal set; }
 
+        public string ProTxHash { get; set; }
+        public string OwnerAddress { get; set; }
+        public string VotingAddress { get; set; }
+        public string CollateralAddress { get; set; }
+        public string PubKeyOperator { get; set; }
+        public string IpfsPeerId { get; set; }
+
     }
 }

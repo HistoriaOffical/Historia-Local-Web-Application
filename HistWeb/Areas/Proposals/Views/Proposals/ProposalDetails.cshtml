@@ -1,7 +1,8 @@
-﻿@model HistWeb.Areas.Proposals.Models.ProposalViewModel;
+﻿@model HistWeb.Areas.Proposals.Models.ProposalViewModel
 @using HistWeb.Helpers
+
 @{
-    ViewData["Title"] = @Model.CurrentModel.ProposalName + " - " + @Model.CurrentModel.ProposalSummary;
+    ViewData["Title"] = Model.CurrentModel.ProposalName + " - " + Model.CurrentModel.ProposalSummary;
 }
 
 @section Styles
@@ -101,7 +102,8 @@
                         <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnPro">Proposal</button></span>
                     }
                     else if (Model.CurrentModel.Type == "4")
-                    { @if (@Model.CurrentModel.ParentIPFSCID == "")
+                    { 
+                        @if (@Model.CurrentModel.ParentIPFSCID == "")
                         {
                             <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnRec">Record</button></span>
                         }
@@ -142,7 +144,8 @@
 
                 }
                 else if (Model.CurrentModel.Type == "5")
-                { @if (@Model.CurrentModel.ParentIPFSCID == "")
+                { 
+                    @if (@Model.CurrentModel.ParentIPFSCID == "")
                     {
                         <span class="ml-0" style="vertical-align:middle;"><button type="button" class="btn btn-outline-dark float-right btn-sm" id="btnArc">Archive</button></span>
                     }
@@ -284,16 +287,18 @@
                         {
                             <h4>Is Passing:</h4>
 
-                            @if (@Model.CurrentModel.CachedFunding == false)
+                            @if (Model.CurrentModel.CachedFunding == false)
                             {
-                                @if (Model.CurrentModel.YesCount < 10)
-                                {
-                                    <label>Needs at least 10 yes votes</label>
-                                }
-                                else
-                                {
-                                    <label>Needs 10% more yes votes than no</label>
-                                }
+                             
+                                    @if (Model.CurrentModel.YesCount < 10)
+                                    {
+                                        <label>Needs at least 10 yes votes</label>
+                                    }
+                                    else
+                                    {
+                                        <label>Needs 10% more yes votes than no</label>
+                                    }
+                              
                             }
                             else
                             {
@@ -340,7 +345,7 @@
             <div class="voting">
                 <div class="votingwrapper">
                     <div class="votingdown">VOTING</div>
-                    @if (Model.CurrentModel.PastSuperBlock == 0)
+                    @if (Model.CurrentModel.PastSuperBlock == 1)
                     {
 
                         @if (@Model.CurrentModel.sig == 1)
@@ -502,17 +507,7 @@
                     <div class="modal-body">
                         @Html.AntiForgeryToken()
                         <input type="hidden" id="tbProposalId" />
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-group">
-                                    <label class="col-form-label" for="tbMasterNodeName">Password: <span style="color:#f00">*</span> </label>
-                                    <input class="form-control" id="tbPassphrase" type="password" placeholder="" required />
-                                    <div class="invalid-feedback">Please enter your Password.</div>
-                                    <div class="invalid-feedback">Invalid Password. Can not submit vote</div>
-                                </div>
-
-                            </div>
-
+                        <div class="row text-center">
                             <div class="col">
                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
                                     <label class="btn btn-secondary">
@@ -526,8 +521,8 @@
                                     </label>
                                 </div>
                             </div>
-
                         </div>
+                        <br />
                         <div class="row">
                             <div class="col">
                                 <div class="form-group">
@@ -1366,7 +1361,7 @@
                                 var drafts = JSON.parse(tableData); // Assuming this is an array of objects
 
                                 // Check if there are no drafts and inform the user if so
-                                if(drafts.length === 0) {
+                                if (drafts.length === 0) {
                                     Swal.fire({
                                         title: 'No Queued Archives',
                                         text: 'You have no queued archives.',
@@ -1378,8 +1373,8 @@
                                 }
 
                                 // Convert drafts into a format that can be used by inputOptions
-                                var inputOptions = {none: 'None'}; // Initialize with a 'None' option
-                                drafts.forEach(function(draft) {
+                                var inputOptions = { none: 'None' }; // Initialize with a 'None' option
+                                drafts.forEach(function (draft) {
                                     inputOptions[draft.Id] = draft.draftName; // Use draft ID as the key and draftName as the value
                                 });
 
@@ -1410,7 +1405,7 @@
                                 console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
 
                             });
-
+                        }
                     })()
                     return false;
             });
@@ -1452,7 +1447,7 @@
             // Async function to get masternode private key
             async function getMasternodePrivKey() {
                 try {
-                    let response = await $.getJSON('@(Url.Action("GetMasternodePrivKey", "Proposals"))');
+                    let response = await $.getJSON('@(Url.Action("GetMasternodePrivKey", "Masternode", new { Area = "Masternode" }))');
                     return response; // This returns the data directly
                 } catch (error) {
                     console.error("Failed to get masternode private key:", error);
@@ -1463,7 +1458,7 @@
             // Async function to submit masternode vote
             async function submitMasternodeVote(voteDataArray) {
                 try {
-                    let response = await $.post('@Url.Action("SubmitMasternodeVote", "Proposals")', {
+                    let response = await $.post('@Url.Action("SubmitMasternodeVote", "Masternode", new { Area = "Masternode" })', {
                         voteData: JSON.stringify(voteDataArray)
                     });
                     return response;
@@ -1488,16 +1483,10 @@
             try {
                 let dataset = await getMasternodePrivKey();
 
-
                 for (let data of dataset) {
                     var signature = "";
-                    var passPhrase = $('#tbPassphrase').val();
-                    var decrypted;
-                    if (data.privateKey) {
-                        decrypted = hex2a(CryptoJS.AES.decrypt(data.privateKey, passPhrase));
-                    } else {
-                        decrypted = data.subscriberPrivateKey;
-                    }
+                    var decrypted = data.privateKey;
+
                     var voteOutcome = 3;
                     var voteSanitized = 'abstain';
 
@@ -1511,19 +1500,17 @@
 
                     var d = new Date();
                     var seconds = Math.round(d.getTime() / 1000);
-
                     var vinMasternode = data.collateralHash + '-' + data.collateralIndex;
                     var voteSignal = 1; //funding (should always be 1)
 
                     var message = vinMasternode + '|' + votingParentHash + '|' + voteSignal + '|' + voteOutcome + '|' + seconds;
-                    console.log("GMP3:", decrypted.toString());
 
                     let signData = await $.ajax({
                         url: '@Url.Action("SignMessage", "Masternode", new { area = "Masternode" })',
                         type: 'POST',
                         dataType: 'json',
                         contentType: 'application/json; charset=utf-8',
-                        data: JSON.stringify({ message: message, privateKey: decrypted.toString() }),
+                        data: JSON.stringify({ message: message, privateKey: decrypted }),
                     });
 
                     signature = signData.result;

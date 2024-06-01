@@ -18,6 +18,9 @@ using reCAPTCHA.AspNetCore;
 using Microsoft.Data.Sqlite;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Diagnostics;
 
 namespace HistWeb
 {
@@ -48,6 +51,7 @@ namespace HistWeb
 
 		public static string DatabasePath { get; set; }
 
+		public static string MediaPath { get; set; }
 		private static void GetDatabasePath()
 		{
 			string databaseFileName = "basex.db";
@@ -73,9 +77,121 @@ namespace HistWeb
 			DatabasePath = Path.Combine(basePath, databaseFileName);
 			Console.WriteLine("DATABASE PATH:" + DatabasePath);
 		}
+
+		public static void CreateMediaDirectoryIfNotExists(string path)
+		{
+			try
+			{
+				// Check if the directory exists
+				if (!Directory.Exists(path))
+				{
+					// Create the directory
+					Directory.CreateDirectory(path);
+					Console.WriteLine($"Directory created: {path}");
+				}
+				else
+				{
+					Console.WriteLine($"Directory already exists: {path}");
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred while creating the directory: {ex.Message}");
+			}
+		}
+
+
+		private static void GetMediaPath()
+		{
+			string basePath;
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HistoriaCore"); // %Appdata%\Roaming\HistoriaCore
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "HistoriaCore"); // /Users/<USERNAME>/Library/Application Support/HistoriaCore
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				basePath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".historiacore"); // /home/<USERNAME>/.historiacore
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Operating system not supported");
+			}
+
+			MediaPath = Path.Combine(basePath, "media");
+			CreateMediaDirectoryIfNotExists(MediaPath);
+			SetDirectoryPermissions(MediaPath);
+			Console.WriteLine("MEDIA PATH:" + MediaPath);
+		}
+
+		private static void SetDirectoryPermissions(string path)
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				// Set directory permissions on Windows
+				DirectoryInfo dirInfo = new DirectoryInfo(path);
+				DirectorySecurity security = dirInfo.GetAccessControl();
+				security.AddAccessRule(new FileSystemAccessRule(
+					new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+					FileSystemRights.FullControl,
+					InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+					PropagationFlags.None,
+					AccessControlType.Allow));
+
+				dirInfo.SetAccessControl(security);
+				Console.WriteLine($"Permissions set successfully for directory: {path}");
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				// Set directory permissions on Unix-based systems
+				try
+				{
+					string command = $"chmod -R 777 \"{path}\"";
+					Process process = new Process
+					{
+						StartInfo = new ProcessStartInfo
+						{
+							FileName = "/bin/bash",
+							Arguments = $"-c \"{command}\"",
+							RedirectStandardOutput = true,
+							RedirectStandardError = true,
+							UseShellExecute = false,
+							CreateNoWindow = true
+						}
+					};
+
+					process.Start();
+					string output = process.StandardOutput.ReadToEnd();
+					string error = process.StandardError.ReadToEnd();
+					process.WaitForExit();
+
+					if (process.ExitCode == 0)
+					{
+						Console.WriteLine($"Permissions set successfully for directory: {path}");
+					}
+					else
+					{
+						Console.WriteLine($"Error setting permissions: {error}");
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"An error occurred while setting directory permissions: {ex.Message}");
+				}
+			}
+			else
+			{
+				throw new InvalidOperationException("Unsupported operating system");
+			}
+		}
 	
 
-		private static void CreateConfig()
+
+	private static void CreateConfig()
 		{
 			try
 			{
@@ -129,7 +245,10 @@ namespace HistWeb
                                                     collateralIndex TEXT  NOT NULL,
                                                     collateralHash TEXT NOT NULL,
                                                     masternodeName TEXT NOT NULL,
-                                                    EncryptedPrivateKey TEXT
+                                                    EncryptedPrivateKey TEXT,
+													blsprivkey TEXT,
+													blspublickey TEXT,
+													UNIQUE (collateralIndex, masternodeName, collateralHash, EncryptedPrivateKey)
                                                 );";
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
@@ -294,7 +413,9 @@ namespace HistWeb
 			try
 			{
 				GetDatabasePath();
+				GetMediaPath();
 				CreateConfig();
+				
 				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
 				using (var connection = new SqliteConnection(connectionString))
 				{

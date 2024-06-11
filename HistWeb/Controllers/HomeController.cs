@@ -478,7 +478,7 @@ namespace HistWeb.Controllers
 			{
 
 				string scriptPath = "/Applications/Historia-Qt.app/Contents/Resources/ipfs/startipfs.sh";
-				string createScriptCommand = $"/bin/bash -c 'printf \"#!/bin/bash\\n/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs daemon\\nexec bash\\n\" > {scriptPath} && chmod +x {scriptPath}'";
+				string createScriptCommand = $"/bin/bash -c 'printf \"#!/bin/bash\\n/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs \\nexec bash\\n\" > {scriptPath} && chmod +x {scriptPath}'";
 
 				// Run the command to create the script
 				Process createScriptProcess = new Process
@@ -576,127 +576,6 @@ namespace HistWeb.Controllers
 			else
 			{
 				throw new NotSupportedException("Unsupported operating system");
-			}
-		}
-
-		[HttpGet]
-		public async Task<JsonResult> InitializeHLWA()
-		{
-			int initialized = 0;
-
-			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
-			using (var conn = new SqliteConnection(connectionString))
-			{
-				try
-				{
-					conn.Open();
-					using (var cmd = conn.CreateCommand())
-					{
-						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration WHERE Id = 1";
-						using (SqliteDataReader rdr = await cmd.ExecuteReaderAsync())
-						{
-							if (rdr.Read())
-							{
-								initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA"));
-								Console.WriteLine("InitializeHLWA::initialized:" + initialized);
-							}
-						}
-					}
-
-					if (initialized == 0)
-					{
-						string[] commandsToRun = GetCommandsBasedOnOS();
-						string workingDirectory = GetWorkingDirectoryBasedOnOS();
-						Console.WriteLine("InitializeHLWA::workingDirectory:" + workingDirectory);
-						foreach (var command in commandsToRun)
-						{
-							var processStartInfo = new ProcessStartInfo
-							{
-								FileName = GetShellName(),
-								Arguments = GetShellArguments(command),
-								WorkingDirectory = workingDirectory,
-								RedirectStandardOutput = true,
-								RedirectStandardError = true,
-								UseShellExecute = false,
-								CreateNoWindow = true
-							};
-
-							var tcs = new TaskCompletionSource<bool>();
-							using (var process = new Process { StartInfo = processStartInfo, EnableRaisingEvents = true })
-							{
-								process.OutputDataReceived += (sender, e) =>
-								{
-									if (e.Data != null)
-									{
-										Console.WriteLine($"Output: {e.Data}");
-									}
-								};
-								process.ErrorDataReceived += (sender, e) =>
-								{
-									if (e.Data != null)
-									{
-										Console.WriteLine($"ERROR: {e.Data}");
-									}
-								};
-
-								process.Exited += (sender, e) => tcs.SetResult(true);
-
-								Console.WriteLine($"Starting process: {processStartInfo.FileName} {processStartInfo.Arguments}");
-
-								bool processStarted = process.Start();
-								if (processStarted)
-								{
-									Console.WriteLine("Process started successfully.");
-									process.BeginOutputReadLine();
-									process.BeginErrorReadLine();
-
-									await tcs.Task;  // Wait for the process to exit
-								}
-								else
-								{
-									Console.WriteLine("Failed to start process.");
-								}
-							}
-						}
-
-						initialized = 1;
-						string configFilePath = GetConfigFilePath();
-
-						var settings = ReadHistoriaConfig(configFilePath);
-						Console.WriteLine("InitializeHLWA::ReadHistoriaConfig:" + configFilePath);
-						ApplicationSettings.IPFSHost = "127.0.0.1"; // User must select a default server
-						ApplicationSettings.IPFSPort = 443; // User must select a default server
-						ApplicationSettings.IPFSApiHost = "127.0.0.1";
-						ApplicationSettings.IPFSApiPort = 5001;
-						ApplicationSettings.HistoriaClientIPAddress = "127.0.0.1";
-						ApplicationSettings.HistoriaRPCPort = int.Parse(settings["rpcport"]);
-						ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
-						ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
-						ApplicationSettings.SaveConfig();
-						Console.WriteLine("InitializeHLWA SAVED:");
-						using (var cmd = conn.CreateCommand())
-						{
-							cmd.CommandType = System.Data.CommandType.Text;
-							cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
-							await cmd.ExecuteNonQueryAsync();
-						}
-					}
-
-					var rep = new { Success = true, value = initialized };
-					Console.WriteLine("InitializeHLWA::success:" + initialized);
-					return Json(rep);
-				}
-				catch (Exception ex)
-				{
-					var rep = new { Success = false, value = 0 };
-					Console.WriteLine("InitializeHLWA FAILED:" + ex);
-					return Json(rep);
-				}
-				finally
-				{
-					await conn.CloseAsync();
-				}
 			}
 		}
 
@@ -1269,22 +1148,147 @@ namespace HistWeb.Controllers
 			return View();
 		}
 
-		public IActionResult Settings()
-		{
-			SettingsModel model = new SettingsModel();
+        public async Task<IActionResult> Settings()
+        {
+            bool initResult = await InitializeHLWA();
 
-			model.IPFSHost = ApplicationSettings.IPFSHost;
-			model.IPFSPort = ApplicationSettings.IPFSPort;
-			model.IPFSApiHost = ApplicationSettings.IPFSApiHost;
-			model.IPFSApiPort = ApplicationSettings.IPFSApiPort;
-			model.HistoriaClientIPAddress = ApplicationSettings.HistoriaClientIPAddress;
-			model.HistoriaRPCPort = ApplicationSettings.HistoriaRPCPort;
-			model.HistoriaRPCUserName = ApplicationSettings.HistoriaRPCUserName;
-			model.HistoriaRPCPassword = ApplicationSettings.HistoriaRPCPassword;
-			return View(model);
-		}
+            SettingsModel model = new SettingsModel();
 
-		public class SettingsParams
+            model.IPFSHost = ApplicationSettings.IPFSHost;
+            model.IPFSPort = ApplicationSettings.IPFSPort;
+            model.IPFSApiHost = ApplicationSettings.IPFSApiHost;
+            model.IPFSApiPort = ApplicationSettings.IPFSApiPort;
+            model.HistoriaClientIPAddress = ApplicationSettings.HistoriaClientIPAddress;
+            model.HistoriaRPCPort = ApplicationSettings.HistoriaRPCPort;
+            model.HistoriaRPCUserName = ApplicationSettings.HistoriaRPCUserName;
+            model.HistoriaRPCPassword = ApplicationSettings.HistoriaRPCPassword;
+
+            return View(model);
+        }
+
+
+        private async Task<bool> InitializeHLWA()
+        {
+            int initialized = 0;
+
+            string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+            using (var conn = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration WHERE Id = 1";
+                        using (SqliteDataReader rdr = await cmd.ExecuteReaderAsync())
+                        {
+                            if (rdr.Read())
+                            {
+                                initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA"));
+                                Console.WriteLine("InitializeHLWA::initialized:" + initialized);
+                            }
+                        }
+                    }
+
+                    if (initialized == 0)
+                    {
+                        string[] commandsToRun = GetCommandsBasedOnOS();
+                        string workingDirectory = GetWorkingDirectoryBasedOnOS();
+                        Console.WriteLine("InitializeHLWA::workingDirectory:" + workingDirectory);
+                        foreach (var command in commandsToRun)
+                        {
+                            var processStartInfo = new ProcessStartInfo
+                            {
+                                FileName = GetShellName(),
+                                Arguments = GetShellArguments(command),
+                                WorkingDirectory = workingDirectory,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+
+                            var tcs = new TaskCompletionSource<bool>();
+                            using (var process = new Process { StartInfo = processStartInfo, EnableRaisingEvents = true })
+                            {
+                                process.OutputDataReceived += (sender, e) =>
+                                {
+                                    if (e.Data != null)
+                                    {
+                                        Console.WriteLine($"Output: {e.Data}");
+                                    }
+                                };
+                                process.ErrorDataReceived += (sender, e) =>
+                                {
+                                    if (e.Data != null)
+                                    {
+                                        Console.WriteLine($"ERROR: {e.Data}");
+                                    }
+                                };
+
+                                process.Exited += (sender, e) => tcs.SetResult(true);
+
+                                Console.WriteLine($"Starting process: {processStartInfo.FileName} {processStartInfo.Arguments}");
+
+                                bool processStarted = process.Start();
+                                if (processStarted)
+                                {
+                                    Console.WriteLine("Process started successfully.");
+                                    process.BeginOutputReadLine();
+                                    process.BeginErrorReadLine();
+
+                                    await tcs.Task;  // Wait for the process to exit
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Failed to start process.");
+                                }
+                            }
+                        }
+
+                        initialized = 1;
+                        string configFilePath = GetConfigFilePath();
+
+                        var settings = ReadHistoriaConfig(configFilePath);
+                        Console.WriteLine("InitializeHLWA::ReadHistoriaConfig:" + configFilePath);
+                        ApplicationSettings.IPFSHost = "127.0.0.1"; // User must select a default server
+                        ApplicationSettings.IPFSPort = 443; // User must select a default server
+                        ApplicationSettings.IPFSApiHost = "127.0.0.1";
+                        ApplicationSettings.IPFSApiPort = 5001;
+                        ApplicationSettings.HistoriaClientIPAddress = "127.0.0.1";
+                        ApplicationSettings.HistoriaRPCPort = int.Parse(settings["rpcport"]);
+                        ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
+                        ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
+                        ApplicationSettings.SaveConfig();
+                        Console.WriteLine("InitializeHLWA SAVED:");
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            cmd.CommandType = System.Data.CommandType.Text;
+                            cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
+
+                    var rep = new { Success = true, value = initialized };
+                    Console.WriteLine("InitializeHLWA::success:" + initialized);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    var rep = new { Success = false, value = 0 };
+                    Console.WriteLine("InitializeHLWA FAILED:" + ex);
+					return false;
+                }
+                finally
+                {
+                    await conn.CloseAsync();
+                }
+            }
+        }
+
+
+        public class SettingsParams
 		{
 			public string IPFSHost { get; set; }
 			public int IPFSPort { get; set; }

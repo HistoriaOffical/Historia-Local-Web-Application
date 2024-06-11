@@ -682,3 +682,29 @@ body {
 .gjs-block-label {
     padding-top: 10px; /* Add padding at the top */
 }
+
+
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.page-link {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0.75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: #6c757d;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}
+
+    /* Hover styles */
+.page-link:hover {
+    color: #6c757d; /* Hover font color */
+    background-color: #e9ecef; /* Hover background color */
+    border-color: #dee2e6; /* Hover border color */
+}

@@ -1023,7 +1023,7 @@ namespace HistWeb.Controllers
 						}
 						if (graph.Metadata.ContainsKey("og:url"))
 						{
-							urltmp = graph.Metadata["og:url"].First().Value;
+							urltmp = url;
 						}
 						if (graph.Metadata.ContainsKey("og:site_name"))
 						{

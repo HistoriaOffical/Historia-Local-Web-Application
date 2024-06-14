@@ -53,7 +53,9 @@ namespace HistWeb
 		public static string DatabasePath { get; set; }
 
 		public static string MediaPath { get; set; }
-		private static void GetDatabasePath()
+
+        public static string OGImagesPath { get; set; }
+        private static void GetDatabasePath()
 		{
 			string databaseFileName = "basex.db";
 			string basePath;
@@ -64,8 +66,11 @@ namespace HistWeb
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
-				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "HistoriaCore"); // /Users/<USERNAME>/Library/Application Support/HistoriaCore
-			}
+				//basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "HistoriaCore");
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HistoriaCore");
+
+                // /Users/<USERNAME>/Library/Application Support/HistoriaCore
+            }
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
 				basePath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".historiacore"); // /home/<USERNAME>/.historiacore
@@ -106,8 +111,30 @@ namespace HistWeb
 			}
 		}
 
+        public static void CreateOGImagesDirectoryIfNotExists(string path)
+        {
+            try
+            {
+                // Check if the directory exists
+                if (!Directory.Exists(path))
+                {
+                    // Create the directory
+                    Directory.CreateDirectory(path);
+                    Console.WriteLine($"Directory created: {path}");
+                }
+                else
+                {
+                    Console.WriteLine($"Directory already exists: {path}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while creating the directory: {ex.Message}");
+            }
+        }
 
-		private static void GetMediaPath()
+
+        private static void GetMediaPath()
 		{
 			string basePath;
 
@@ -117,8 +144,9 @@ namespace HistWeb
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
-				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "HistoriaCore"); // /Users/<USERNAME>/Library/Application Support/HistoriaCore
-			}
+				//Users/<USERNAME>/Library/Application Support/HistoriaCore
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HistoriaCore");
+            }
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
 				basePath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".historiacore"); // /home/<USERNAME>/.historiacore
@@ -129,9 +157,12 @@ namespace HistWeb
 			}
 
 			MediaPath = Path.Combine(basePath, "media");
-			CreateMediaDirectoryIfNotExists(MediaPath);
-			SetDirectoryPermissions(MediaPath);
-			Console.WriteLine("MEDIA PATH:" + MediaPath);
+            OGImagesPath = Path.Combine(basePath, "media", "ogimages");
+            CreateMediaDirectoryIfNotExists(MediaPath);
+            CreateOGImagesDirectoryIfNotExists(OGImagesPath);
+            SetDirectoryPermissions(MediaPath);
+            SetDirectoryPermissions(OGImagesPath);
+
 		}
 
 		private static void SetDirectoryPermissions(string path)

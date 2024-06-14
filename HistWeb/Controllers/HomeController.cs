@@ -604,300 +604,236 @@ namespace HistWeb.Controllers
 		[DllImport("sqlite3.dll", EntryPoint = "sqlite3_load_extension")]
 		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
 
-		[HttpGet]
-		public JsonResult LoadRecords(string recordType, int pageIndex, string query, int numberToLoad = 5)
-		{
+        [HttpGet]
+        public JsonResult LoadRecords(string recordType, int pageIndex, string query, int numberToLoad = 5)
+        {
+            int? dbRecordType = recordType switch
+            {
+                "proposals" => 1,
+                "records" => 4,
+                "tree" => 4,
+                _ => null
+            };
 
-			int? dbRecordType = null;
-			switch (recordType)
-			{
-				case "proposals": dbRecordType = 1; break;
-				case "records": dbRecordType = 4; break;
-				case "tree": dbRecordType = 4; break;
+            if (recordType == "tree")
+            {
+                recordType = "records";
+            }
 
-			}
-			if (recordType == "tree")
-			{
-				recordType = "records";
-			}
-			int toggle = GetDeepSearch();
-			List<ProposalRecordModel> records = new List<ProposalRecordModel>();
+            int toggle = GetDeepSearch();
+            var records = new List<ProposalRecordModel>();
+            string rpcServerUrl = $"http://{ApplicationSettings.HistoriaClientIPAddress}:{ApplicationSettings.HistoriaRPCPort}";
 
-			try
-			{
-				string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
+            try
+            {
+                var request = CreateWebRequest(rpcServerUrl, recordType, pageIndex, numberToLoad, query);
 
-				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
-				webRequest.Credentials = new NetworkCredential(_userName, _password);
-				webRequest.ContentType = "application/json-rpc";
-				webRequest.Method = "POST";
-				webRequest.Timeout = 5000;
-				string jsonstring = "";
-				if (!string.IsNullOrEmpty(query))
-				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", "all", (pageIndex * 5) + 1, (pageIndex + 1) * 5);
-				}
-				else
-				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, (pageIndex * 5) + 1, (pageIndex + 1) * numberToLoad);
-				}
+                //using var response = request.GetResponse();
+                //using var sr = new StreamReader(response.GetResponseStream());
+                //var jsonResponse = sr.ReadToEnd();
 
-				// serialize json for the request
-				byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-				webRequest.ContentLength = byteArray.Length;
-				Stream dataStream = webRequest.GetRequestStream();
-				dataStream.Write(byteArray, 0, byteArray.Length);
-				dataStream.Close();
-				WebResponse webResponse = webRequest.GetResponse();
-				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-				string getResp = sr.ReadToEnd();
-				if (!String.IsNullOrEmpty(getResp))
-				{
-					dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
-					foreach (var record in response.result)
-					{
+                WebResponse webResponse = request.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                dynamic jsonResponse = JObject.Parse(getResp);
 
-						ProposalRecordModel pm = new ProposalRecordModel();
+                if (!string.IsNullOrEmpty(jsonResponse.ToString()))
+                {
+                    dynamic responseObject = JsonConvert.DeserializeObject<dynamic>(jsonResponse.ToString());
+                    foreach (var record in responseObject.result)
+                    {
+                        var pm = ParseRecord(record.Value, query, toggle);
+                        if (pm != null)
+                        {
+                            records.Add(pm);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"ProposalDescription Error: {ex}");
+            }
 
-						//Get Datastring Info
-						var ds = record.Value.DataString;
-						string p1 = ds;
-						dynamic proposal1 = JObject.Parse(p1);
+            var sortedRecords = records.OrderByDescending(o => ((dynamic)JObject.Parse(o.DataString)).name).ToList();
+            return Json(new { Success = true, Records = sortedRecords });
+        }
 
-						string hostname = _ipfsUrl;
-						pm.DataString = record.Value.DataString;
-						pm.Hostname = hostname;
-						pm.IPFSUrl = _ipfsUrl;
-						
-						pm.IPFSWebPort = _ipfsWebPort;
-						pm.Hash = record.Value.Hash;
+        private HttpWebRequest CreateWebRequest(string rpcServerUrl, string recordType, int pageIndex, int numberToLoad, string query)
+        {
+            var webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
+            webRequest.Credentials = new NetworkCredential(_userName, _password);
+            webRequest.ContentType = "application/json-rpc";
+            webRequest.Method = "POST";
+            webRequest.Timeout = 5000;
 
-						pm.ProposalName = HttpUtility.HtmlEncode(proposal1.summary.name.ToString());
-						pm.ProposalSummary = HttpUtility.HtmlEncode(proposal1.summary.description.ToString());
-						var en = new System.Globalization.CultureInfo("en-US");
+            string jsonstring = string.IsNullOrEmpty(query)
+                ? $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{recordType}\", \"{pageIndex * numberToLoad + 1}\", \"{(pageIndex + 1) * numberToLoad}\"] }}"
+                : $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"all\", \"{pageIndex * numberToLoad + 1}\", \"999\"] }}";
 
-						if (!string.IsNullOrEmpty(query) && toggle == 0)
-						{
 
-							// This is terribly ugly code. This was required as there were weird values that were not being found, even if the string value was exactly the same. Something to do with unicode values, but haven't solved it completely yet.
-							//This code needs to be refactored, but it works currently.
-							int compareLinguisticName = String.Compare(query, pm.ProposalName, en, System.Globalization.CompareOptions.IgnoreCase);
-							int compareOrdinalName = String.Compare(query, pm.ProposalName, StringComparison.OrdinalIgnoreCase);
-							int compareLinguisticSummary = String.Compare(query, pm.ProposalSummary, en, System.Globalization.CompareOptions.IgnoreCase);
-							int compareOrdinalSummary = String.Compare(query, pm.ProposalSummary, StringComparison.OrdinalIgnoreCase);
+            byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+            webRequest.ContentLength = byteArray.Length;
 
-							if (compareLinguisticName == 0)
-							{
-								goto run;
-							}
+            using var dataStream = webRequest.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            return webRequest;
+        }
 
-							if (compareOrdinalName == 0)
-							{
-								goto run;
-							}
+        private ProposalRecordModel ParseRecord(dynamic record, string query, int toggle)
+        {
+            var pm = new ProposalRecordModel
+            {
+                DataString = record.DataString,
+                Hash = record.Hash,
+                YesCount = long.Parse(record.YesCount.ToString()),
+                NoCount = long.Parse(record.NoCount.ToString()),
+                AbstainCount = long.Parse(record.AbstainCount.ToString()),
+                CachedLocked = bool.Parse(record.fCachedLocked.ToString()),
+                CachedFunding = bool.Parse(record.fCachedFunding.ToString()),
+                PermLocked = bool.Parse(record.fPermLocked.ToString())
+            };
 
-							if (compareLinguisticSummary == 0)
-							{
-								goto run;
-							}
+            dynamic proposalData = JObject.Parse(record.DataString.ToString());
+            pm.ProposalName = HttpUtility.HtmlEncode(proposalData.summary.name.ToString());
+            pm.ProposalSummary = HttpUtility.HtmlEncode(proposalData.summary.description.ToString());
+            pm.PaymentAmount = decimal.Parse(proposalData.payment_amount.ToString());
+            pm.PaymentAddress = proposalData.payment_address.ToString();
+            pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposalData.start_epoch.ToString())).ToString("MM/dd/yyyy");
+            pm.PaymentEndDate = UnixTimeStampToDateTime(double.Parse(proposalData.end_epoch.ToString())).AddDays(-2);
+            pm.ProposalDate = pm.PaymentDate;
+            pm.Type = proposalData.type.ToString();
+            pm.ProposalDescriptionUrl = proposalData.ipfscid.ToString();
+            pm.ParentIPFSCID = proposalData.ipfspid?.ToString() ?? "";
+            pm.cidtype = string.IsNullOrEmpty(proposalData.ipfscidtype?.ToString()) ? "0" : proposalData.ipfscidtype.ToString();
+            pm.IsUpdate = string.IsNullOrEmpty(pm.ParentIPFSCID) ? "0" : pm.PermLocked ? "0" : "1";
 
-							if (compareOrdinalSummary == 0)
-							{
-								goto run;
-							}
+            if (!string.IsNullOrEmpty(query) && !IsRecordMatchingQuery(pm, query, toggle))
+            {
+                return null;
+            }
 
-							if (!pm.ProposalName.Contains(query, StringComparison.OrdinalIgnoreCase) || !pm.ProposalSummary.Contains(query, StringComparison.OrdinalIgnoreCase))
-							{
-								continue;
-							}
-						}
-						else if (!string.IsNullOrEmpty(query) && toggle == 1)
-						{
+            if (pm.Type == "4")
+            {
+                GetAdditionalOGInfo(pm, proposalData);
+            }
 
-							try
-							{
-								string connectionString1 = $"Data Source={ApplicationSettings.DatabasePath}";
-								using (var conn = new SqliteConnection(connectionString1))
-								{
+            FetchAdditionalRecordData(pm);
 
-									using (var cmd = conn.CreateCommand())
-									{
-										conn.Open();
-										cmd.CommandType = System.Data.CommandType.Text;
-										cmd.CommandText = "SELECT ipfscid FROM items_fts WHERE ipfscid = @ipfscid AND (name MATCH @query OR summary MATCH @query OR html MATCH @query)";
-										cmd.Parameters.AddWithValue("@ipfscid", proposal1.ipfscid.ToString());
-										cmd.Parameters.AddWithValue("@query", query);
-										using (SqliteDataReader rdr = cmd.ExecuteReader())
-										{
-											if (rdr.Read())
-											{
-												goto run;
-											}
-											else
-											{
-												continue;
-											}
-										}
-									}
-								}
-							}
-							catch (Exception ex)
-							{
-								Console.WriteLine(ex.Message);
+            if (toggle == 1)
+            {
+                GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposalData.ipfscid.ToString(), pm.Hash, pm.ParentIPFSCID, pm.cidtype, pm.PaymentAmount.ToString(), pm.PaymentAddress, proposalData.start_epoch.ToString());
+            }
 
-							}
-						}
+            return pm;
+        }
 
-					run:
+        private bool IsRecordMatchingQuery(ProposalRecordModel pm, string query, int toggle)
+        {
+            var en = new System.Globalization.CultureInfo("en-US");
+            bool isMatch = toggle switch
+            {
+                0 => CompareString(query, pm.ProposalName, en) || CompareString(query, pm.ProposalSummary, en) || pm.ProposalName.Contains(query, StringComparison.OrdinalIgnoreCase) || pm.ProposalSummary.Contains(query, StringComparison.OrdinalIgnoreCase),
+                1 => IsRecordInDatabase(pm, query),
+                _ => false
+            };
+            return isMatch;
+        }
 
-						pm.ProposalDescriptionUrl = proposal1.ipfscid.ToString();
-						pm.PaymentAddress = proposal1.payment_address.ToString();
-						pm.YesCount = long.Parse(record.Value.YesCount.ToString());
-						pm.NoCount = long.Parse(record.Value.NoCount.ToString());
-						pm.AbstainCount = long.Parse(record.Value.AbstainCount.ToString());
-						pm.CachedLocked = bool.Parse(record.Value.fCachedLocked.ToString());
+        private bool CompareString(string query, string value, System.Globalization.CultureInfo cultureInfo)
+        {
+            return String.Compare(query, value, cultureInfo, System.Globalization.CompareOptions.IgnoreCase) == 0 || String.Compare(query, value, StringComparison.OrdinalIgnoreCase) == 0;
+        }
 
-						pm.CachedFunding = bool.Parse(record.Value.fCachedFunding.ToString());
-						pm.PaymentAmount = decimal.Parse(proposal1.payment_amount.ToString());
-						pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposal1.start_epoch.ToString())).ToString("MM/dd/yyyy");
-						DateTime EndDateTemp = UnixTimeStampToDateTime(double.Parse(proposal1.end_epoch.ToString()));
-						pm.PaymentEndDate = EndDateTemp.AddDays(-2);
-						pm.ProposalDate = pm.PaymentDate;
+        private bool IsRecordInDatabase(ProposalRecordModel pm, string query)
+        {
+            try
+            {
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using var conn = new SqliteConnection(connectionString);
+                conn.Open();
 
-						pm.PermLocked = bool.Parse(record.Value.fPermLocked.ToString());
+                using var cmd = conn.CreateCommand();
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.CommandText = "SELECT ipfscid FROM items_fts WHERE ipfscid = @ipfscid AND (name MATCH @query OR summary MATCH @query OR html MATCH @query)";
+                cmd.Parameters.AddWithValue("@ipfscid", pm.ProposalDescriptionUrl);
+                cmd.Parameters.AddWithValue("@query", query);
 
-						pm.ProposalDescriptionUrlRazor = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
-						pm.Type = proposal1.type.ToString();
-						string OGUrl = "";
-						if (pm.Type == "4")
-						{
-							string jsonString = CallAPI("https://historia.network/home/rogai?ipfs=" + proposal1.ipfscid.ToString()).GetAwaiter().GetResult();
-							OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
-							if (data.isArchive == "1")
-							{
-								pm.Type = "5";
-								OGUrl = data.OGUrl;
-							}
-						}
+                using var rdr = cmd.ExecuteReader();
+                return rdr.Read();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
 
-						if (pm.PermLocked)
-						{
-							pm.PastSuperBlock = 1;
-						}
-						else
-						{
-							pm.PastSuperBlock = 0;
-						}
-						pm.ParentIPFSCID = string.IsNullOrEmpty(proposal1.ipfspid.ToString()) ? "" : proposal1.ipfspid.ToString();
-						if (!string.IsNullOrEmpty(pm.ParentIPFSCID))
-						{
+        private void GetAdditionalOGInfo(ProposalRecordModel pm, dynamic proposalData)
+        {
+            string jsonString = CallAPI($"https://historia.network/home/rogai?ipfs={proposalData.ipfscid}").GetAwaiter().GetResult();
+            OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
+			Console.WriteLine(jsonString);
+            if (data.isArchive == "1")
+            {
+                pm.Type = "5";
+                pm.oglinksid = OG(data.OGUrl, proposalData.ipfscid.ToString());
+            }
+        }
 
-							if (string.IsNullOrEmpty(proposal1.ipfscidtype?.ToString()))
-							{
-								pm.cidtype = "0";
-							}
-							else
-							{
-								pm.cidtype = proposal1.ipfscidtype.ToString();
-							}
+        private void FetchAdditionalRecordData(ProposalRecordModel pm)
+        {
+            try
+            {
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using var conn = new SqliteConnection(connectionString);
+                conn.Open();
 
-							if (pm.PermLocked)
-							{
-								pm.IsUpdate = "0";
-							}
-							else
-							{
-								pm.IsUpdate = "1";
-							}
-						}
-						else
-						{
-							pm.cidtype = "1";
-							pm.IsUpdate = "0";
-						}
-						if (!string.IsNullOrEmpty(OGUrl))
-						{
-							pm.oglinksid = OG(OGUrl, proposal1.ipfscid.ToString());
-							try
-							{
-								if (pm.oglinksid != 0)
-								{
-									string connectionString1 = $"Data Source={ApplicationSettings.DatabasePath}";
-									using (var conn = new SqliteConnection(connectionString1))
-									{
-										using (var cmd = conn.CreateCommand())
-										{
-											conn.Open();
-											cmd.CommandType = System.Data.CommandType.Text;
-											cmd.CommandText = "SELECT * FROM oglinks where Id = @Oid";
-											cmd.Parameters.AddWithValue("@Oid", pm.oglinksid);
-											using (SqliteDataReader rdr = cmd.ExecuteReader())
-											{
-												if (rdr.Read())
-												{
-													pm.oglinksimageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
-													pm.oglinkstitle = rdr.GetString(rdr.GetOrdinal("title"));
-													pm.oglinksurl = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
-													pm.oglinkssitename = rdr.GetString(rdr.GetOrdinal("sitename"));
-													pm.oglinksdescription = rdr.GetString(rdr.GetOrdinal("description"));
-												}
-											}
-										}
-									}
-								}
-							}
-							catch (Exception ex)
-							{
-								Console.WriteLine(ex.Message);
-							}
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    cmd.CommandText = "SELECT id FROM items WHERE proposalhash = @proposalhash";
+                    cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
 
-						}
-						string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
-						using (var conn = new SqliteConnection(connectionString))
-						{
-							using (var cmd = conn.CreateCommand())
-							{
-								conn.Open();
-								cmd.CommandType = System.Data.CommandType.Text;
-								cmd.CommandText = "SELECT id FROM items where proposalhash = @proposalhash";
-								cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
-								using (SqliteDataReader rdr = cmd.ExecuteReader())
-								{
-									if (rdr.Read())
-									{
-										pm.Id = rdr.GetInt32(rdr.GetOrdinal("id"));
-									}
-								}
-							}
-						}
-						
-						if (toggle == 1)
-						{
-							GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposal1.ipfscid.ToString(), pm.Hash, pm.ParentIPFSCID, pm.cidtype, pm.PaymentAmount.ToString(), pm.PaymentAddress, proposal1.start_epoch.ToString());
-						}
+                    using var rdr1 = cmd.ExecuteReader();
+                    if (rdr1.Read())
+                    {
+                        pm.Id = rdr1.GetInt32(rdr1.GetOrdinal("id"));
+                    }
+                }
+
+                if (pm.oglinksid != 0)
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT * FROM oglinks WHERE Id = @Oid";
+                        cmd.Parameters.AddWithValue("@Oid", pm.oglinksid);
+
+                        using var ogReader = cmd.ExecuteReader();
+                        if (ogReader.Read())
+                        {
+                            pm.oglinksimageurl = ogReader.GetString(ogReader.GetOrdinal("imageurl"));
+                            pm.oglinkstitle = ogReader.GetString(ogReader.GetOrdinal("title"));
+                            pm.oglinksurl = $"https://{_ipfsUrl}/ipfs/{pm.ProposalDescriptionUrl}/index.html";
+                            pm.oglinkssitename = ogReader.GetString(ogReader.GetOrdinal("sitename"));
+                            pm.oglinksdescription = ogReader.GetString(ogReader.GetOrdinal("description"));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
 
 
 
-						records.Add(pm);
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				_logger.LogCritical("ProposalDescription Error: " + ex.ToString());
-			}
-
-			//sort descending based on DataString.name
-			List<ProposalRecordModel> sortedRecords = records.OrderByDescending(o => ((dynamic)JObject.Parse(o.DataString)).name).ToList();
-
-			var rep = new { Success = true, Records = sortedRecords };
-			return Json(rep);
-		}
 
 
-		
-
-		public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded)
+        public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded)
 		{
 			int toggle = GetDeepSearch();
 			if (toggle == 0)
@@ -981,6 +917,8 @@ namespace HistWeb.Controllers
 
 		}
 
+
+
 		public int OG(string url, string ipfscid)
 		{
 			var sanitizer = new HtmlSanitizer();
@@ -1035,8 +973,9 @@ namespace HistWeb.Controllers
 						}
 						if (graph.Metadata.ContainsKey("og:url"))
 						{
-							urltmp = graph.Metadata["og:url"].First().Value;
-						}
+							urltmp = url;
+
+                        }
 						if (graph.Metadata.ContainsKey("og:site_name"))
 						{
 							sitename = graph.Metadata["og:site_name"].First().Value;

@@ -161,7 +161,7 @@ public class RecurringJobService : BackgroundService
                 // Using the base directory of the application to find IPFS
                 executablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ipfs/ipfs");
                 fileName = "/bin/bash";
-                arguments = $"-c \"{executablePath} daemon; exec bash\"";  // Keep bash open after IPFS starts
+                arguments = $"-c \"{executablePath}; exec bash\"";  // Keep bash open after IPFS starts
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {

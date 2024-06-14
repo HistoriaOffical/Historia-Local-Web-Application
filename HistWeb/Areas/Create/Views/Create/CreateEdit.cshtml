@@ -145,13 +145,7 @@
         var cidtype = paramArr[4];
         var ipfspid = paramArr[5];
         var isdraft = paramArr[6];
-        console.log("id:" + id);
-        console.log("type:" + type);
-        console.log("template:" + template);
-        console.log("pid:" + pid);
-        console.log("cidtype:" + cidtype);
-        console.log("ipfspid:" + ipfspid);
-        console.log("isdraft:" + isdraft);
+
         if (paramArr[1] == 1) {
             $('#type').text("Proposal");
             $('#submitRec').show();
@@ -203,7 +197,7 @@
         function GetNewAddress() {
 
             $.getJSON('@Url.Action("GetNewAddressGet", "Masternode", new { area = "Masternode" })', function (result) {
-                console.log("JSON: " + JSON.stringify(result));
+                //console.log("JSON: " + JSON.stringify(result));
             }).done(function (result) {
 
                 if (result.success) {
@@ -914,7 +908,7 @@
             var pid = paramArr[3];
             var cidtype = paramArr[4];
             var isdraft = paramArr[6];
-            console.log("EDIT");
+
             if (template === "proposal" || template === "news" || template === "wiki") {
  //               CreateBuilderLoadTemplate(template);
                 $('#submitRec').show();
@@ -932,7 +926,6 @@
                 $('#submitArchive').prop('disabled', false);
 
             } else {
-                console.log("TYPE OTHER");
                 CreateBuilderLoadEdit(id, type, template, pid, cidtype, isdraft);
                 $('#submitRec').show();
                 $('#submitRec').prop('disabled', false);
@@ -1106,7 +1099,7 @@
             var passphrase;
             Swal.fire({
                 title: "Are you sure you want to continue?",
-                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If you wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
+                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1283,7 +1276,6 @@
             evt.stopPropagation();
 
             size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
-            console.log("SIZE: " + size);
             if (size > 10) {
                 Swal.fire({
                     title: 'Error!',
@@ -1299,7 +1291,7 @@
             var passphrase;
             Swal.fire({
                 title: "Are you sure you want to continue?",
-                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If you wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
+                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1387,7 +1379,6 @@
                 data.append('Name', $('#tbName').val());
                 data.append('Summary', $('#tbSummary').val());
                 data.append('html', $('#archiveDiv').html());
-                console.log("HTML: " + $('#archiveDiv').html());
                 data.append('isArchive', 1);
                 data.append('PaymentAddress', $('#tbAddress').val());
                 data.append('PaymentAmount', $('#tbReward').val());

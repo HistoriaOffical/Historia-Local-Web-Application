@@ -1251,8 +1251,6 @@
                                 if (templateId && templateId !== 'none') {
                                     window.location.href = `/Create/Create/CreateBuilder?Id=${templateId}&Type=5&Template=none&CidType=1&Pid=@Model.CurrentModel.Hash`;
                                 }
-                                //window.location = '/Create/Create/CreateEdit?Id=0&Type=5&Pid=@Model.CurrentModel.Hash&CidType=1&ipfs=@Model.CurrentModel.ProposalDescriptionUrl';
-
                             }).fail(function (jqXHR, textStatus, errorThrown) {
                                 console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
 
@@ -1434,7 +1432,6 @@
 
 
             $('input[name="voteOptions"]').change(function (evt) {
-                    console.log('voteYes clicked', evt.target.id);
                     vote = evt.target.id;
             });
 
@@ -1514,7 +1511,6 @@
                     });
 
                     signature = signData.result;
-                    console.log("signature", signature);
                     var voteData = {
                         "vinMasternode": data.collateralHash,
                         "collateralIndex": data.collateralIndex,
@@ -1540,7 +1536,6 @@
                 }
 
                 if (voteDataArray.length > 0) {
-                    console.log("SUBMITVOTE");
                     let submitResponse = await submitMasternodeVote(voteDataArray);
                     if (submitResponse.success) {
                         Swal.fire({
@@ -1560,7 +1555,6 @@
                         });
                     }
                 } else {
-                    console.log("SUBMITVOTE FAIL");
                 }
             } catch {
                 Swal.fire({

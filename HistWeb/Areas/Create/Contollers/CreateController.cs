@@ -86,7 +86,7 @@ namespace HistWeb.Controllers
 					{
 						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT * FROM items WHERE imported !=0";
+						cmd.CommandText = "SELECT * FROM items WHERE IsDraft == 1";
 
 						using (SqliteDataReader rdr = cmd.ExecuteReader())
 						{
@@ -559,45 +559,49 @@ namespace HistWeb.Controllers
 		[HttpGet]
 		public async Task<IActionResult> CreateBuilderLoadEdit(string id, string Type, string Template, string pid, string ipfspid, string cidtype, string isDraft)
 		{
-			List<object> items = new List<object>();
-			var sanitizer = new HtmlSanitizer();
-			int superblock = 0;
-			int isArchive = 0;
-			HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
-			webRequest.Credentials = new NetworkCredential(_userName, _password);
-			webRequest.ContentType = "application/json-rpc";
-			webRequest.Method = "POST";
-			webRequest.Timeout = 5000;
-			string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
-
-			// serialize json for the request
-			byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-			webRequest.ContentLength = byteArray.Length;
-			Stream dataStream = webRequest.GetRequestStream();
-			dataStream.Write(byteArray, 0, byteArray.Length);
-			dataStream.Close();
-			try
+            var sanitizer = new HtmlSanitizer();
+            List<object> items = new List<object>();
+            try
 			{
-				WebResponse webResponse = webRequest.GetResponse();
-				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-				string getResp = sr.ReadToEnd();
-				dynamic proposals = JObject.Parse(getResp);
 
-				//Get Datastring Info
-				var ds = proposals.result.DataString.ToString();
-				string p1 = ds;
-				dynamic proposal1 = JObject.Parse(p1);
-
-				//Get Voting Info
-				var ds1 = proposals.result.FundingResult.ToString();
-				string p2 = ds1;
-				dynamic proposal2 = JObject.Parse(p2);
-
-				string hostname = _ipfsUrl;
-
-				if (!string.IsNullOrEmpty(pid) && isDraft != "1")
+				if (pid != "0" && isDraft != "1")
 				{
-					if (cidtype != "0")
+
+
+                    int superblock = 0;
+                    int isArchive = 0;
+                    HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                    webRequest.Credentials = new NetworkCredential(_userName, _password);
+                    webRequest.ContentType = "application/json-rpc";
+                    webRequest.Method = "POST";
+                    webRequest.Timeout = 5000;
+                    string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
+
+                    // serialize json for the request
+                    byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                    webRequest.ContentLength = byteArray.Length;
+                    Stream dataStream = webRequest.GetRequestStream();
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                    dataStream.Close();
+
+                    WebResponse webResponse = webRequest.GetResponse();
+                    StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                    string getResp = sr.ReadToEnd();
+                    dynamic proposals = JObject.Parse(getResp);
+
+                    //Get Datastring Info
+                    var ds = proposals.result.DataString.ToString();
+                    string p1 = ds;
+                    dynamic proposal1 = JObject.Parse(p1);
+
+                    //Get Voting Info
+                    var ds1 = proposals.result.FundingResult.ToString();
+                    string p2 = ds1;
+                    dynamic proposal2 = JObject.Parse(p2);
+
+                    string hostname = _ipfsUrl;
+
+                    if (cidtype != "0")
 					{
 						var Name = "";
 						var Summary = "";
@@ -649,13 +653,13 @@ namespace HistWeb.Controllers
 									var Name = !rdr.IsDBNull(rdr.GetOrdinal("Name")) ? rdr.GetString(rdr.GetOrdinal("Name")) : "";
 									var Summary = !rdr.IsDBNull(rdr.GetOrdinal("Summary")) ? rdr.GetString(rdr.GetOrdinal("Summary")) : "";
 									var html = !rdr.IsDBNull(rdr.GetOrdinal("html")) ? rdr.GetString(rdr.GetOrdinal("html")) : "";
-									var IpfsPid = proposal1.ipfscid.ToString();
+									//var IpfsPid = proposal1.ipfscid.ToString();
 									var css = !rdr.IsDBNull(rdr.GetOrdinal("css")) ? rdr.GetString(rdr.GetOrdinal("css")) : "";
 									var PaymentAddress = "";
 									var PaymentAmount = "";
 									var IsDraft = "0";
-									Type = proposal1.type.ToString();
-									var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+									//Type = proposal1.type.ToString();
+									var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, CidType = cidtype };
 									items.Add(item);
 
 								}
@@ -692,7 +696,144 @@ namespace HistWeb.Controllers
 		}
 
 
-		[HttpGet]
+
+        [HttpGet]
+        public async Task<IActionResult> CreateBuilderLoadEditDraft(string id, string Type, string Template, string pid, string ipfspid, string cidtype, string isDraft)
+        {
+            List<object> items = new List<object>();
+            var sanitizer = new HtmlSanitizer();
+            int superblock = 0;
+            int isArchive = 0;
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+            webRequest.Credentials = new NetworkCredential(_userName, _password);
+            webRequest.ContentType = "application/json-rpc";
+            webRequest.Method = "POST";
+            webRequest.Timeout = 5000;
+            string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
+
+            // serialize json for the request
+            byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+            webRequest.ContentLength = byteArray.Length;
+            Stream dataStream = webRequest.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            try
+            {
+                WebResponse webResponse = webRequest.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                dynamic proposals = JObject.Parse(getResp);
+
+                //Get Datastring Info
+                var ds = proposals.result.DataString.ToString();
+                string p1 = ds;
+                dynamic proposal1 = JObject.Parse(p1);
+
+                //Get Voting Info
+                var ds1 = proposals.result.FundingResult.ToString();
+                string p2 = ds1;
+                dynamic proposal2 = JObject.Parse(p2);
+
+                string hostname = _ipfsUrl;
+
+                if (!string.IsNullOrEmpty(pid) && isDraft != "1")
+                {
+                    if (cidtype != "0")
+                    {
+                        var Name = "";
+                        var Summary = "";
+                        var html = "";
+                        var IpfsPid = proposal1.ipfscid.ToString();
+                        var PaymentAddress = "";
+                        var PaymentAmount = "";
+                        var IsDraft = "0";
+                        Type = proposal1.type.ToString();
+                        var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                        items.Add(item);
+                    }
+                    else
+                    {
+
+                        var Name = sanitizer.Sanitize(proposal1.summary.name.ToString());
+                        var Summary = sanitizer.Sanitize(proposal1.summary.description.ToString());
+                        System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
+                        //client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
+                        var url = "https://" + _ipfsUrl + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
+                        var html = await client.GetStringAsync(url);
+
+                        var IpfsPid = proposal1.ipfscid.ToString();
+                        var PaymentAddress = "";
+                        var PaymentAmount = "";
+                        var IsDraft = "0";
+                        Type = proposal1.type.ToString();
+                        var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                        items.Add(item);
+
+                    }
+                }
+                else
+                {
+                    string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                    using (var conn = new SqliteConnection(connectionString))
+                    {
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            conn.Open();
+                            cmd.CommandType = System.Data.CommandType.Text;
+                            cmd.CommandText = "SELECT * FROM items WHERE id = @id";
+                            cmd.Parameters.AddWithValue("id", id);
+                            using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            {
+                                while (rdr.Read())
+                                {
+
+                                    var Name = !rdr.IsDBNull(rdr.GetOrdinal("Name")) ? rdr.GetString(rdr.GetOrdinal("Name")) : "";
+                                    var Summary = !rdr.IsDBNull(rdr.GetOrdinal("Summary")) ? rdr.GetString(rdr.GetOrdinal("Summary")) : "";
+                                    var html = !rdr.IsDBNull(rdr.GetOrdinal("html")) ? rdr.GetString(rdr.GetOrdinal("html")) : "";
+                                    var IpfsPid = proposal1.ipfscid.ToString();
+                                    var css = !rdr.IsDBNull(rdr.GetOrdinal("css")) ? rdr.GetString(rdr.GetOrdinal("css")) : "";
+                                    var PaymentAddress = "";
+                                    var PaymentAmount = "";
+                                    var IsDraft = "0";
+                                    Type = proposal1.type.ToString();
+                                    var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                                    items.Add(item);
+
+                                }
+                            }
+                        }
+                    }
+
+
+
+                }
+                return Json(items);
+
+            }
+            catch (Exception ex)
+            {
+
+                var Name = "";
+                var Summary = "";
+                var html = "Could not load record from IPFS. Check IPFS Gateway in Settings and verify the connection.";
+                var IpfsPid = "";
+                var css = "";
+                var PaymentAddress = "";
+                var PaymentAmount = "";
+                var IsDraft = "0";
+                Type = "0";
+                var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                items.Add(item);
+                return Json(items);
+
+            }
+
+
+            return Json(new { Success = false, Error = "Can not load" });
+        }
+
+
+        [HttpGet]
 		public IActionResult CreateBuilderLoadTemplate([FromQuery(Name = "Template")] string Template)
 		{
 			List<object> items = new List<object>();

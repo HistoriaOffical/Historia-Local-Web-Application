@@ -166,7 +166,12 @@
                     <li class="nav-item"><a id="allTab" href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
                     <li class="nav-item"><a id="proposalsTab" href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
                     <li class="nav-item"><a id="recordTab" href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
-                    <li class="nav-item" id="searchTab" style="display:none"><a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close" onclick="">Search<i class="fa fa-times" style="margin-left: 5px;"></i></a></li>
+                    <li class="nav-item" id="searchTab" style="display:none">
+                        <a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close">
+                            Search
+                            <i class="fa fa-times" style="margin-left: 5px;" onclick="closeSearchTab()"></i>
+                        </a>
+                    </li>
                     <li class="nav-item ml-auto">
                         <a id="treeTab" href="#tree" data-target="#tree" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'tree'; clearRecords(); lazyLoadAll(selectedType, 0, '', 50);"><i class="fa fa-folder-tree" style="margin-left: 5px; margin-right: 5px;"></i>Tree View</a>
                     </li>
@@ -264,7 +269,7 @@
                         </div>
                         <div id="searchContainer">
                         </div>
-                        <div class="row mt-4" id="searchNoRecordMsg">
+                        <div class="row mt-4" id="searchNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
                                 <div class="card">
                                     <div class="card-body text-center">
@@ -527,6 +532,10 @@
             return str;
         }
 
+        function closeSearchTab() {
+            window.location.href = "/";
+        }
+
         function checkMasternodeSetup(event, element) {
             event.preventDefault(); // Prevent the default action of the link
 
@@ -665,7 +674,6 @@
                             });
                         }
                     } catch (error) {
-                        console.log("Error: Unable to parse the response as JSON");
                         template = $('#treeTemplateEmpty').clone().show();
                         $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
                         $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
@@ -680,11 +688,10 @@
                 data: { phash: Hash, level: level }, /*Increment based on current level*/
                 dataType: 'json',
                 success: function (result, status, xhr) {
-                    //console.log(JSON.stringify(result, null, 0));
                     try {
                         const resultObj = JSON.parse(result);
                         if (resultObj.success === false) {
-                            //console.log("Error: " + resultObj.message);
+                            console.log("Error: " + resultObj.message);
                         } else {
                             resultObj.forEach((record, idx) => {
                                 if (record.ParentIPFSCid) {
@@ -745,7 +752,7 @@
                             });
                         }
                     } catch (error) {
-                        //console.log("Error: Unable to parse the response as JSON");
+                        console.log("Error: Unable to parse the response as JSON");
                     }
                 }
             });
@@ -757,14 +764,12 @@
                 data: { phash: Hash, level: level}, /*Increment based on current level*/
                 dataType: 'json',
                 success: function (result, status, xhr) {
-                    console.log(JSON.stringify(result, null, 0));
                     try {
                         const resultObj = JSON.parse(result);
                         if (resultObj.success === false) {
-                           //console.log("Error: " + resultObj.message);
+                           console.log("Error: " + resultObj.message);
                         } else {
                             resultObj.forEach((record, idx) => {
-                                console.log('record: ', record);
                                 if (record.ParentIPFSCid) {
                                     template = $('#treeTemplate').clone().show();
                                     template.attr("id", `treeTemplate_${record.IPFSHash}`);
@@ -805,15 +810,12 @@
                                             iconContainer.append(iconElement);
                                             $('#template').replaceWith(template);
                                         }
-
-                                        console.log('actualClickedId/actualClickedChildId', actualClickedId, actualClickedChildId)
                                         if ($(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).length !== 0) {
                                             $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
                                             if (!$(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).is(":visible"))
                                                 $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
                                         }
                                         else {
-                                            console.log('adding to ', actualClickedId, $(`#collapseTreeChildren_${actualClickedId}`))
                                             $(`#collapseTreeChildren_${actualClickedId}`).append(template);
                                         }
                                     }
@@ -875,7 +877,6 @@
                 dataType: 'json',
                 success: function (result, status, xhr) {
                     pageIndex = pageIndex + 1;
-                    //console.log(JSON.stringify(result, null, 2));
                     result.records && result.records.length > 0 && result.records.map((record, idx) => {
                         let template;
                         let add = true;
@@ -1285,11 +1286,9 @@
                 var winScrolled = $(window).height() + $(window).scrollTop();
                 if (docHeight - winScrolled < 1) {
                     let nowScroll = $(this).scrollTop();
-                    //console.log("lastScroll:" + lastScroll + "nowScroll:" + nowScroll + "docHeight:" + docHeight + "winScrolled:" + winScrolled);
                     if (nowScroll >= lastScroll) {
                         if (typeof queryR === "undefined" || queryR === "") {
                             lazyLoadAll(selectedType, pageIndex, "", 5);
-                            console.log("LAZY: " + selectedType + " " + pageIndex +  " " + "5")
                         } else {
                             lazyLoadAll(selectedType, pageIndex, queryR, 5);
                         }
@@ -1301,9 +1300,7 @@
             });
 
             if (typeof queryR === "undefined" || queryR === "") {
-
                 lazyLoadAll(selectedType, pageIndex, "", 5);
-                console.log("LAZY1: " + selectedType + " " + pageIndex + " " + "5")
             } else {
 
                 lazyLoadAll(selectedType, pageIndex, queryR, 5);

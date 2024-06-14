@@ -77,6 +77,10 @@
             color: orange;
         }
 
+        .swal-wide-70 {
+            width: 70% !important;
+        }
+
        .swal-wide {
             width: 60% !important;
         }
@@ -105,6 +109,14 @@
             font-size: 0.9em;
             display: inline-block;
             margin-left: 5px;
+        }
+
+        .copyable {
+            cursor: pointer;
+        }
+
+        .table tr {
+            margin-bottom: 5px; 
         }
 
     </style>
@@ -923,12 +935,10 @@
                     $.get('@Url.Action("IsUnlockWallet", "Masternode", new { Area = "Masternode" })', null, function (data) {
                         if (!data.success) {
                             if (nodetype == "100") {
-                                console.log("NODE:" + nodetype);
                                 $('#VPWalletLockedVoting').show();
                                 $('#btnUnlockWalletVoting').show();
                                 $('#btnDeleteMasternodeSetupAttempt').show();
                             } else if (nodetype == "5000") {
-                                console.log("NODE:" + nodetype);
                                 $('#VPWalletLockedMasternode').show();
                                 $('#btnUnlockWalletMasternode').show();
                                 $('#btnRestartMasternodeSetup').show();
@@ -1006,7 +1016,7 @@
 
                                 } else {
                                     var DNS = data.identity.replace(/^https?:\/\//, '');
-                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="ToolsBtn" class="fas fa-tools icon-button" title="Diagnosis" onClick="GetTools(\'' + data.collateralHash + '\', \'' + data.ipaddress + '\', \'' + DNS + '\');"></i>&nbsp<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasterNode(\'' + data.collateralHash + '\');"></i>';
+                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="ToolsBtn" class="fas fa-tools icon-button" title="Diagnosis" onClick="GetTools(\'' + data.collateralHash + '\', \'' + data.ipAddress + '\', \'' + DNS + '\');"></i>&nbsp<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasterNode(\'' + data.collateralHash + '\');"></i>';
 
                                 }
                             }
@@ -1034,27 +1044,98 @@
                             text: response.error,
                         });
                     } else {
-                        let htmlContent = `<ul>
-                                    <li style="text-align: left;"><strong>ProTxHash:</strong> ${response.proTxHash}</li>
-                                    <li style="text-align: left;"><strong>CollateralHash:</strong> ${response.collateralHash}</li>
-                                    <li style="text-align: left;"><strong>CollateralIndex:</strong> ${response.collateralIndex}</li>
-                                    <li style="text-align: left;"><strong>Identity:</strong> ${response.identity}</li>
-                                    <li style="text-align: left;"><strong>Owner Address:</strong> ${response.ownerAddress}</li>
-                                    <li style="text-align: left;"><strong>Voting Address:</strong> ${response.votingAddress}</li>
-                                    <li style="text-align: left;"><strong>Collateral Address:</strong> ${response.collateralAddress}</li>
-                                    <li style="text-align: left;"><strong>PubKey Operator:</strong> ${response.pubKeyOperator.length > 50 ? response.pubKeyOperator.substring(0, 50) + '...' : response.pubKeyOperator}</li>
-                                    <li style="text-align: left;"><strong>IPFS Peer ID:</strong> ${response.ipfsPeerId}</li>
-                                    <li style="text-align: left;"><strong>Status:</strong> ${response.status}</li>
-                                    <li style="text-align: left;"><strong>IP Address:</strong> ${response.ipAddress}</li>
-                                    <li style="text-align: left;"><strong>Last Paid Time:</strong> ${response.lastpaidtime}</li>
-                                    <li style="text-align: left;"><strong>Last Paid Block:</strong> ${response.lastpaidblock}</li>
-                                    <li style="text-align: left;"><strong>Payee:</strong> ${response.payee}</li>
+                        let wrapText = (text, maxLength) => {
+                            if (!text) return '';
+                            return text.match(new RegExp('.{1,' + maxLength + '}', 'g')).join('<br>');
+                        };
+
+                        let htmlContent = `
+                        <div class="container">
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <table class="table table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th style="text-align: left;">ProTxHash:</th>
+                                                <td class="copyable">${wrapText(response.proTxHash, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">CollateralHash:</th>
+                                                <td class="copyable">${wrapText(response.collateralHash, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">CollateralIndex:</th>
+                                                <td class="copyable">${response.collateralIndex}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Identity:</th>
+                                                <td class="copyable">${wrapText(response.identity, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Owner Address:</th>
+                                                <td class="copyable">${wrapText(response.ownerAddress, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Voting Address:</th>
+                                                <td class="copyable">${wrapText(response.votingAddress, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Collateral Address:</th>
+                                                <td class="copyable">${wrapText(response.collateralAddress, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">PubKey Operator:</th>
+                                                <td class="copyable">${wrapText(response.pubKeyOperator, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">IPFS Peer ID:</th>
+                                                <td class="copyable">${wrapText(response.ipfsPeerId, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Status:</th>
+                                                <td class="copyable">${response.status}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">IP Address:</th>
+                                                <td class="copyable">${response.ipAddress}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Last Paid Time:</th>
+                                                <td class="copyable">${response.lastpaidtime}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Last Paid Block:</th>
+                                                <td class="copyable">${response.lastpaidblock}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Payee:</th>
+                                                <td class="copyable">${wrapText(response.payee, 50)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                     <hr>
                                     <p>You can update these fields, but if they are not empty, don't change them:</p>
-                                            <li style="text-align: left;"><strong>Fee Source Address:</strong><input type="text" id="feeSourceAddress" value="${response.feeSourceAddress}" placeholder="Enter Fee Source Address" size="80"></li>
-                                            <li style="text-align: left;"><strong>BLS Private Key:</strong> <input type="text" id="blsprivkey" value="${response.blsprivkey}" placeholder="Enter BLS Private Key" size="80"></li>
-                                            <li style="text-align: left;"><strong>BLS Public Key:</strong><input type="text" id="blspublickey" value="${response.blsprivkey}" placeholder="Enter BLS Public Key" size="80"></li>
-                                </ul>`;
+                                    <div class="form-group row">
+                                        <label for="feeSourceAddress" class="col-md-3 col-form-label" style="text-align: left;"><strong>Fee Source Address:</strong></label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="feeSourceAddress" class="form-control" value="${response.feeSourceAddress}" placeholder="Enter Fee Source Address" size="68">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="blsprivkey" class="col-md-3 col-form-label" style="text-align: left;"><strong>BLS Private Key:</strong></label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="blsprivkey" class="form-control" value="${response.blsprivkey}" placeholder="Enter BLS Private Key" size="68">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="blspublickey" class="col-md-3 col-form-label" style="text-align: left;"><strong>BLS Public Key:</strong></label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="blspublickey" class="form-control" value="${response.blspublickey}" placeholder="Enter BLS Public Key" size="68">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
 
                         if (!response.feeSourceAddress || !response.blsprivkey || !response.blspublickey) {
                             htmlContent += '<p id="manage-message" style="color: red;">You cannot manage this masternode until you update empty fields.</p>';
@@ -1068,8 +1149,32 @@
                             confirmButtonText: 'Save',
                             cancelButtonText: 'Close',
                             customClass: {
-                                popup: 'swal-wide',
+                                popup: 'swal-wide-70',
                                 content: 'swal2-content'
+                            },
+                            didRender: () => {
+                                $('.copyable').on('click', function () {
+                                    let textToCopy = $(this).html().replace(/<br>/g, '');
+                                    navigator.clipboard.writeText(textToCopy).then(() => {
+                                        let copiedMessage = $('<div class="copiedMessage">Copied</div>');
+                                        copiedMessage.css({
+                                            display: 'block',
+                                            position: 'absolute',
+                                            background: 'lightblue',
+                                            color: 'black',
+                                            padding: '5px',
+                                            borderRadius: '5px',
+                                            zIndex: 1000,
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)'
+                                        });
+                                        $(this).closest('tr').css('position', 'relative').append(copiedMessage);
+                                        copiedMessage.fadeIn().delay(2000).fadeOut(() => {
+                                            copiedMessage.remove();
+                                        });
+                                    });
+                                });
                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -1088,11 +1193,13 @@
             });
         }
 
+
+
+
         function saveAllFields(collateralHash) {
             const feeSourceAddress = $('#feeSourceAddress').val() || '';
             const blsprivkey = $('#blsprivkey').val() || '';
             const blspublickey = $('#blspublickey').val() || '';
-            console.log("saveAllFields");
             const data = {
                 collateralHash: collateralHash,
                 feeSourceAddress: feeSourceAddress,
@@ -1234,16 +1341,13 @@
                     const resultText = response.success ? 'Yes' : 'No';
                     const resultColor = response.success ? 'green' : 'red';
                     results[endpoint.elementId] = { text: resultText, color: resultColor };
-                    console.log(`${endpoint.elementId}: ${resultText}`);
                     $('#' + endpoint.elementId).text(resultText).css('color', resultColor);
                 } catch (error) {
                     results[endpoint.elementId] = { text: 'Error', color: 'red' };
-                    console.log(`${endpoint.elementId}: Error`);
                     $('#' + endpoint.elementId).text('Error').css('color', 'red');
                 }
             }
 
-            console.log('All requests completed.');
             Swal.update({
                 title: 'Diagnosis Complete',
                 icon: 'success',
@@ -1340,7 +1444,7 @@
 
 
         function RevokeVoterNode(collateralHash) {
-            console.log("collateralHash:" + collateralHash);
+
             Swal.fire({
                 title: "Revoke Voter Node?",
                 html:
@@ -1362,7 +1466,7 @@
 
             }).then(function (confirm) {
                 if (confirm.value) {
-                    console.log("Pass:" + passphrase);
+
                     $.ajax({
                         type: 'POST',
                         url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
@@ -1452,7 +1556,7 @@
 
             }).then(function (confirm) {
                 if (confirm.value) {
-                    console.log("Pass:" + passphrase);
+
                     $.ajax({
                         type: 'POST',
                         url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
@@ -1538,7 +1642,7 @@
 
             }).then(function (confirm) {
                 if (confirm.value) {
-                    console.log("Pass:" + passphrase);
+  
                     $.ajax({
                         type: 'POST',
                         url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
@@ -1617,7 +1721,7 @@
             Swal.fire({
                 title: "Are you sure you want to continue?",
                 html:
-                    '<b><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                    '<b><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1635,7 +1739,6 @@
 
             }).then(function (confirm) {
                 if (confirm.value) {
-                    console.log("Pass:" + passphrase);
                     $.ajax({
                         type: 'POST',
                         url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
@@ -1661,12 +1764,10 @@
                                     success: function (tableData) {
                                         try {
                                             var parsedData = JSON.parse(tableData);
-                                            console.log('masternode data:', JSON.stringify(parsedData));
                                             Swal.close();
                                             var jsonRet = [];
 
                                             if (parsedData.result && typeof parsedData.result === 'object') {
-                                                console.log("tableData.result:", parsedData.result);
                                                 for (var prop in parsedData.result) {
                                                     var mn = parsedData.result[prop];
                                                     var masterNode = {};
@@ -1820,7 +1921,6 @@
 
             function checkIPFSHost() {
                 return $('#IPFSHost').val() === '127.0.0.1';
-                console.log("checkIPFSHost");
             }
 
             $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
@@ -1901,10 +2001,8 @@
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 var target = $(e.target).attr("href");
                 if (target === '#setupvotingnodes') {
-                    console.log("target:" + target);
                     startPolling(fetchLogEntries);
                 } else if (target === '#setupmasternodes' || target === '#sshlogs') {
-                    console.log("target:" + target);
                     startPolling(fetchSshLogEntries);
                 } else {
                     stopPolling();
@@ -1990,7 +2088,6 @@
                 }
                 
                 // If success, process the data
-                console.log('masternode data: ' + JSON.stringify(response.data));  // Log the data part
                 var jsonRet = [];
                 response.data.forEach(function(item) {  // Assuming response.data is an array of objects
                     var masterNode = {
@@ -2041,7 +2138,6 @@
                 }
             }).then(function (result) {
                 if (result.isConfirmed) {
-                    console.log("Passphrase entered: " + result.value);
 
                     const passphrase = result.value;
                     $.ajax({
@@ -2832,6 +2928,33 @@
             });
 
         $('#btnEnabledIpfsApi').on('click', function (e) {
+
+                if ($('#btnEnabledIpfsApiLabel').html() === "On") {
+                    Swal.fire({
+                        title: 'Disable IPFS API Server?',
+                        html: 'Are you sure you want to disable the IPFS server? You will not be able to Create and submit.' +
+                            '<br>',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ok',
+                        denyButtonText: 'Cancel',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.get('@Url.Action("ToggleIpfsApiValue", "Home", new { Area = "Home" })', null, function (data) {
+                                if (data.value == 0) {
+                                    $('#btnEnabledIpfsApiLabel').html("Off");
+                                    $('#btnEnabledIpfsApi').prop('checked', false);
+                                } else {
+                                    $('#btnEnabledIpfsApiLabel').html("On");
+                                    $('#btnEnabledIpfsApi').prop('checked', true);
+                                }
+                            });
+                        }
+                    });
+                    return false;
+                }
+
                 const isChecked = e.target.checked;
                 $('#btnEnabledIpfsApiLabel').html(isChecked ? "On" : "Off");
                 if (isChecked || !isChecked) {  // Weird workaround on a bug concerning the btnEnabledIpfsApiLabel checkbox

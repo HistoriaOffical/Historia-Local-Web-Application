@@ -232,7 +232,7 @@
         function GetNewAddress() {
 
             $.getJSON('@Url.Action("GetNewAddressGet", "Masternode", new { area = "Masternode" })', function (result) {
-                console.log("JSON: " + JSON.stringify(result));
+                //console.log("JSON: " + JSON.stringify(result));
             }).done(function (result) {
 
                 if (result.success) {
@@ -268,7 +268,6 @@
 
 
         function validateName() {
-            console.log("validaName");
             var allowed_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0912345678 .,;-_/:?()'\"";
 
             // Get the value directly from the input field
@@ -292,7 +291,6 @@
         }
 
         function validateSummary() {
-            console.log("validateSummary");
             var allowed_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0912345678 .,;-_/:?()'\"";
 
             // Get the value directly from the input field
@@ -705,7 +703,6 @@
         }
 
         function CreateBuilderLoadTemplate(template, id) {
-            console.log("CreateBuilderLoadTemplate");
             $.getJSON('@Url.Action("CreateBuilderLoadTemplate", "Create", new { area = "Create" })', { id: 0, template: template }, function (result) {
 
 
@@ -885,7 +882,6 @@
             let searchParams = new URLSearchParams(window.location.search)
             var filename = searchParams.get('filename');
             if (ext == 1) {
-                console.log("CreateBuilderLoadMedia:", filename);
 
                 if (filename) {
                     $.ajax({
@@ -907,7 +903,6 @@
 
         function displayBase64Content(base64Content, fileType, filename) {
             try {
-                console.log("fileType0", fileType);
                 var ft;
                 switch (fileType) {
                     case 'image':
@@ -946,7 +941,6 @@
 
         function displayFileContent(container, base64Content, fileName, fileType) {
             try {
-                console.log("fileType1", fileType);
                 var cardBodyElement;
                 var cardTitleElement;
                 var cardText;
@@ -1248,7 +1242,6 @@
             evt.preventDefault();
 
             size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
-            console.log("SIZE: " + size);
             if (size > 10) {
                 Swal.fire({
                     title: 'Error!',
@@ -1266,7 +1259,7 @@
             Swal.fire({
                 title: "Are you sure you want to continue?",
                 html:
-                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If you wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">',
+                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1354,7 +1347,6 @@
                 data.append('Name', $('#tbName').val());
                 data.append('Summary', $('#tbSummary').val());
                 data.append('html', $('#archiveDiv').html());
-                console.log("HTML: " + $('#archiveDiv').html());
                 data.append('isArchive', 1);
                 data.append('PaymentAddress', $('#tbAddress').val());
                 data.append('PaymentAmount', $('#tbReward').val());

@@ -253,7 +253,6 @@
         }
 
         function validateSummary() {
-            console.log("validateSummary");
             var isValid = true;
             var allowed_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0912345678 .,;-_/:?()'\"";
 
@@ -328,7 +327,7 @@
         function GetNewAddress() {
 
             $.getJSON('@Url.Action("GetNewAddressGet", "Masternode", new { area = "Masternode" })', function (result) {
-                console.log("JSON: " + JSON.stringify(result));
+                //console.log("JSON: " + JSON.stringify(result));
             }).done(function (result) {
 
                 if (result.success) {
@@ -342,7 +341,7 @@
 
         function CreateBuilderLoad() {
             $.getJSON('@Url.Action("CreateBuilderLoad", "Create", new { area = "Create" })', { id: id }, function (result) {
-                console.log("JSON: " + JSON.stringify(result));
+                //console.log("JSON: " + JSON.stringify(result));
             }).done(function (result) {
 
                 if (result.id == 0) {
@@ -538,7 +537,7 @@
 
         function CreateBuilderLoadTemplate(template, id) {
             $.getJSON('@Url.Action("CreateBuilderLoadTemplate", "Create", new { area = "Create" })', { id: 0, template: template }, function (result) {
-                console.log("JSON Template: " + JSON.stringify(result));
+                //console.log("JSON Template: " + JSON.stringify(result));
             }).done(function (result) {
 
                 grapesjs.plugins.add('tweet-plugin', (editor, options) => {
@@ -696,7 +695,7 @@
             var ext = 1;
             if (ext == 1) {
                 $.getJSON('@Url.Action("CreateBuilderLoadArchiveURL", "Create", new { area = "Create" })', { id: id }, function (result) {
-                    console.log("JSON Template: " + JSON.stringify(result));
+                    //console.log("JSON Template: " + JSON.stringify(result));
                 }).done(function (result) {
 
                 }).fail(function (jqXHR, textStatus, errorThrown) {
@@ -814,11 +813,6 @@
 
         function submit(data) {
 
-            // Show loading message
-            console.log("SUBMIT::START");
-
-            // Submit the request to the server
-            console.log("SUBMIT::BEFORE", data);
             $.ajax({
                 url: '@Url.Action("Submit", "Create", new { Area = "Create" })',
                 type: 'POST',
@@ -826,10 +820,10 @@
                 processData: false,
                 data: data,
                 complete: function (data) {
-                    console.log("SUBMIT::COMPL::", data);
+
                 }
             }).done(function (result) {
-                console.log("SUBMIT::DONE::", data);
+
                 Swal.fire({
                     allowOutsideClick: false,
                     allowEscapeKey: false,
@@ -843,18 +837,15 @@
                     confirmButtonText: 'Ok'
                 }).then(function () {
                     console.log("Redirect");
-                    //window.location.href = "https://historia.network/";
+                    window.location.href = "/";
                 });
             }).fail(function (error) {
                 // Handle failure
                 Swal.close();
-                console.error('SUBMIT::Ajax request failed:', error);
             });
-            console.log("SUBMIT::END");
         }
 
         $(document).ready(function () {
-            console.log("BUILD");
             if (template === "proposal" || template === "news" || template === "wiki") {
                 CreateBuilderLoadTemplate(template);
                 $('#submitRec').show();
@@ -930,7 +921,6 @@
             data.append('paymentDate', $('#tbPaymentDate').val());
             data.append('formData', form.serialize());
 
-            console.log("Data: " + data);
             $.ajax({
                 url: '@Url.Action("SaveCreateDraft", "Create", new { Area = "Create" })',
                 type: 'POST',
@@ -938,7 +928,6 @@
                 processData: false,
                 data: data,
             }).done(function (result) {
-                console.log('result: ' + JSON.stringify(result));
                 if (result.success) {
                     Swal.fire({
                         title: 'Success!',
@@ -991,7 +980,6 @@
                         processData: false,
                         data: data,
                     }).done(function (result) {
-                        console.log('result: ' + JSON.stringify(result));
                         if (result.success) {
                             Swal.fire({
                                 title: 'Success!',
@@ -1098,7 +1086,7 @@
             Swal.fire({
                 title: "Are you sure you want to continue?",
                 html:
-                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
 
                 type: "warning",
                 allowOutsideClick: false,
@@ -1269,7 +1257,6 @@
         $('#submitArchive').off().on('click', function (evt) {
 
             size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
-            console.log("SIZE: " + size);
             if (size > 10) {
                 Swal.fire({
                     title: 'Error!',
@@ -1287,7 +1274,7 @@
             Swal.fire({
                 title: "Are you sure you want to continue?",
                 html:
-                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If you wallet is not encrypted just hit submit.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">',
+                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1375,7 +1362,6 @@
                 data.append('Name', $('#tbName').val());
                 data.append('Summary', $('#tbSummary').val());
                 data.append('html', $('#archiveDiv').html());
-                console.log("HTML: " + $('#archiveDiv').html());
                 data.append('isArchive', 1);
                 data.append('PaymentAddress', $('#tbAddress').val());
                 data.append('PaymentAmount', $('#tbReward').val());

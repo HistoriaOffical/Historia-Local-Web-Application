@@ -71,8 +71,6 @@
         $(document).ready(function () {
 
             $.getJSON('@Url.Action("GetDrafts", "Create", new { Area = "Create" })', function (tableData) {
-                console.log('draft data: ' + JSON.stringify(tableData));
-
                 var draftsTable = $('#draftsTable').DataTable({
                     data: tableData,
                     info: false,

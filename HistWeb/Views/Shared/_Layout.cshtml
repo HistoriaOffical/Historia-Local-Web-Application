@@ -13,7 +13,6 @@
     @Html.Raw(ViewBag.LoadMetaTag)
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -33,25 +32,96 @@
     {
         @RenderSection("Styles", required: false)
     }
+    <style>
+        .navbar-custom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 300px; /* Adjust as needed */
+        }
+
+            .search-container .input-group {
+                position: absolute;
+                right: 0;
+                width: 100%;
+            }
+
+        .rotate-button {
+            min-width: 230px;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 350px; /* Adjust as needed */
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        #search-input {
+            width: 100%;
+            padding-right: 40px; /* Adjust to fit the icon inside the input */
+            min-width: 350px; /* Keep the min-width to ensure consistent size */
+        }
+
+        #searchSubmit {
+            position: absolute;
+            right: 10px; /* Adjust to place the icon inside the input */
+            top: 50%;
+            transform: translateY(-50%);
+            height: 100%;
+            border: none;
+            background: transparent;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        /* Remove hover effects on the button */
+        #searchSubmit:hover {
+            background: transparent;
+            color: inherit;
+        }
+
+        .custom-dropdown-toggle {
+            display: flex;
+            align-items: center;
+        }
+
+        .custom-dropdown-toggle::after {
+            font-size: 1.5em; /* Increase the size of the caret */
+            margin-left: 0.5em; /* Adjust the spacing as needed */
+            vertical-align: middle;
+        }
+
+
+
+
+    </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
+            <div class="container navbar-custom">
                 <div class="d-sm-inline-flex flex-sm-row-reverse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle custom-dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <img src="~/images/logoblue.svg" width="175" />
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-
                                 <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Index">Home</a>
                                 <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Wallets">Wallets & Software</a>
                                 <a class="dropdown-item" href="/Home/About">About / Dev Log</a>
                                 <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Whitepaper">White Paper / Tokenomics</a>
                                 <a class="dropdown-item" asp-area="Home" asp-controller="Home" asp-action="Team">Team / Partners / Social</a>
-
                                 <hr />
                                 <h5 class="dropdown-item" style="font-weight: bold;">External Links</h5>
                                 <a class="dropdown-item" href="https://blockexplorer.historia.network/" target="_blank">Block Explorer #1</a>
@@ -59,53 +129,35 @@
                                 <a class="dropdown-item" href="https://docs.historia.network/en/latest/" target="_blank">Technical Documentation</a>
                                 <a class="dropdown-item" href="https://github.com/HistoriaOffical/historia" target="_blank">Github</a>
                                 <a class="dropdown-item" href="https://blog.historia.network/" target="_blank">Blog</a>
+                            </div>
+                        </li>
 
-                            </div>
-                        </li>
-                        <!--
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Masternodes
-                            </a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" asp-area="Masternode" asp-controller="Masternode" asp-action="Registration">My Masternodes</a>
-                                <a class="dropdown-item" asp-area="Masternode" asp-controller="Masternode" asp-action="Index">Masternodes</a>
-                            </div>
-                        </li>
-                        -->
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="Masternode" asp-controller="Masternode" asp-action="Index">Masternodes</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="Create" asp-controller="Create" asp-action="Index">Create</a>
                         </li>
+                    </ul>
+                </div>
+                <div class="d-sm-inline-flex flex-sm-row-reverse search-container">
+                    <form id="search-form" class="form-inline">
+                        <div class="input-group">
+                            <input class="search border-end-0 border rounded-pill" type="search" autocomplete="off" id="search-input" data-default-value="Search Historia">
+                            <button id="searchSubmit" class="btn btn-outline-secondary searchSubmit" type="button">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-                    </ul>
-                </div>
-                <div class="d-sm-inline-flex flex-sm-row-reverse">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li>
-                            <form id="search-form" class="form-inline">
-                                <div class="input-group no-wrap">
-                                    <input class="search border-end-0 border rounded-pill rotate" type="search" autocomplete="off" id="search-input" data-default-value="Search Historia">
-                                    <span class="input-group-append">
-                                        <button id="searchSubmit" class="btn btn-outline-secondary border rounded-pill searchSubmit rotate" style="margin-left: 0px;" type="button">
-                                            <i class="fa fa-search"></i>
-                                        </button>
-                                    </span>
-                                </div>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
 
                 <div class="d-sm-inline-flex flex-sm-row-reverse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item dropdown" title="Number of days left in the current voting cycle">
                             <span class="nav-link">
-                                <button class="btn btn-outline-secondary bg-white border rounded-pill btn-outline-secondary rotate" id="rotate" style="min-width: 230px; pointer-events: none;" type="button" value="Loading...">Loading...</button>
-
-                                <!-- <label id="rotate" class="rotate">Loading...</label>-->
+                                <button class="btn btn-outline-secondary bg-white border rounded-pill btn-outline-secondary rotate rotate-button" id="rotate" style="pointer-events: none;" type="button" value="Loading...">Loading...</button>
                             </span>
                         </li>
                         <li class="nav-item">
@@ -113,8 +165,8 @@
                         </li>
                     </ul>
                 </div>
-            </div>
 
+            </div>
         </nav>
     </header>
     <div class="container">
@@ -154,7 +206,6 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script type="text/javascript">
-
         var _nextSuperBlock = 0;
         var _currentSuperBlock = 0;
         var _daysleft = 0;
@@ -174,13 +225,13 @@
             $('#proposalsContainer').empty();
             $('#recordsContainer').empty();
             $('#searchContainer').empty();
+            $('#treeContainer').empty();
             pageIndex = 0;
             lastScroll = 0;
             inProgress = false;
         }
 
         $(document).ready(function () {
-
             const searchInput = $('#search-input');
             const defaultValue = searchInput.attr('data-default-value');
             searchInput.val(defaultValue);
@@ -188,7 +239,6 @@
                 if (searchInput.val() === defaultValue) {
                     searchInput.val('');
                 }
-
             });
 
             var parameters = {};
@@ -208,42 +258,41 @@
                 }
             });
 
-             $('#searchSubmit').on('click', function (evt) {
+            $('#searchSubmit').on('click', function (evt) {
+                var selectedType = "search";
+                clearRecords();
+                var searchInput = $('#search-input').val();
+                if (searchInput === "" || searchInput === "Search Historia" || typeof searchInput === 'undefined') {
+                    $("#SearchNoRecordMsg").show();
+                    $('a[href="#search"]').tab('show');
+                    $("#searchTab").show();
+                    $("#allTab").removeClass("active");
+                    $("#proposalsTab").removeClass("active");
+                    $("#recordsTab").removeClass("active");
+                    $("#all").removeClass("active");
+                    $("#proposals").removeClass("active");
+                    $("#records").removeClass("active");
+                    $('#search').show;
+                    $('#search').addClass("show active");
+                    $('#searchNoRecordMsg').addClass("show active");
 
-                    var selectedType = "search";
-                    clearRecords();
-                    var searchInput = $('#search-input').val();
-                    if (searchInput === "" || searchInput === "Search Historia" || typeof searchInput === 'undefined') {
-                        $("#SearchNoRecordMsg").show();
-                        $('a[href="#search"]').tab('show');
-                        $("#searchTab").show();
-                        $("#allTab").removeClass("active");
-                        $("#proposalsTab").removeClass("active");
-                        $("#recordsTab").removeClass("active");
-                        $("#all").removeClass("active");
-                        $("#proposals").removeClass("active");
-                        $("#records").removeClass("active");
-                        $('#search').show;
-                        $('#search').addClass("show active");
-                        $('#searchNoRecordMsg').addClass("show active");
-
-                        $("#searchContainer").show();
-                        return;
+                    $("#searchContainer").show();
+                    return;
+                } else {
+                    var query = $('#search-input').val();
+                    var currentUrl = $(location).attr('href');
+                    var baseUrl = window.location.origin;
+                    if (currentUrl === baseUrl + '/') {
+                        lazyLoadAll(selectedType, pageIndex, query);
                     } else {
-                        var query = $('#search-input').val();
-                        var currentUrl = $(location).attr('href');
-                        var baseUrl = window.location.origin;
-                        if (currentUrl === baseUrl + '/') {
-                            lazyLoadAll(selectedType, pageIndex, query);
+                        if (typeof query === "undefined" || query === "") {
+                            window.location.href = baseUrl + '/home?q=' + queryR;
                         } else {
-                            if (typeof query === "undefined" || query === "") {
-                                window.location.href = baseUrl + '/home?q=' + queryR;
-                            } else {
-                                window.location.href = baseUrl + '/home?q=' + query;
-                            }
+                            window.location.href = baseUrl + '/home?q=' + query;
                         }
                     }
-                    event.preventDefault();
+                }
+                event.preventDefault();
             });
 
             $('#search-input').keydown(function (event) {
@@ -254,7 +303,6 @@
             });
 
             $('.tab-close').click(function () {
-
                 if ($(this).hasClass('tab-close')) {
                     $("#searchTab").hide();
                     $('#search').removeClass('show active');
@@ -273,7 +321,6 @@
             });
 
             $('.tab-select').click(function () {
-
                 $("#searchTab").hide();
                 $('#search').removeClass('show active');
                 $("#searchloadingdiv").hide();
@@ -283,17 +330,15 @@
                 clearRecords();
             });
 
-
-
-             $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
+            $.getJSON('@Url.Action("GetCurrentSuperBlockInfo", "Masternode", new { Area = "Masternode" })', function (result) {
                 result = JSON.parse(result);
                 _currentSuperBlock = result.result.currentBlock;
                 _nextSuperBlock = result.result.nextsuperblock;
-                 _circulatingSupply = result.result.cSupply;
-                 _totalCoins = result.result.totalBudget;
-                 _totalPassingCoins = result.result.totalPassingCoins;
+                _circulatingSupply = result.result.cSupply;
+                _totalCoins = result.result.totalBudget;
+                _totalPassingCoins = result.result.totalPassingCoins;
 
-                 internationalNumberFormat = new Intl.NumberFormat('en-US');
+                internationalNumberFormat = new Intl.NumberFormat('en-US');
                 var delta = _nextSuperBlock - _currentSuperBlock;
                 daysToSuperBlock = (((delta * 2.5) / 60) / 24);
                 if (daysToSuperBlock <= 2) {
@@ -302,48 +347,47 @@
                 } else {
                     $('#nextSuperBlock').html(Math.round(daysToSuperBlock - 2));
                     _daysleft = Math.round(daysToSuperBlock - 2);
-                 }
-                 $('#daysToSuperBlock').html(Math.round(daysToSuperBlock));
-                 var votingDeadline = 0;
-                 if (daysToSuperBlock < 2) {
-                     $('#votingDeadline').html(Math.round(daysToSuperBlock));
-                 } else {
-                     $('#votingDeadline').html(Math.round(daysToSuperBlock - 2));
-                 }
-                 var todaydd = new Date();
-                 var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock)));
-                 $("#EndCycleDate").html(correctDate);
+                }
+                $('#daysToSuperBlock').html(Math.round(daysToSuperBlock));
+                var votingDeadline = 0;
+                if (daysToSuperBlock < 2) {
+                    $('#votingDeadline').html(Math.round(daysToSuperBlock));
+                } else {
+                    $('#votingDeadline').html(Math.round(daysToSuperBlock - 2));
+                }
+                var todaydd = new Date();
+                var correctDate = formatDate(addDays(todaydd, Math.round(daysToSuperBlock)));
+                $("#EndCycleDate").html(correctDate);
 
-                 $('#totalCoins').html(internationalNumberFormat.format(Math.floor(_totalCoins)));
-                 $('#totalPassingCoins').html(internationalNumberFormat.format(_totalPassingCoins));
+                $('#totalCoins').html(internationalNumberFormat.format(Math.floor(_totalCoins)));
+                $('#totalPassingCoins').html(internationalNumberFormat.format(_totalPassingCoins));
 
-                 if (delta < 576 * 2) // Prod
-                 //if (delta > 576 * 2) // Test
-                 {
-                     var path = window.location.pathname;
-                     if (path === "/Create/Create/CreateBuilder") {
-                         Swal.fire({
-                             title: 'Error!',
-                             text: 'Proposal Creation is currently disabled for the last 2 days of the cycle.',
-                             type: 'error',
-                             confirmButtonText: 'Ok'
-                         });
-                     }
-                     $('#submit').addClass('disabled');
-                     $('#submit').attr('disabled');
-                     $('#submit').hide();
-                     $('#submitArchive').addClass('disabled');
-                     $('#submitArchive').attr('disabled');
-                     $('#submitArchive').hide();
-                 }
-                 else {
-                     $('#submit').removeClass('disabled');
-                     $('#submit').removeAttr('disabled');
-                     //$('#submit').show();
-                     $('#submitArchive').removeClass('disabled');
-                     $('#submitArchive').removeAttr('disabled');
-                     //$('#submitArchive').show();
-                 }
+                if (delta < 576 * 2) // Prod
+                //if (delta > 576 * 2) // Test
+                {
+                    var path = window.location.pathname;
+                    if (path === "/Create/Create/CreateBuilder") {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Proposal Creation is currently disabled for the last 2 days of the cycle.',
+                            type: 'error',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                    $('#submit').addClass('disabled');
+                    $('#submit').attr('disabled');
+                    $('#submit').hide();
+                    $('#submitArchive').addClass('disabled');
+                    $('#submitArchive').attr('disabled');
+                    $('#submitArchive').hide();
+                } else {
+                    $('#submit').removeClass('disabled');
+                    $('#submit').removeAttr('disabled');
+                    //$('#submit').show();
+                    $('#submitArchive').removeClass('disabled');
+                    $('#submitArchive').removeAttr('disabled');
+                    //$('#submitArchive').show();
+                }
 
                 $('#currentBlock').html(result.result.currentBlock);
                 var i = 0;
@@ -369,14 +413,14 @@
                         i = 0;
                     }
                     setTimeout(rotate, 5000);
-                 })();
-             });
+                })();
+            });
         });
     </script>
 
     @RenderSection("Scripts", required: false)
 
-
 </body>
 </html>
+
 

@@ -478,10 +478,10 @@ namespace HistWeb.Controllers
 			{
 
 				string scriptPath = "/Applications/Historia-Qt.app/Contents/Resources/ipfs/startipfs.sh";
-				string createScriptCommand = $"/bin/bash -c 'printf \"#!/bin/bash\\n/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs \\nexec bash\\n\" > {scriptPath} && chmod +x {scriptPath}'";
+                string createScriptCommand = $"/bin/bash -c 'printf \"#!/bin/bash\\n/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs daemon\\nexec bash\\n\" > {scriptPath} && chmod +x {scriptPath}'";
 
-				// Run the command to create the script
-				Process createScriptProcess = new Process
+                // Run the command to create the script
+                Process createScriptProcess = new Process
 				{
 					StartInfo = new ProcessStartInfo
 					{
@@ -681,6 +681,23 @@ namespace HistWeb.Controllers
             return webRequest;
         }
 
+        string SafeHtmlSanitizeEncode(string input)
+        {
+            // Create an instance of HtmlSanitizer
+            var sanitizer = new HtmlSanitizer();
+
+            // Sanitize the input to remove unsafe HTML
+            string sanitized = sanitizer.Sanitize(input);
+
+            // Encode the sanitized input to ensure all special characters are safe
+            string encoded = HttpUtility.HtmlEncode(sanitized);
+
+            // Replace encoded apostrophes with actual apostrophes for readability
+            encoded = encoded.Replace("&#39;", "'");
+
+            return encoded;
+        }
+
         private ProposalRecordModel ParseRecord(dynamic record, string query, int toggle)
         {
             var pm = new ProposalRecordModel
@@ -696,8 +713,8 @@ namespace HistWeb.Controllers
             };
 
             dynamic proposalData = JObject.Parse(record.DataString.ToString());
-            pm.ProposalName = HttpUtility.HtmlEncode(proposalData.summary.name.ToString());
-            pm.ProposalSummary = HttpUtility.HtmlEncode(proposalData.summary.description.ToString());
+            pm.ProposalName = SafeHtmlSanitizeEncode(proposalData.summary.name.ToString());
+            pm.ProposalSummary = SafeHtmlSanitizeEncode(proposalData.summary.description.ToString());
             pm.PaymentAmount = decimal.Parse(proposalData.payment_amount.ToString());
             pm.PaymentAddress = proposalData.payment_address.ToString();
             pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposalData.start_epoch.ToString())).ToString("MM/dd/yyyy");
@@ -707,6 +724,14 @@ namespace HistWeb.Controllers
             pm.ProposalDescriptionUrl = proposalData.ipfscid.ToString();
             pm.ParentIPFSCID = proposalData.ipfspid?.ToString() ?? "";
             pm.cidtype = string.IsNullOrEmpty(proposalData.ipfscidtype?.ToString()) ? "0" : proposalData.ipfscidtype.ToString();
+            if (pm.PermLocked)
+            {
+                pm.PastSuperBlock = 1;
+            }
+            else
+            {
+                pm.PastSuperBlock = 0;
+            }
             pm.IsUpdate = string.IsNullOrEmpty(pm.ParentIPFSCID) ? "0" : pm.PermLocked ? "0" : "1";
 
             if (!string.IsNullOrEmpty(query) && !IsRecordMatchingQuery(pm, query, toggle))

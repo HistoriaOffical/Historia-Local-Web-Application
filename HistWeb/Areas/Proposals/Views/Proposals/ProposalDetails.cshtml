@@ -415,10 +415,11 @@
 
             <div class="usertabs">
                 <div class="social">
-                    <span id="btnEdit_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Suggest Edit" data-placement="top"><i class="fa fa-pencil fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
+                    @if(@Model.CurrentModel.Type != "5") {
+                        <span id="btnEdit_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Suggest Edit" data-placement="top"><i class="fa fa-pencil fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
+                    }
                     <span id="btnEvidence_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Add Additional Evidence" data-placement="top"><i class="fa fa-lightbulb fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
                     <span id="btnTopic_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Add to Topic" data-placement="top"><i class="fa fa-hashtag fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
-                    <span id="btnTranslation_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Add Translation - COMING SOON" data-placement="top"><i class="fa fa-language fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
                 </div>
             </div>
 

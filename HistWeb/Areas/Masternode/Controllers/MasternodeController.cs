@@ -1934,10 +1934,121 @@ namespace HistWeb.Controllers
         }
 
 
+        [HttpPost]
+        public JsonResult ImportMyMasterNodes()
+        {
+            try
+            {
+                MasternodeModel masternode = new MasternodeModel();
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"masternode\", \"params\": [\"outputs\"] }";
+                System.Diagnostics.Debug.WriteLine("GetMasterNodes: " + jsonstring);
+                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                Stream dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+
+                WebResponse webResponse = webRequest.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+
+                // Debugging step: Print the raw response
+                System.Diagnostics.Debug.WriteLine("Raw response: " + getResp);
+
+                // Attempt to parse the response
+                var jsonResponse = JObject.Parse(getResp);
+                var result = jsonResponse["result"].ToObject<Dictionary<string, string>>();
+
+                // Create a list to store MasternodeModel objects
+                List<MasternodeModel> masternodes = new List<MasternodeModel>();
+
+                foreach (var kvp in result)
+                {
+                    string CollateralTXID = kvp.Key;
+                    string Collateralindex = kvp.Value;
+                    int count = 0;
+                    try
+                    {
+
+                        string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                        using (var conn = new SqliteConnection(connectionString))
+                        {
+                            conn.Open();
+                            using (var cmd = conn.CreateCommand())
+                            {
+                                cmd.CommandType = System.Data.CommandType.Text;
+                                cmd.CommandText = "SELECT COUNT(*) as cnt from masternodeprivatekeys WHERE collateralHash = @collateralHash";
+                                cmd.Parameters.AddWithValue("collateralHash", CollateralTXID);
+                                cmd.ExecuteNonQuery();
+
+                                using (SqliteDataReader rdr = cmd.ExecuteReader())
+                                {
+                                    if (rdr.Read())
+                                    {
+                                        count = rdr.GetInt32(rdr.GetOrdinal("cnt"));
+                                    }
+                                }
+                            }
+                        }
+
+                        if (count == 0)
+                        {
+
+                            masternode = masternodelistFilterByJson(CollateralTXID, Collateralindex);
+
+                            string masternodeprivkey = getMasternodePrivKey(masternode.VotingAddress);
+
+                            if (!String.IsNullOrEmpty(masternodeprivkey))
+                            {
+                                using (var conn = new SqliteConnection(connectionString))
+                                {
+                                    conn.Open();
+
+                                    using (var cmd = conn.CreateCommand())
+                                    {
+                                        conn.Open();
+                                        cmd.CommandType = System.Data.CommandType.Text;
+                                        cmd.CommandText = @"INSERT OR IGNORE INTO masternodeprivatekeys 
+                                                (ProTXHash, collateralIndex, masternodeName, collateralHash, EncryptedPrivateKey) 
+                                                VALUES 
+                                                (@ProTXHash, @CollateralIndex, @MasternodeName, @CollateralHash, @EncryptedPrivateKey)";
+                                        cmd.Parameters.AddWithValue("ProTXHash", masternode.ProTxHash);
+                                        cmd.Parameters.AddWithValue("CollateralHash", CollateralTXID);
+                                        cmd.Parameters.AddWithValue("CollateralIndex", Collateralindex);
+                                        cmd.Parameters.AddWithValue("MasternodeName", masternode.Identity);
+                                        cmd.Parameters.AddWithValue("EncryptedPrivateKey", masternodeprivkey);
+                                        cmd.ExecuteNonQuery();
+                                    }
+                                }
+                                masternodes.Add(masternode);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error processing key {CollateralTXID}: {ex.Message}");
+                    }
+                }
+                lockWallet();
+                var json1 = JsonConvert.SerializeObject(masternodes);
+                return Json(json1);
+            }
+            catch (Exception ex)
+            {
+                var prepRespJson1 = new { Success = false, Error = ex.ToString() };
+                return Json(prepRespJson1);
+            }
+        }
+        
+
         //-------------------------------------------
         //SshClient Masternode functions
         //-------------------------------------------
- 
+
         public void UpdateFirewallRules(SshClient client)
         {
             Logger.Instance.Log("UpdateFirewallRules", $"Setting up firewall rules", "MASTERNODE");
@@ -4346,6 +4457,7 @@ WantedBy=multi-user.target
                         }
                     }
                 }
+
                 return Json(masterNodes);
 
             }

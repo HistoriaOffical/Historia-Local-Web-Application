@@ -193,13 +193,14 @@ namespace HistWeb
 						StartInfo = new ProcessStartInfo
 						{
 							FileName = "/bin/bash",
-							Arguments = $"-c \"{command}\"",
-							RedirectStandardOutput = true,
+                            Arguments = $"-c \"{command.Replace("\"", "\\\"")}\"",
+                            RedirectStandardOutput = true,
 							RedirectStandardError = true,
 							UseShellExecute = false,
 							CreateNoWindow = true
 						}
 					};
+
 
 					process.Start();
 					string output = process.StandardOutput.ReadToEnd();

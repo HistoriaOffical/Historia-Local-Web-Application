@@ -1742,7 +1742,7 @@
                     $.ajax({
                         type: 'POST',
                         url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
-                        data: JSON.stringify({ passphrase: passphrase, time: "60" }), 
+                        data: JSON.stringify({ passphrase: passphrase, time: "100" }), 
                         contentType: 'application/json; charset=utf-8',
                         dataType: 'json',
                         success: function (response) {

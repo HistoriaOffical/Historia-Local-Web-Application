@@ -46,6 +46,7 @@ using MySqlX.XDevAPI;
 using Renci.SshNet;
 using HistWeb.Utilties;
 using System.Security.Policy;
+using System.Web;
 
 public class RecurringJobService : BackgroundService
 {
@@ -54,6 +55,11 @@ public class RecurringJobService : BackgroundService
     private static Process _ipfsProcess;
     private readonly Dictionary<Func<Task>, (TimeSpan Interval, string CronExpression)> recurringFunctions;
     private readonly DatabaseHelper _stepHelper;
+    private string _rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
+    private string _userName = ApplicationSettings.HistoriaRPCUserName;
+    private string _password = ApplicationSettings.HistoriaRPCPassword;
+    private static bool isRunning = false;
+    private static readonly object lockObject = new object();
 
     public RecurringJobService(IConfiguration config)
     {
@@ -67,7 +73,7 @@ public class RecurringJobService : BackgroundService
 			{ () => GenerateProposalMatrix(_configuration), (TimeSpan.FromMinutes(1), "*/5 * * * *") },
             { () => ToggleIpfsApi(_configuration, _ipfsProcess), (TimeSpan.FromMinutes(1), "* * * * *") },
             { () => CheckMasternodeSetupQueue(_configuration,_stepHelper), (TimeSpan.FromMinutes(1), "* * * * *") },
-
+            { () => ImportHistoriaClientRecords(_configuration), (TimeSpan.FromMinutes(1), "* * * * *") },
         };
 
         timer = new Timer(async state => await RunScheduledTasks(), null, Timeout.Infinite, Timeout.Infinite);
@@ -578,155 +584,244 @@ public class RecurringJobService : BackgroundService
     private static async Task GenerateProposalMatrix(IConfiguration _configuration)
 {
 
-    try
-    {
-        int id, innerId;
-        string ipfscid;
-        string proposalhash;
-        string ParentIPFSCID;
-        string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
-        using (var conn = new SqliteConnection(connectionString))
+        try
         {
-            using (var cmd = conn.CreateCommand())
+            int id, innerId;
+            string ipfscid;
+            string proposalhash;
+            string ParentIPFSCID;
+            string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+            using (var conn = new SqliteConnection(connectionString))
             {
-                conn.Open();
-                cmd.CommandType = System.Data.CommandType.Text;
-                cmd.CommandText = "SELECT id, proposalhash, ipfscid, ParentIPFSCID FROM items WHERE ipfscid IS NOT NULL AND (ParentIPFSCID = '' OR ParentIPFSCID IS NULL)";
-
-                List<dynamic> resultList1 = new List<dynamic>();
-
-                using (SqliteDataReader rdr = cmd.ExecuteReader())
+                using (var cmd = conn.CreateCommand())
                 {
-                    while (rdr.Read())
+                    conn.Open();
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    cmd.CommandText = "SELECT id, proposalhash, ipfscid, ParentIPFSCID FROM items WHERE ipfscid IS NOT NULL AND (ParentIPFSCID = '' OR ParentIPFSCID IS NULL)";
+
+                    List<dynamic> resultList1 = new List<dynamic>();
+
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
                     {
-                        dynamic result = new System.Dynamic.ExpandoObject();
-
-                        result.id = rdr.GetInt32(rdr.GetOrdinal("id"));
-                        result.ipfscid = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString("ipfscid") : string.Empty;
-                        result.proposalhash = !rdr.IsDBNull(rdr.GetOrdinal("proposalhash")) ? rdr.GetString("proposalhash") : string.Empty;
-                        result.ParentIPFSCID = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString("ParentIPFSCID") : string.Empty;
-
-                        resultList1.Add(result);
-                    }
-                }
-
-                using (var conn1 = new SqliteConnection(connectionString))
-                {
-                    conn1.Open();
-
-                    foreach (var result in resultList1)
-                    {
-                        using (var cmd1 = conn1.CreateCommand())
+                        while (rdr.Read())
                         {
-                            cmd1.CommandType = System.Data.CommandType.Text;
+                            dynamic result = new System.Dynamic.ExpandoObject();
 
-                            cmd1.CommandText = "INSERT OR REPLACE INTO proposalmatrix(url, proposalmatrixid, ParentIPFS, proposalid) VALUES(@url, @proposalmatrixid, @ParentIPFS, @proposalid)";
+                            result.id = rdr.GetInt32(rdr.GetOrdinal("id"));
+                            result.ipfscid = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString("ipfscid") : string.Empty;
+                            result.proposalhash = !rdr.IsDBNull(rdr.GetOrdinal("proposalhash")) ? rdr.GetString("proposalhash") : string.Empty;
+                            result.ParentIPFSCID = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString("ParentIPFSCID") : string.Empty;
 
-                            cmd1.Parameters.AddWithValue("url", result.ipfscid);
-                            cmd1.Parameters.AddWithValue("proposalmatrixid", result.id);
-                            cmd1.Parameters.AddWithValue("ParentIPFS", result.ParentIPFSCID);
-                            cmd1.Parameters.AddWithValue("proposalid", result.id);
-
-                            cmd1.ExecuteNonQuery();
+                            resultList1.Add(result);
                         }
                     }
-                }
 
-
-
-            }
-        }
-        List<dynamic> resultList = new List<dynamic>();
-
-        using (var conn = new SqliteConnection(connectionString))
-        {
-            using (var cmd = conn.CreateCommand())
-            {
-                conn.Open();
-                cmd.CommandType = System.Data.CommandType.Text;
-                cmd.CommandText = "SELECT id, ipfscid, proposalhash, ParentIPFSCID FROM items WHERE ipfscid IS NOT NULL AND LENGTH(ParentIPFSCID) > 0;";
-
-
-
-                using (SqliteDataReader rdr = cmd.ExecuteReader())
-                {
-                    while (rdr.Read())
+                    using (var conn1 = new SqliteConnection(connectionString))
                     {
-                        dynamic result = new System.Dynamic.ExpandoObject();
-                        result.id = rdr.GetInt32(rdr.GetOrdinal("id"));
-                        result.ipfscid = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString("ipfscid") : string.Empty;
-                        result.proposalhash = !rdr.IsDBNull(rdr.GetOrdinal("proposalhash")) ? rdr.GetString("proposalhash") : string.Empty;
-                        result.ParentIPFSCID = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString("ParentIPFSCID") : string.Empty;
-                        resultList.Add(result);
-                    }
-                }
-            }
-        }
-        using (var conn1 = new SqliteConnection(connectionString))
-        {
-            conn1.Open();
+                        conn1.Open();
 
-            // Set a longer busy timeout (e.g., 5000 milliseconds)
-            using (var cmdTimeout = conn1.CreateCommand())
-            {
-                cmdTimeout.CommandText = "PRAGMA busy_timeout = 5000;";
-                cmdTimeout.ExecuteNonQuery();
-            }
-
-            using (var transaction = conn1.BeginTransaction())
-            {
-                try
-                {
-                    foreach (var result in resultList)
-                    {
-                        using (var cmd1 = conn1.CreateCommand())
+                        foreach (var result in resultList1)
                         {
-                            cmd1.CommandType = System.Data.CommandType.Text;
-                            cmd1.CommandText = "SELECT id FROM proposalmatrix WHERE url = @ParentIPFS";
-                            cmd1.Parameters.AddWithValue("ParentIPFS", result.ParentIPFSCID);
-
-                            using (SqliteDataReader rdr1 = cmd1.ExecuteReader())
+                            using (var cmd1 = conn1.CreateCommand())
                             {
-                                while (rdr1.Read())
-                                {
-                                    innerId = rdr1.GetInt32("Id");
+                                cmd1.CommandType = System.Data.CommandType.Text;
 
-                                    using (var cmd2 = conn1.CreateCommand())
-                                    {
-                                        cmd2.CommandType = System.Data.CommandType.Text;
-                                        cmd2.CommandText = "INSERT OR REPLACE INTO proposalmatrix (url, proposalmatrixid, ParentIPFS, proposalid) VALUES(@url, @proposalmatrixid, @ParentIPFS, @proposalid)";
+                                cmd1.CommandText = "INSERT OR REPLACE INTO proposalmatrix(url, proposalmatrixid, ParentIPFS, proposalid) VALUES(@url, @proposalmatrixid, @ParentIPFS, @proposalid)";
 
-                                        cmd2.Parameters.AddWithValue("url", result.ipfscid);
-                                        cmd2.Parameters.AddWithValue("proposalmatrixid", innerId);
-                                        cmd2.Parameters.AddWithValue("ParentIPFS", result.ParentIPFSCID);
-                                        cmd2.Parameters.AddWithValue("proposalid", result.id);
-                                        cmd2.ExecuteNonQuery();
-                                    }
-                                }
+                                cmd1.Parameters.AddWithValue("url", result.ipfscid);
+                                cmd1.Parameters.AddWithValue("proposalmatrixid", result.id);
+                                cmd1.Parameters.AddWithValue("ParentIPFS", result.ParentIPFSCID);
+                                cmd1.Parameters.AddWithValue("proposalid", result.id);
+
+                                cmd1.ExecuteNonQuery();
                             }
                         }
                     }
 
-                    // Commit the transaction after all operations
-                    transaction.Commit();
-                }
-                catch (Exception)
-                {
-                    // Roll back the transaction on exception
-                    transaction.Rollback();
-                    throw;
+
+
                 }
             }
+            List<dynamic> resultList = new List<dynamic>();
+
+            using (var conn = new SqliteConnection(connectionString))
+            {
+                using (var cmd = conn.CreateCommand())
+                {
+                    conn.Open();
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    cmd.CommandText = "SELECT id, ipfscid, proposalhash, ParentIPFSCID FROM items WHERE ipfscid IS NOT NULL AND LENGTH(ParentIPFSCID) > 0;";
+
+
+
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            dynamic result = new System.Dynamic.ExpandoObject();
+                            result.id = rdr.GetInt32(rdr.GetOrdinal("id"));
+                            result.ipfscid = !rdr.IsDBNull(rdr.GetOrdinal("ipfscid")) ? rdr.GetString("ipfscid") : string.Empty;
+                            result.proposalhash = !rdr.IsDBNull(rdr.GetOrdinal("proposalhash")) ? rdr.GetString("proposalhash") : string.Empty;
+                            result.ParentIPFSCID = !rdr.IsDBNull(rdr.GetOrdinal("ParentIPFSCID")) ? rdr.GetString("ParentIPFSCID") : string.Empty;
+                            resultList.Add(result);
+                        }
+                    }
+                }
+            }
+            using (var conn1 = new SqliteConnection(connectionString))
+            {
+                conn1.Open();
+
+                // Set a longer busy timeout (e.g., 5000 milliseconds)
+                using (var cmdTimeout = conn1.CreateCommand())
+                {
+                    cmdTimeout.CommandText = "PRAGMA busy_timeout = 5000;";
+                    cmdTimeout.ExecuteNonQuery();
+                }
+
+                using (var transaction = conn1.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var result in resultList)
+                        {
+                            using (var cmd1 = conn1.CreateCommand())
+                            {
+                                cmd1.CommandType = System.Data.CommandType.Text;
+                                cmd1.CommandText = "SELECT id FROM proposalmatrix WHERE url = @ParentIPFS";
+                                cmd1.Parameters.AddWithValue("ParentIPFS", result.ParentIPFSCID);
+
+                                using (SqliteDataReader rdr1 = cmd1.ExecuteReader())
+                                {
+                                    while (rdr1.Read())
+                                    {
+                                        innerId = rdr1.GetInt32("Id");
+
+                                        using (var cmd2 = conn1.CreateCommand())
+                                        {
+                                            cmd2.CommandType = System.Data.CommandType.Text;
+                                            cmd2.CommandText = "INSERT OR REPLACE INTO proposalmatrix (url, proposalmatrixid, ParentIPFS, proposalid) VALUES(@url, @proposalmatrixid, @ParentIPFS, @proposalid)";
+
+                                            cmd2.Parameters.AddWithValue("url", result.ipfscid);
+                                            cmd2.Parameters.AddWithValue("proposalmatrixid", innerId);
+                                            cmd2.Parameters.AddWithValue("ParentIPFS", result.ParentIPFSCID);
+                                            cmd2.Parameters.AddWithValue("proposalid", result.id);
+                                            cmd2.ExecuteNonQuery();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Commit the transaction after all operations
+                        transaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        // Roll back the transaction on exception
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+            var rep = new { Success = true };
         }
-        var rep = new { Success = true };
-    }
-    catch (Exception ex)
-    {
-        var rep = new { Success = false };
-    }
+        catch (Exception ex)
+        {
+            var rep = new { Success = false };
+        }
 
 }
 
+
+    public static async Task ImportHistoriaClientRecords(IConfiguration _configuration)
+    {
+        int toggle = HomeController.GetDeepSearch();
+        if (toggle == 0)
+        {
+            return;
+        }
+        string hostname = ApplicationSettings.IPFSHost;
+        if(hostname == "127.0.0.1")
+        {
+            return;
+        }
+        lock (lockObject)
+        {
+            if (isRunning)
+            {
+                return;
+            }
+            isRunning = true;
+        }
+        try
+        {
+
+
+            string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
+            webRequest.Credentials = new NetworkCredential(ApplicationSettings.HistoriaRPCUserName, ApplicationSettings.HistoriaRPCPassword);
+            webRequest.ContentType = "application/json-rpc";
+            webRequest.Method = "POST";
+            webRequest.Timeout = 5000;
+            string jsonstring = "";
+            jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"all\"] }}");
+
+            // serialize json for the request
+            byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+            webRequest.ContentLength = byteArray.Length;
+            Stream dataStream = webRequest.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            WebResponse webResponse = webRequest.GetResponse();
+            StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+            string getResp = sr.ReadToEnd();
+            if (!String.IsNullOrEmpty(getResp))
+            {
+                dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
+                foreach (var record in response.result)
+                {
+
+                    //Get Datastring Info
+                    var ds = record.Value.DataString;
+                    string p1 = ds;
+                    dynamic proposal1 = JObject.Parse(p1);
+                    string hash = "";
+                    hash = record.Value.Hash;
+                   
+                    string cidtype;
+                    if (proposal1.ipfscidtype != null && !string.IsNullOrEmpty(proposal1.ipfscidtype.ToString()))
+                    {
+                        cidtype = proposal1.ipfscidtype.ToString();
+                    }
+                    else
+                    {
+                        cidtype = "0";
+                    }
+
+                    string payment_amount = proposal1.payment_amount.ToString();
+                    string payment_address = proposal1.payment_address.ToString();
+                    string dateadded = proposal1.start_epoch.ToString();
+                    string type = proposal1.type.ToString();
+                    await HomeController.GetHtmlSourceAsync(HttpUtility.HtmlEncode(proposal1.summary.name.ToString()), HttpUtility.HtmlEncode(proposal1.summary.description.ToString()), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString(), hash, proposal1.ipfspid.ToString(), cidtype, payment_amount, payment_address, dateadded, type, 1);
+
+                }
+            }
+
+            return;
+        }
+        catch (Exception ex)
+        {
+            return;
+        }
+        finally
+        {
+            lock (lockObject)
+            {
+                isRunning = false;
+            }
+        }
+    }
 
     private bool ShouldCallFunction((TimeSpan Interval, string CronExpression) functionConfig)
     {

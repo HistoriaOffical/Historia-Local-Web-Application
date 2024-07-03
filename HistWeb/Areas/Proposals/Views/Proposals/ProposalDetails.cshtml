@@ -1,5 +1,6 @@
 ﻿@model HistWeb.Areas.Proposals.Models.ProposalViewModel
 @using HistWeb.Helpers
+@using System.Net
 
 @{
     ViewData["Title"] = Model.CurrentModel.ProposalName + " - " + Model.CurrentModel.ProposalSummary;
@@ -12,8 +13,8 @@
         /* selected btn css */
         .btn-group-toggle .btn:not(:disabled):not(.disabled).active, .btn-group-toggle .btn:not(:disabled):not(.disabled):active, .show > .btn.dropdown-toggle {
             color: #fff;
-            background-color: #2196F3;
-            border-color: #2196F3;
+            background-color: #545B62;
+            border-color: #545B62;
         }
 
         .dt-body-left {
@@ -94,6 +95,7 @@
                     <label id="recordTime" style="line-height: normal;" class="ml-0 float-right"></label>&nbsp;<br />
                 </div>
             </div>
+            <input type="file" id="fileInput" accept=".jpg, .jpeg, .png, .gif, .mp3, .mp4, .pdf" style="display:none;">
             <div class="col-md-2">
                 <div class="title text-left">
 
@@ -193,7 +195,10 @@
             <p class="card-text">@Model.CurrentModel.ProposalSummary</p>
             @if (@Model.CurrentModel.Type != "5")
             {
-                <iframe src="@Model.CurrentModel.ProposalDescriptionUrlRazor" sandbox="" style="width:100%;height:700px;" frameBorder="1"></iframe>
+                <iframe src="/proxy?url=@Model.CurrentModel.ProposalDescriptionUrlRazor" sandbox="" style="width:100%;height:700px;" frameBorder="1"></iframe>
+
+
+
                 <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
             }
             else
@@ -228,7 +233,7 @@
                     </div>
 
                     <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
-                    <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Non-Archived Version</a></div>
+                    <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Live Version</a></div>
 
                 }
                 else
@@ -260,7 +265,7 @@
                         <br>
                     </div>
                     <div class="col-12 text-right text-"><a id="url" target='_blank' href="https://@Model.CurrentModel.Hostname/ipfs/@Model.CurrentModel.ProposalDescriptionUrl">Archived Version</a></div>
-                    <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Non-Archived Version</a></div>
+                    <div class="col-12 text-right text-"><a id="url1" target='_blank' href="@Model.CurrentModel.orgUrl">Live Version</a></div>
                 }
             }
 
@@ -345,7 +350,7 @@
             <div class="voting">
                 <div class="votingwrapper">
                     <div class="votingdown">VOTING</div>
-                    @if (Model.CurrentModel.PastSuperBlock == 1)
+                    @if (Model.CurrentModel.PastSuperBlock == 0)
                     {
 
                         @if (@Model.CurrentModel.sig == 1)
@@ -415,6 +420,7 @@
 
             <div class="usertabs">
                 <div class="social">
+                    <span id="btnShare_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Share" data-placement="top"> <i class="fa-solid fa-share-alt social-icon" id="shareIcon" style="cursor: pointer;"></i></span><font size="4">&nbsp;&nbsp;</font>
                     @if(@Model.CurrentModel.Type != "5") {
                         <span id="btnEdit_@Model.CurrentModel.Id" style="vertical-align:central; cursor: pointer;" alt="" data-toggle="popover" title="Suggest Edit" data-placement="top"><i class="fa fa-pencil fa-lg"></i></span><font size="4">&nbsp;&nbsp;</font>
                     }
@@ -451,6 +457,12 @@
                                         </thead>
                                     </table>
                                 </div>
+                                <div id="deepSearchOverlaytopics" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000; color:white; display:flex; justify-content:center; align-items:center;">
+                                    <div style="background-color:black; padding:20px; border-radius:10px; text-align:center;">
+                                        <h2>Deep search is disabled</h2>
+                                        <p>To enable: Go to Settings -> Advanced Settings -> Enable Deep Search</p>
+                                    </div>
+                                </div>
                             </div>
 
 
@@ -466,6 +478,12 @@
                                         </thead>
                                     </table>
                                 </div>
+                                <div id="deepSearchOverlayevidence" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000; color:white; display:flex; justify-content:center; align-items:center;">
+                                    <div style="background-color:black; padding:20px; border-radius:10px; text-align:center;">
+                                        <h2>Deep search is disabled</h2>
+                                        <p>To enable: Go to Settings -> Advanced Settings -> Enable Deep Search</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <div id="versions" class="tab-pane fade show">
@@ -480,7 +498,14 @@
                                         </thead>
                                     </table>
                                 </div>
+                                <div id="deepSearchOverlayversions" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000; color:white; display:flex; justify-content:center; align-items:center;">
+                                    <div style="background-color:black; padding:20px; border-radius:10px; text-align:center;">
+                                        <h2>Deep search is disabled</h2>
+                                        <p>To enable: Go to Settings -> Advanced Settings -> Enable Deep Search</p>
+                                    </div>
+                                </div>
                             </div>
+
 
 
                             <div class="row">
@@ -551,18 +576,18 @@
                         <div class="row">
                             <div class="col">
                                 <b>Marketing</b><br>For the best chance to get this document passed by the voters, market and lobby for it!<br><br>Share on social media:<br><br>
-                                <div class="row">
+                                <div class="row text-center">
                                     <div class="col-sm"><a href="http://x.com/share?text=@Model.CurrentModel.ProposalName-@Model.CurrentModel.ProposalSummary&url=https://historia.network/id/@Model.CurrentModel.Hash&hashtags=#historia,#blockchain,#altcoins,#history,@@historiasys" target="_blank"><i class="fa-brands fa-twitter"></i> X.com</a></div>
                                     <div class="col-sm"><a href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/@Model.CurrentModel.Hash" target="_blank"><i class="fa-brands fa-facebook-f"></i> Facebook</a></div>
                                 </div>
 
-                                <div class="row">
+                                <div class="row text-center">
                                     <div class="col-sm"><a href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a></div>
 
                                     <div class="col-sm">  <a href="https://t.me/share/url?url=https://historia.network/id/@Model.CurrentModel.Hash" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram</a></div>
                                 </div>
 
-                                <div class="row">
+                                <div class="row text-center">
                                     <div class="col-sm"><a href="https://www.reddit.com/submit?url=https://historia.network/id/@Model.CurrentModel.Hash" target="_blank"><i class="fa-brands fa-reddit"></i> Reddit</a></div>
                                     <div class="col-sm"><a href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/@Model.CurrentModel.Hash"><i class="fa fa-envelope" aria-hidden="true"></i> Via Email</a></div>
                                 </div>
@@ -694,131 +719,159 @@
                 $('#topicsTab').trigger('shown.bs.tab');
             }, 100); // Adjust the delay as needed
 
+
+
+
             var IpfsPid = "@Model.CurrentModel.Hash";
             $('#versionsTab').on('shown.bs.tab', function (e) {
-                if ($('#versionsTab').hasClass('active')) {
-                    $.getJSON('@Url.Action("GetVersionsDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData1) {
+                $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
+                    let deepvalue = data.value;
 
-                        var verisonsTable = $('#versionsTable').DataTable({
-                            destroy: true,
-                            data: JSON.parse(tableData1),
-                            order: [[0, '']],
-                            info: false,
-                            searching: false,
-                            fixedHeader: false,
-                            lengthChange: false,
-                            autoWidth: true,
-                            responsive: true,
-                            columnDefs: [
-                                {
-                                    targets: '_all', // Apply to all columns
-                                    className: 'dt-body-left'
-                                }
-                            ],
-                            columns: [
-                                { data: "DateAdded" },
-                                {
-                                    data: null,
-                                    render: function (data, type, full, meta) {
+                    if (deepvalue == 0) {
+                        $('#deepSearchOverlayversions').show();
+                    } else {
+                        $('#deepSearchOverlayversions').hide();
 
-                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a href>');
-                                    }
-                                },
-                                {
-                                    data: null,
-                                    render: function (data, type, full, meta) {
-
-                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a href>');
-                                    }
-                                }
-
-                            ],
-                        });
-                    });
-                }
+                        if ($('#versionsTab').hasClass('active')) {
+                            $.getJSON('@Url.Action("GetVersionsDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData1) {
+                                var versionsTable = $('#versionsTable').DataTable({
+                                    destroy: true,
+                                    data: JSON.parse(tableData1),
+                                    order: [[0, 'asc']],
+                                    info: false,
+                                    searching: false,
+                                    fixedHeader: false,
+                                    lengthChange: false,
+                                    autoWidth: true,
+                                    responsive: true,
+                                    columnDefs: [
+                                        {
+                                            targets: '_all', // Apply to all columns
+                                            className: 'dt-body-left'
+                                        }
+                                    ],
+                                    columns: [
+                                        { data: "DateAdded" },
+                                        {
+                                            data: null,
+                                            render: function (data, type, full, meta) {
+                                                return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a>');
+                                            }
+                                        },
+                                        {
+                                            data: null,
+                                            render: function (data, type, full, meta) {
+                                                return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a>');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+                        }
+                    }
+                });
             });
 
             $('#evidenceTab').on('shown.bs.tab', function (e) {
-                if ($('#evidenceTab').hasClass('active')) {
-                    $.getJSON('@Url.Action("GetEvidenceDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData2) {
+                $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
+                    let deepvalue = data.value;
 
-                        var evidenceTable = $('#evidenceTable').DataTable({
-                            destroy: true,
-                            data: JSON.parse(tableData2),
-                            order: [[0, '']],
-                            info: false,
-                            searching: false,
-                            fixedHeader: false,
-                            lengthChange: false,
-                            autoWidth: false,
-                            responsive: true,
-                            columnDefs: [
-                                {
-                                    targets: '_all', // Apply to all columns
-                                    className: 'dt-body-left'
-                                }
-                            ],
-                            columns: [
-                                { data: "DateAdded" },
-                                {
-                                    data: null,
-                                    render: function (data, type, full, meta) {
+                    if (deepvalue == 0) {
+                        $('#deepSearchOverlayevidence').show();
+                    } else {
+                        $('#deepSearchOverlayevidence').hide();
 
-                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a href>');
-                                    }
-                                },
-                                {
-                                    data: null,
-                                    render: function (data, type, full, meta) {
-
-                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a href>');
-                                    }
-                                }
-
-                            ],
-                        });
-                    });
-                }
+                        if ($('#evidenceTab').hasClass('active')) {
+                            $.getJSON('@Url.Action("GetEvidenceDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData2) {
+                                var evidenceTable = $('#evidenceTable').DataTable({
+                                    destroy: true,
+                                    data: JSON.parse(tableData2),
+                                    order: [[0, 'asc']],
+                                    info: false,
+                                    searching: false,
+                                    fixedHeader: false,
+                                    lengthChange: false,
+                                    autoWidth: false,
+                                    responsive: true,
+                                    columnDefs: [
+                                        {
+                                            targets: '_all', // Apply to all columns
+                                            className: 'dt-body-left'
+                                        }
+                                    ],
+                                    columns: [
+                                        { data: "DateAdded" },
+                                        {
+                                            data: null,
+                                            render: function (data, type, full, meta) {
+                                                return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a>');
+                                            }
+                                        },
+                                        {
+                                            data: null,
+                                            render: function (data, type, full, meta) {
+                                                return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a>');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+                        }
+                    }
+                });
             });
+
 
             $('#topicsTab').on('shown.bs.tab', function (e) {
-                if ($('#topicsTab').hasClass('active')) {
-                    $.getJSON('@Url.Action("GetTopicsDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData3) {
-                        var topicsTable = $('#topicsTable').DataTable({
-                            destroy: true,
-                            data: JSON.parse(tableData3),
-                            order: [[0, '']],
-                            info: false,
-                            searching: false,
-                            fixedHeader: false,
-                            lengthChange: false,
-                            autoWidth: false,
-                            responsive: true,
-                            columnDefs: [
-                                {
-                                    targets: '_all', // Apply to all columns
-                                    className: 'dt-body-left'
-                                }
-                            ],
-                            columns: [
-                                { data: "DateAdded" },
-                                {
-                                    data: null,
-                                    render: function (data, type, full, meta) {
-                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a>');
-                                    }
-                                },
-                                {
-                                    data: null,
-                                    render: function (data, type, full, meta) {
-                                        return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a>');
-                                    }
-                                }
-                            ],
-                        });
-                    });
-                }
+                $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
+                    let deepvalue = data.value;
+
+                    if (deepvalue == 0) {
+                        $('#deepSearchOverlaytopics').show();
+                    } else {
+                        $('#deepSearchOverlaytopics').hide();
+
+                        if ($('#topicsTab').hasClass('active')) {
+                            $.getJSON('@Url.Action("GetTopicsDetails", "Proposals", new { Area = "Proposals" })', { phash: IpfsPid, level: 0 }, function (tableData3) {
+                                var topicsTable = $('#topicsTable').DataTable({
+                                    destroy: true,
+                                    data: JSON.parse(tableData3),
+                                    order: [[0, 'asc']],
+                                    info: false,
+                                    searching: false,
+                                    fixedHeader: false,
+                                    lengthChange: false,
+                                    autoWidth: false,
+                                    responsive: true,
+                                    columnDefs: [
+                                        {
+                                            targets: '_all', // Apply to all columns
+                                            className: 'dt-body-left'
+                                        }
+                                    ],
+                                    columns: [
+                                        { data: "DateAdded" },
+                                        {
+                                            data: null,
+                                            render: function (data, type, full, meta) {
+                                                return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Name + '</a>');
+                                            }
+                                        },
+                                        {
+                                            data: null,
+                                            render: function (data, type, full, meta) {
+                                                return ('<a href="/Proposals/Proposals/ProposalDetails?hash=' + data.ProposalHash + '">' + data.Summary + '</a>');
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+                        }
+                    }
+                });
             });
+            
+
 
             $('#btnSEU').on('click', function () {
 
@@ -950,21 +1003,8 @@
 
             $('#url').click(function (event) {
                 event.preventDefault(); // prevent the link from following the URL
+                window.open($('#url').attr('href'), '_blank');  // follow the link URL
 
-                Swal.fire({
-                    title: 'Offsite Link',
-                    text: 'This will take you offsite. Are you sure you would like to continue?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#48B5C4',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, continue',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.open($('#url').attr('href'), '_blank');  // follow the link URL
-                    }
-                });
             });
 
 
@@ -1165,12 +1205,13 @@
                             inputOptions: {
                                 record: 'Record',
                                 archive: 'Archive',
+                                media: 'Media',
                             },
                             inputPlaceholder: 'Select a type',
                             showCancelButton: true,
                             inputValidator: (value) => {
                                 return new Promise((resolve) => {
-                                    if (value === 'record' || value === 'archive') {
+                                if (value === 'record' || value === 'archive' || value === 'media') {
                                         resolve()
                                     } else {
                                         resolve('You need to select a type :)')
@@ -1256,11 +1297,132 @@
                                 console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
 
                             });
+                        } else if (type === "media") {
+                            const fileInput = $('#fileInput');
+                            fileInput.click();
+                            fileInput.on('change', function () {
+                                const files = this.files;
+
+                                if (files.length > 0) {
+                                    const file = files[0];
+                                    const fileSize = file.size;
+                                    const maxSizeInBytes = 10485760;
+
+                                    if (fileSize > maxSizeInBytes) {
+                                        Swal.fire({
+                                            title: 'File size too big',
+                                            type: 'error',
+                                            confirmButtonColor: "#48B5C4",
+                                            confirmButtonText: 'Ok'
+                                        });
+                                    } else {
+                                        const fileName = file.name;
+
+
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+                                        formData.append('filename', fileName);
+
+                                        const fileReader = new FileReader();
+
+                                        fileReader.onload = function (e) {
+                                            const fileContent = e.target.result;
+
+                                            const fileInfo = {
+                                                fileName: file.name,
+                                                fileSize: file.size,
+                                                fileContent: fileContent
+                                            };
+
+                                        };
+
+                                        fileReader.readAsDataURL(file);
+
+                                        $.ajax({
+                                            url: '@Url.Action("UploadMedia", "Create", new { Area = "Create" })',
+                                            type: 'POST',
+                                            data: formData,
+                                            contentType: false,
+                                            processData: false,
+                                            success: function (response) {
+                                            window.location = '/Create/Create/CreateMedia?Id=0&Type=4.1&Template=none&filename=' + response.filename + '&pid=@Model.CurrentModel.Hash&ipfsurl=@Model.CurrentModel.ProposalDescriptionUrl';
+
+                                            },
+                                            error: function (xhr, status, error) {
+                                                Swal.fire({
+                                                    title: 'Could Not Upload Media',
+                                                    type: 'error',
+                                                    confirmButtonColor: "#48B5C4",
+                                                    confirmButtonText: 'Ok'
+                                                });
+                                                console.error('Error loading images:', error);
+                                                sessionStorage.removeItem('uploadedFile');
+                                            }
+                                        });
+                                    }
+                                }
+                            });
                         }
                     })()
 
                     return false;
 
+            });
+
+            $('#btnShare_@Model.CurrentModel.Id').on('click', function () {
+                var votingProposalId = @Model.CurrentModel.Id;
+                var votingParentHash = '@Model.CurrentModel.Hash';
+                var escapedString = '@("@historiasys")';
+                var summaryName = '@Model.CurrentModel.ProposalName';
+                var summary = '@Model.CurrentModel.ProposalSummary';
+                var proposalHash = '@Model.CurrentModel.Hash';
+
+                Swal.fire({
+                    title: 'Share on social media:',
+                    html: `
+                    <hr>
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-sm text-center">
+                                <a class="social-link" href="http://twitter.com/share?text=${summaryName} - ${summary}&url=https://historia.network/id/${proposalHash}&hashtags=#historia,#blockchain,${escapedString}" target="_blank">
+                                    <i class="fa-brands fa-twitter social-icon"></i> X.com
+                                </a>
+                            </div>
+                            <div class="col-sm text-center">
+                                <a class="social-link" href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/${proposalHash}" target="_blank">
+                                    <i class="fa-brands fa-facebook-f social-icon"></i> Facebook
+                                </a>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-sm text-center">
+                                <a class="social-link" href="https://discordapp.com/invite/b3FJPpn" target="_blank">
+                                    <i class="fa-brands fa-discord social-icon"></i> Discord
+                                </a>
+                            </div>
+                            <div class="col-sm text-center">
+                                <a class="social-link" href="https://t.me/share/url?url=https://historia.network/id/${proposalHash}" target="_blank">
+                                    <i class="fa-brands fa-telegram social-icon"></i> Telegram
+                                </a>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-sm text-center">
+                                <a class="social-link" href="https://www.reddit.com/submit?url=https://historia.network/id/${proposalHash}" target="_blank">
+                                    <i class="fa-brands fa-reddit social-icon"></i> Reddit
+                                </a>
+                            </div>
+                            <div class="col-sm text-center">
+                                <a class="social-link" href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/${proposalHash}">
+                                    <i class="fa fa-envelope social-icon" aria-hidden="true"></i> Via Email
+                                </a>
+                            </div>
+                        </div>
+                    </div>`,
+                    showCloseButton: true,
+                    focusConfirm: false,
+                    confirmButtonText: 'Close'
+                });
             });
 
             $('#btnEdit_@Model.CurrentModel.Id').on('click', function () {
@@ -1480,10 +1642,9 @@
             $('#tbProposalId').val(votingProposalId);
             try {
                 let dataset = await getMasternodePrivKey();
-
                 for (let data of dataset) {
                     var signature = "";
-                    var decrypted = data.privateKey;
+                    var decrypted = data.votingPrivateKey;
 
                     var voteOutcome = 3;
                     var voteSanitized = 'abstain';
@@ -1502,6 +1663,7 @@
                     var voteSignal = 1; //funding (should always be 1)
 
                     var message = vinMasternode + '|' + votingParentHash + '|' + voteSignal + '|' + voteOutcome + '|' + seconds;
+
 
                     let signData = await $.ajax({
                         url: '@Url.Action("SignMessage", "Masternode", new { area = "Masternode" })',

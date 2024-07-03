@@ -397,6 +397,7 @@ namespace HistWeb
                                                   url TEXT UNIQUE,
                                                   description TEXT,
                                                   imageurl TEXT,
+												  image TEXT,
                                                   type TEXT,
                                                   title TEXT,
                                                   sitename TEXT,
@@ -553,7 +554,7 @@ namespace HistWeb
 		public void ConfigureServices(IServiceCollection services)
 		{
             //services.AddControllers(options => options.EnableEndpointRouting = false);
-
+            services.AddHttpClient();
             services.Configure<KestrelServerOptions>(options =>
             {
                 options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(60);

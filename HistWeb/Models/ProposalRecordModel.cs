@@ -105,7 +105,8 @@ namespace HistWeb.Home.Models
 
 		public int oglinksid { get; set; }
 		public string oglinksimageurl { get; set; }
-		public string oglinkstitle { get; set; }
+        public string oglinksimage { get; set; }
+        public string oglinkstitle { get; set; }
 		public string oglinksurl { get; set; }
 		public string oglinkssitename { get; set; }
 		public string oglinksdescription { get; set; }

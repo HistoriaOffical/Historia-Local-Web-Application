@@ -48,6 +48,11 @@ using SQLitePCL;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.IO;
+using static Google.Protobuf.Reflection.FieldOptions.Types;
+using System.Security.Policy;
+using System.Text.RegularExpressions;
+using HistWeb.Areas.Proposals.Models;
+using System.Reflection.Metadata;
 
 
 
@@ -122,53 +127,8 @@ namespace HistWeb.Controllers
 			ToggleDeepSearch();
 			try
 			{
-				string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
-				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
-				webRequest.Credentials = new NetworkCredential(_userName, _password);
-				webRequest.ContentType = "application/json-rpc";
-				webRequest.Method = "POST";
-				webRequest.Timeout = 5000;
-				string jsonstring = "";
-				jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"all\"] }}");
+                RecurringJobService.ImportHistoriaClientRecords(_configuration);
 
-				// serialize json for the request
-				byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-				webRequest.ContentLength = byteArray.Length;
-				Stream dataStream = webRequest.GetRequestStream();
-				dataStream.Write(byteArray, 0, byteArray.Length);
-				dataStream.Close();
-				WebResponse webResponse = webRequest.GetResponse();
-				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-				string getResp = sr.ReadToEnd();
-				if (!String.IsNullOrEmpty(getResp))
-				{
-					dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
-					foreach (var record in response.result)
-					{
-
-						//Get Datastring Info
-						var ds = record.Value.DataString;
-						string p1 = ds;
-						dynamic proposal1 = JObject.Parse(p1);
-						string hash = "";
-						hash = record.Value.Hash;
-						string hostname = _ipfsUrl;
-						string cidtype;
-						if (proposal1.ipfscidtype != null && !string.IsNullOrEmpty(proposal1.ipfscidtype.ToString()))
-						{
-							cidtype = proposal1.ipfscidtype.ToString();
-						} else
-						{
-							cidtype = "0";
-						}
-
-						string payment_amount =  proposal1.payment_amount.ToString();
-						string payment_address =  proposal1.payment_address.ToString();
-						string dateadded = proposal1.start_epoch.ToString();
-						GetHtmlSourceAsync(HttpUtility.HtmlEncode(proposal1.summary.name.ToString()), HttpUtility.HtmlEncode(proposal1.summary.description.ToString()), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString(), hash, proposal1.ipfspid.ToString(), cidtype, payment_amount, payment_address, dateadded);
-
-					}
-				}
 
 				var rep = new { Success = true, toggle = GetDeepSearch() };
 				return Json(rep);
@@ -382,7 +342,7 @@ namespace HistWeb.Controllers
 			}
 		}
 		
-		private static int GetDeepSearch()
+		public static int GetDeepSearch()
 		{
 			int toggleValue = 0;
 			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
@@ -739,17 +699,15 @@ namespace HistWeb.Controllers
                 return null;
             }
 
-            if (pm.Type == "4")
+            string hostname = _ipfsUrl;
+            if (toggle != 1)
             {
-                GetAdditionalOGInfo(pm, proposalData);
+                if (pm.Type == "4")
+                {
+                    //GetAdditionalOGInfo(pm, proposalData);
+                }
             }
-
-            FetchAdditionalRecordData(pm);
-
-            if (toggle == 1)
-            {
-                GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposalData.ipfscid.ToString(), pm.Hash, pm.ParentIPFSCID, pm.cidtype, pm.PaymentAmount.ToString(), pm.PaymentAddress, proposalData.start_epoch.ToString());
-            }
+            FetchAdditionalRecordData(pm, toggle);
 
             return pm;
         }
@@ -805,9 +763,10 @@ namespace HistWeb.Controllers
                 pm.Type = "5";
                 pm.oglinksid = OG(data.OGUrl, proposalData.ipfscid.ToString());
             }
+
         }
 
-        private void FetchAdditionalRecordData(ProposalRecordModel pm)
+        private void FetchAdditionalRecordData(ProposalRecordModel pm, int toggle)
         {
             try
             {
@@ -818,34 +777,57 @@ namespace HistWeb.Controllers
                 using (var cmd = conn.CreateCommand())
                 {
                     cmd.CommandType = System.Data.CommandType.Text;
-                    cmd.CommandText = "SELECT id FROM items WHERE proposalhash = @proposalhash";
+                    cmd.CommandText = "SELECT id, type, ipfscid FROM items WHERE proposalhash = @proposalhash";
                     cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
 
                     using var rdr1 = cmd.ExecuteReader();
                     if (rdr1.Read())
                     {
                         pm.Id = rdr1.GetInt32(rdr1.GetOrdinal("id"));
+                        pm.Type = rdr1.GetString(rdr1.GetOrdinal("type"));
+                        pm.IPFSUrl = rdr1.GetString(rdr1.GetOrdinal("ipfscid"));
                     }
                 }
 
-                if (pm.oglinksid != 0)
-                {
-                    using (var cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandType = System.Data.CommandType.Text;
-                        cmd.CommandText = "SELECT * FROM oglinks WHERE Id = @Oid";
-                        cmd.Parameters.AddWithValue("@Oid", pm.oglinksid);
+				if(toggle == 1) { 
+					using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT id FROM oglinks WHERE ipfscid = @ipfshash";
+						cmd.Parameters.AddWithValue("@ipfshash", pm.IPFSUrl);
 
-                        using var ogReader = cmd.ExecuteReader();
-                        if (ogReader.Read())
-                        {
-                            pm.oglinksimageurl = ogReader.GetString(ogReader.GetOrdinal("imageurl"));
+						using var rdr1 = cmd.ExecuteReader();
+						if (rdr1.Read())
+						{
+							pm.oglinksid = rdr1.GetInt32(rdr1.GetOrdinal("id"));
+						}
+					}
+
+
+					using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT * FROM oglinks WHERE Id = @Oid";
+						cmd.Parameters.AddWithValue("@Oid", pm.oglinksid);
+
+						using var ogReader = cmd.ExecuteReader();
+						if (ogReader.Read())
+						{
+							pm.oglinksimageurl = ogReader.GetString(ogReader.GetOrdinal("imageurl"));
+
+                            pm.oglinksimage = ogReader.GetString(ogReader.GetOrdinal("image"));
                             pm.oglinkstitle = ogReader.GetString(ogReader.GetOrdinal("title"));
-                            pm.oglinksurl = $"https://{_ipfsUrl}/ipfs/{pm.ProposalDescriptionUrl}/index.html";
-                            pm.oglinkssitename = ogReader.GetString(ogReader.GetOrdinal("sitename"));
-                            pm.oglinksdescription = ogReader.GetString(ogReader.GetOrdinal("description"));
-                        }
+							pm.oglinksurl = $"https://{_ipfsUrl}/ipfs/{pm.ProposalDescriptionUrl}/index.html";
+							pm.oglinkssitename = ogReader.GetString(ogReader.GetOrdinal("sitename"));
+							pm.oglinksdescription = ogReader.GetString(ogReader.GetOrdinal("description"));
+							pm.oglinksid = ogReader.GetInt32(ogReader.GetOrdinal("id"));
+						}
+					}
+					if(!string.IsNullOrEmpty(pm.oglinksimage))
+					{
+						pm.oglinksimageurl = "data:image/jpeg;base64," + pm.oglinksimage;
                     }
+
                 }
             }
             catch (Exception ex)
@@ -858,9 +840,8 @@ namespace HistWeb.Controllers
 
 
 
-        public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded)
+        public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded, string type, int toggle)
 		{
-			int toggle = GetDeepSearch();
 			if (toggle == 0)
 			{
 				return false;
@@ -885,7 +866,7 @@ namespace HistWeb.Controllers
 								count = rdr.GetInt32(rdr.GetOrdinal("count")); ;
 							}
 						}
-						if (count > 0)
+						if (count == 1)
 						{
 							return true;
 						}
@@ -893,180 +874,230 @@ namespace HistWeb.Controllers
 				}
 			}
 			catch (Exception ex)
-			{
-				return false;
+            {
+                return false;
 			}
-			using (HttpClient client = new HttpClient())
+			using (HttpClientHandler handler = new HttpClientHandler())
 			{
-				using (HttpResponseMessage response = await client.GetAsync(url))
+				handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+				using (HttpClient client = new HttpClient(handler))
 				{
-					using (HttpContent content = response.Content)
+					using (HttpResponseMessage response = await client.GetAsync(url))
 					{
-						string html = await content.ReadAsStringAsync();
-						try
+						using (HttpContent content = response.Content)
 						{
-							string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
-							using (var conn = new SqliteConnection(connectionString))
+							string html = await content.ReadAsStringAsync();
+							if (!String.IsNullOrEmpty(html))
 							{
-								using (var cmd = conn.CreateCommand())
+								string OGurl = ExtractUrl(html);
+								int ogid = await OG(OGurl, ipfscid);
+								if (ogid != 0)
 								{
-									conn.Open();
-									cmd.CommandType = System.Data.CommandType.Text;
-									cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, proposalhash, ParentIPFSCID, cidtype, PaymentAddress, PaymentAmount, dateadded, imported) VALUES (@Name, @Summary, @html, @ipfscid, @proposalhash, @ParentIPFSCID, @cidtype, @PaymentAddress, @PaymentAmount, @dateadded, 1)";
-									cmd.Parameters.AddWithValue("Name", Name);
-									cmd.Parameters.AddWithValue("Summary", Summary);
-									cmd.Parameters.AddWithValue("html", html);
-									cmd.Parameters.AddWithValue("ipfscid", ipfscid);
-									cmd.Parameters.AddWithValue("proposalhash", proposalhash);
-									cmd.Parameters.AddWithValue("ParentIPFSCID", ParentIPFSCID);
-									cmd.Parameters.AddWithValue("cidtype", cidtype);
-									cmd.Parameters.AddWithValue("PaymentAddress", paymentAddress);
-									cmd.Parameters.AddWithValue("PaymentAmount", paymentAmount);
-									cmd.Parameters.AddWithValue("dateadded", dateadded);
-									cmd.ExecuteNonQuery();
-
+									type = "5";
 								}
-							}
 
-						}
-						catch (Exception ex)
-						{
-							Console.WriteLine(ex.Message);
-							return false;
-						}
-					}
-					return true;
-				}
+                                if (!string.IsNullOrEmpty(OGurl) && ogid == 0)
+                                {
+                                    type = "5";
+                                }
 
-			}
-
-		}
-
-
-
-		public int OG(string url, string ipfscid)
-		{
-			var sanitizer = new HtmlSanitizer();
-			try
-			{
-
-				string desc = "", imageurl = "", type = "", title = "", urltmp = "", sitename = "";
-				int PURL = 0, id = 0;
-				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
-				using (var conn = new SqliteConnection(connectionString))
-				{
-					using (var cmd = conn.CreateCommand())
-					{
-
-						conn.Open();
-						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT description, imageurl, type, title, sitename, url, id FROM oglinks where url = @url LIMIT 1";
-						cmd.Parameters.AddWithValue("@url", url);
-						using (SqliteDataReader rdr = cmd.ExecuteReader())
-						{
-							if (rdr.Read())
-							{
-								desc = rdr.GetString(rdr.GetOrdinal("description"));
-								imageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
-								type = rdr.GetString(rdr.GetOrdinal("type"));
-								title = rdr.GetString(rdr.GetOrdinal("title"));
-								urltmp = rdr.GetString(rdr.GetOrdinal("url"));
-								sitename = rdr.GetString(rdr.GetOrdinal("sitename"));
-								id = rdr.GetInt32(rdr.GetOrdinal("id"));
-								PURL = 1;
-							}
-						}
-					}
-				}
-
-				if (PURL == 0)
-				{
-					OpenGraph graph = OpenGraph.ParseUrl(url);
-					if (graph.Metadata.Count != 0)
-					{
-						if (graph.Metadata.ContainsKey("og:image"))
-						{
-							imageurl = graph.Metadata["og:image"].First().Value;
-						}
-						if (graph.Metadata.ContainsKey("og:type"))
-						{
-							type = graph.Type;
-						}
-						if (graph.Metadata.ContainsKey("og:title"))
-						{
-							title = graph.Title;
-						}
-						if (graph.Metadata.ContainsKey("og:url"))
-						{
-							urltmp = url;
-
-                        }
-						if (graph.Metadata.ContainsKey("og:site_name"))
-						{
-							sitename = graph.Metadata["og:site_name"].First().Value;
-						}
-
-						if (graph.Metadata.ContainsKey("description"))
-						{
-							desc = graph.Metadata["description"].First().Value;
-						}
-						else if (graph.Metadata.ContainsKey("twitter:description"))
-						{
-							desc = graph.Metadata["twitter:description"].First().Value;
-						}
-						else if (graph.Metadata.ContainsKey("og:description"))
-						{
-							desc = graph.Metadata["og:description"].First().Value;
-						}
-
-						if (urltmp != "")
-						{
-							try
-							{
-								using (var conn = new SqliteConnection(connectionString))
+                                try
 								{
-									using (var cmd = conn.CreateCommand())
+									string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+									using (var conn = new SqliteConnection(connectionString))
 									{
-										//INSERT INTO followers(userid, followerid) VALUES(@userid, @followerid)";
-										conn.Open();
-										cmd.CommandType = System.Data.CommandType.Text;
-										cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid) VALUES(@url, @desc, @imageurl, @type, @title, @sitename, @ipfscid);  SELECT last_insert_rowid();";
-										cmd.Parameters.AddWithValue("@url", urltmp);
-										cmd.Parameters.AddWithValue("@desc", sanitizer.Sanitize(desc));
-										cmd.Parameters.AddWithValue("@imageurl", imageurl);
-										cmd.Parameters.AddWithValue("@type", type);
-										cmd.Parameters.AddWithValue("@title", sanitizer.Sanitize(title));
-										cmd.Parameters.AddWithValue("@sitename", sitename);
-										cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
-										cmd.ExecuteNonQuery();
-										id = Convert.ToInt32(cmd.ExecuteScalar());
-									}
-								}
+										using (var cmd = conn.CreateCommand())
+										{
+											conn.Open();
+											cmd.CommandType = System.Data.CommandType.Text;
+											cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, proposalhash, ParentIPFSCID, cidtype, PaymentAddress, PaymentAmount, dateadded, imported, type) VALUES (@Name, @Summary, @html, @ipfscid, @proposalhash, @ParentIPFSCID, @cidtype, @PaymentAddress, @PaymentAmount, @dateadded, 1, @type)";
+											cmd.Parameters.AddWithValue("Name", Name);
+											cmd.Parameters.AddWithValue("Summary", Summary);
+											cmd.Parameters.AddWithValue("html", html);
+											cmd.Parameters.AddWithValue("ipfscid", ipfscid);
+											cmd.Parameters.AddWithValue("proposalhash", proposalhash);
+											cmd.Parameters.AddWithValue("ParentIPFSCID", ParentIPFSCID);
+											cmd.Parameters.AddWithValue("cidtype", cidtype);
+											cmd.Parameters.AddWithValue("type", type);
+											cmd.Parameters.AddWithValue("PaymentAddress", paymentAddress);
+											cmd.Parameters.AddWithValue("PaymentAmount", paymentAmount);
+											cmd.Parameters.AddWithValue("dateadded", dateadded);
+											cmd.ExecuteNonQuery();
 
-							}
-							catch (Exception ex)
-							{
-								return 0;
+										}
+									}
+
+								}
+								catch (Exception ex)
+								{
+									Console.WriteLine(ex.Message);
+									return false;
+								}
 							}
 						}
+						return true;
 					}
-					else
-					{
-						return 0;
-					}
+
 				}
-
-				return id;
-
 			}
-			catch (Exception ex)
-			{
 
-				return 0;
-			}
 		}
 
-		public IActionResult Tokenomics()
+        public static string ExtractUrl(string html)
+        {
+            string pattern = @"url:\s*(http[s]?://[^\s]+)";
+            Match match = Regex.Match(html, pattern, RegexOptions.IgnoreCase);
+
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            return string.Empty; // or handle the case where the URL is not found
+        }
+
+        public static async Task<int> OG(string url, string ipfscid)
+        {
+            var sanitizer = new HtmlSanitizer();
+            try
+            {
+                string desc = "", imageurl = "", type = "", title = "", urltmp = "", sitename = "", image = "";
+                int PURL = 0, id = 0;
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        conn.Open();
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT description, imageurl, type, title, sitename, url, id FROM oglinks where url = @url LIMIT 1";
+                        cmd.Parameters.AddWithValue("@url", url);
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        {
+                            if (rdr.Read())
+                            {
+                                desc = rdr.GetString(rdr.GetOrdinal("description"));
+                                imageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
+                                type = rdr.GetString(rdr.GetOrdinal("type"));
+                                title = rdr.GetString(rdr.GetOrdinal("title"));
+                                urltmp = rdr.GetString(rdr.GetOrdinal("url"));
+                                sitename = rdr.GetString(rdr.GetOrdinal("sitename"));
+                                id = rdr.GetInt32(rdr.GetOrdinal("id"));
+                                PURL = 1;
+                            }
+                        }
+                    }
+                }
+
+                if (PURL == 0)
+                {
+                    OpenGraph graph = OpenGraph.ParseUrl(url);
+                    if (graph.Metadata.Count != 0)
+                    {
+                        if (graph.Metadata.ContainsKey("og:image"))
+                        {
+                            imageurl = graph.Metadata["og:image"].First().Value;
+                            image = await DownloadImageAsBase64Async(imageurl);
+                        }
+                        if (graph.Metadata.ContainsKey("og:type"))
+                        {
+                            type = graph.Type;
+                        }
+                        if (graph.Metadata.ContainsKey("og:title"))
+                        {
+                            title = graph.Title;
+                        }
+                        if (graph.Metadata.ContainsKey("og:url"))
+                        {
+                            urltmp = url;
+                        }
+                        if (graph.Metadata.ContainsKey("og:site_name"))
+                        {
+                            sitename = graph.Metadata["og:site_name"].First().Value;
+                        }
+                        if (graph.Metadata.ContainsKey("description"))
+                        {
+                            desc = graph.Metadata["description"].First().Value;
+                        }
+                        else if (graph.Metadata.ContainsKey("twitter:description"))
+                        {
+                            desc = graph.Metadata["twitter:description"].First().Value;
+                        }
+                        else if (graph.Metadata.ContainsKey("og:description"))
+                        {
+                            desc = graph.Metadata["og:description"].First().Value;
+                        }
+
+                        if (urltmp != "")
+                        {
+                            try
+                            {
+                                using (var conn = new SqliteConnection(connectionString))
+                                {
+                                    using (var cmd = conn.CreateCommand())
+                                    {
+                                        conn.Open();
+                                        cmd.CommandType = System.Data.CommandType.Text;
+                                        cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid, image) VALUES(@url, @desc, @imageurl, @type, @title, @sitename, @ipfscid, @image); SELECT last_insert_rowid();";
+                                        cmd.Parameters.AddWithValue("@url", urltmp);
+                                        cmd.Parameters.AddWithValue("@desc", sanitizer.Sanitize(desc));
+                                        cmd.Parameters.AddWithValue("@imageurl", imageurl);
+                                        cmd.Parameters.AddWithValue("@image", image);
+                                        cmd.Parameters.AddWithValue("@type", type);
+                                        cmd.Parameters.AddWithValue("@title", sanitizer.Sanitize(title));
+                                        cmd.Parameters.AddWithValue("@sitename", sitename);
+                                        cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
+                                        cmd.ExecuteNonQuery();
+                                        id = Convert.ToInt32(cmd.ExecuteScalar());
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                                return 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return 0;
+            }
+        }
+
+        public static async Task<string> DownloadImageAsBase64Async(string imageUrl)
+        {
+            using (HttpClientHandler handler = new HttpClientHandler())
+            {
+                // Ignore SSL certificate errors
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+
+                using (HttpClient client = new HttpClient(handler))
+                {
+                    try
+                    {
+                        byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+                        return Convert.ToBase64String(imageBytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error downloading image: " + ex.Message);
+                        return null;
+                    }
+                }
+            }
+        }
+
+        public IActionResult Tokenomics()
 		{
 			return View();
 		}
@@ -1130,6 +1161,55 @@ namespace HistWeb.Controllers
             return View(model);
         }
 
+
+		public JsonResult IsInitializedHLWA()
+		{
+			int initialized = 0;
+
+            string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
+			{
+				try
+				{
+					conn.Open();
+					using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration WHERE Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA"));
+
+							}
+						}
+					}
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
+                        cmd.ExecuteNonQuery();
+                    }
+                    if (initialized == 0)
+					{
+                        dynamic prepJson = JObject.Parse("{success: false}");
+                        return Json(prepJson);
+                    } else
+					{
+                        dynamic prepJson = JObject.Parse("{success: true}");
+                        return Json(prepJson);
+                    }
+
+
+                }
+				catch (Exception ex)
+				{
+                    dynamic prepJson = JObject.Parse("{success: false}");
+                    return Json(prepJson);
+                }
+			}
+		}
 
         private async Task<bool> InitializeHLWA()
         {
@@ -1226,12 +1306,7 @@ namespace HistWeb.Controllers
                         ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
                         ApplicationSettings.SaveConfig();
                         Console.WriteLine("InitializeHLWA SAVED:");
-                        using (var cmd = conn.CreateCommand())
-                        {
-                            cmd.CommandType = System.Data.CommandType.Text;
-                            cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
-                            await cmd.ExecuteNonQueryAsync();
-                        }
+
                     }
 
                     var rep = new { Success = true, value = initialized };

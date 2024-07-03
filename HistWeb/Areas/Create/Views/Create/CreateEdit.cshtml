@@ -2,7 +2,9 @@
 @{
     ViewData["Title"] = "Create Builder";
 }
-
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
 <form id="formStep1" class="" novalidate enctype="multipart/form-data">
     <div class="card" style="margin-bottom:10px" id="step1Card">
         <div class="card-body">
@@ -53,7 +55,7 @@
                     <input class="form-control" id="tbReward" type="text" placeholder="" onchange="validatePaymentAmount();" required maxlength="10" />
                 </div>
             </div>
-            <div class="row" style="max-width:1500px">
+            <div id="tbParentIPFSCIDRow" class="row" style="max-width:1500px" style="display: none;">
                 <div class="col-12 createuppertab">
                     <label class="col-form-label" for="tbParentIPFSCID">Parent: <span style="" id="tbParentIPFSCID"><u><a href="" target="_blank"  style="color: white;"></a></u></span> </label>
                     <input type="hidden" id="tbParentIPFSCIDhidden" value="" />
@@ -288,6 +290,88 @@
                             autoload: false
                         },
                     });
+
+                    // Helper function to generate a unique ID
+                    function generateUniqueId() {
+                        return 'id-' + Math.random().toString(36).substr(2, 9);
+                    }
+
+                    // Function to handle adding unique ID and CSS rules
+                    function addUniqueIdAndCss(component) {
+                        const uniqueId = generateUniqueId();
+                        component.addAttributes({ id: uniqueId });
+
+                        // Determine the CSS rule based on the class of the component
+                        let cssRule;
+                        const componentClass = component.getAttributes().class;
+
+                        if (componentClass === 'custom-ipfs-link') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                        }`;
+                        } else if (componentClass === 'custom-ipfs-link-block') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                            padding: 5px;
+                            min-height: 50px;
+                            min-width: 50px;
+                        }`;
+                        }
+
+                        // Add CSS rule dynamically
+                        if (cssRule) {
+                            const css = editor.Css;
+                            css.addRules(cssRule);
+                        }
+                    }
+
+                    // Add the first custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link', {
+                        label: 'IPFS Link',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: 'IPFS Link',
+                            attributes: {
+                                class: 'custom-ipfs-link',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Add the second custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link-block', {
+                        label: 'IPFS Link Block',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: [],
+                            attributes: {
+                                class: 'custom-ipfs-link-block',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Ensure CSS rules are added when a new component is added to the canvas
+                    editor.on('component:add', (component) => {
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
+                    // Ensure CSS rules are added when the block is dropped onto the canvas
+                    editor.on('block:drag:stop', (model) => {
+                        const component = model.get('active');
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
                 } else {
                     LandingPage = {
                         html: result[0].html,
@@ -313,6 +397,88 @@
                         },
 
                     });
+
+                    // Helper function to generate a unique ID
+                    function generateUniqueId() {
+                        return 'id-' + Math.random().toString(36).substr(2, 9);
+                    }
+
+                    // Function to handle adding unique ID and CSS rules
+                    function addUniqueIdAndCss(component) {
+                        const uniqueId = generateUniqueId();
+                        component.addAttributes({ id: uniqueId });
+
+                        // Determine the CSS rule based on the class of the component
+                        let cssRule;
+                        const componentClass = component.getAttributes().class;
+
+                        if (componentClass === 'custom-ipfs-link') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                        }`;
+                        } else if (componentClass === 'custom-ipfs-link-block') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                            padding: 5px;
+                            min-height: 50px;
+                            min-width: 50px;
+                        }`;
+                        }
+
+                        // Add CSS rule dynamically
+                        if (cssRule) {
+                            const css = editor.Css;
+                            css.addRules(cssRule);
+                        }
+                    }
+
+                    // Add the first custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link', {
+                        label: 'IPFS Link',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: 'IPFS Link',
+                            attributes: {
+                                class: 'custom-ipfs-link',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Add the second custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link-block', {
+                        label: 'IPFS Link Block',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: [],
+                            attributes: {
+                                class: 'custom-ipfs-link-block',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Ensure CSS rules are added when a new component is added to the canvas
+                    editor.on('component:add', (component) => {
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
+                    // Ensure CSS rules are added when the block is dropped onto the canvas
+                    editor.on('block:drag:stop', (model) => {
+                        const component = model.get('active');
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
 
                     $('#tbName').val(result[0].name);
                     $('#tbSummary').val(result[0].summary);
@@ -373,6 +539,87 @@
                         autoload: false
                     },
                 });
+                // Helper function to generate a unique ID
+                function generateUniqueId() {
+                    return 'id-' + Math.random().toString(36).substr(2, 9);
+                }
+
+                // Function to handle adding unique ID and CSS rules
+                function addUniqueIdAndCss(component) {
+                    const uniqueId = generateUniqueId();
+                    component.addAttributes({ id: uniqueId });
+
+                    // Determine the CSS rule based on the class of the component
+                    let cssRule;
+                    const componentClass = component.getAttributes().class;
+
+                    if (componentClass === 'custom-ipfs-link') {
+                        cssRule = `#${uniqueId} {
+                            display: inline-block;
+                        }`;
+                    } else if (componentClass === 'custom-ipfs-link-block') {
+                        cssRule = `#${uniqueId} {
+                            display: inline-block;
+                            padding: 5px;
+                            min-height: 50px;
+                            min-width: 50px;
+                        }`;
+                    }
+
+                    // Add CSS rule dynamically
+                    if (cssRule) {
+                        const css = editor.Css;
+                        css.addRules(cssRule);
+                    }
+                }
+
+                // Add the first custom IPFS link block
+                editor.BlockManager.add('custom-ipfs-link', {
+                    label: 'IPFS Link',
+                    category: 'Basic',
+                    content: {
+                        type: 'link',
+                        components: 'IPFS Link',
+                        attributes: {
+                            class: 'custom-ipfs-link',
+                            href: '',
+                            target: '_blank'
+                        }
+                    },
+                    attributes: { class: 'fa fa-link' }
+                });
+
+                // Add the second custom IPFS link block
+                editor.BlockManager.add('custom-ipfs-link-block', {
+                    label: 'IPFS Link Block',
+                    category: 'Basic',
+                    content: {
+                        type: 'link',
+                        components: [],
+                        attributes: {
+                            class: 'custom-ipfs-link-block',
+                            href: '',
+                            target: '_blank'
+                        }
+                    },
+                    attributes: { class: 'fa fa-link' }
+                });
+
+                // Ensure CSS rules are added when a new component is added to the canvas
+                editor.on('component:add', (component) => {
+                    if (component && component.attributes.type === 'link') {
+                        addUniqueIdAndCss(component);
+                    }
+                });
+
+                // Ensure CSS rules are added when the block is dropped onto the canvas
+                editor.on('block:drag:stop', (model) => {
+                    const component = model.get('active');
+                    if (component && component.attributes.type === 'link') {
+                        addUniqueIdAndCss(component);
+                    }
+                });
+
                 size = UpdateGrapeCnt();
             }).fail(function (jqXHR, textStatus, errorThrown) {
 				console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
@@ -432,10 +679,10 @@
                     $("#oglinkid").val(result[0].oglinkid);
                     var size = parseFloat(result[0].totalSize / 1000000).toFixed(2);
 
-                    if (size > 10) {
+                    if (size > 20) {
                         Swal.fire({
                             title: 'Error!',
-                            text: 'The webpage or file you have created exceeds the maximum size limit of 10MB.',
+                            text: 'The webpage or file you have created exceeds the maximum size limit of 20MB.',
                             type: 'error',
                             confirmButtonColor: "#48B5C4",
                             confirmButtonText: 'Ok'
@@ -470,9 +717,13 @@
             var pid = paramArr[3]; // Pid
             var cidtype = paramArr[4]; // cidtype
             var ipfsurl = paramArr[5]; // ipfsurl
-
-            $('#tbParentIPFSCID').html("<u><a target=\"_blank\" href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + ipfsurl+ "</a></u>");
-            $('#tbParentIPFSCIDhidden').val(ipfsurl);
+            if (ipfsurl) {  
+                $('#tbParentIPFSCIDRow').show();
+                $('#tbParentIPFSCID').html("<u><a target=\"_blank\" href=\"/Proposals/Proposals/ProposalDetails?hash=" + pid + "\" style='color: white;'>" + ipfsurl + "</a></u>");
+                $('#tbParentIPFSCIDhidden').val(ipfsurl);
+            } else {
+                $('#tbParentIPFSCIDRow').hide(); 
+            }
             if (cidtype == 0) {
                 $('#type').text("Archive - Suggest an Edit");
             } else if (cidtype == 1) {
@@ -528,21 +779,28 @@
             }).done(function (result) {
                 swal.close();
                 if (result.success) {
+                    var success = result.Success;
+                    var summaryName = result.summaryname;
+                    var summary = result.summary;
+                    var proposalHash = result.proposalhash;
+                    var escapedString = '@("@historiasys")';
                     $('#submitArchive').hide();
                     $('#submitArchive').prop('disabled', true);
                     Swal.fire({
                         allowOutsideClick: false,
                         allowEscapeKey: false,
                         closeOnClickOutside: false,
-                        confirmButtonColor: "#48B5C4",
+                        confirmButtonColor: "#545B62",
                         backdrop: true,
                         title: 'Success!',
-                        text: 'Your document has been submitted.',
+                        html:
+                            'Your document has been submitted. Do NOT close the IPFS Window for at least 30 minutes to guarantee your document will be distributed correctly.<br><br><b>Marketing</b><br>For the best chance to get your document passed by the voters, you should market and lobby for it!<br><br>Share on social media:<br><hr><div class= "container"><div class="row justify-content-center"> <div class="col-sm text-center"> <a class="social-link" href = "http://twitter.com/share?text=' + summaryName + ' - ' + summary + '&url=https://historia.network/id/' + proposalHash + ' &hashtags=#historia,#blockchain,' + escapedString + '" target="_blank" ><i class="fa-brands fa-twitter social-icon"></i> X.com</a ></div><div class="col-sm text-center"><a class="social-link" href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-facebook-f social-icon"></i> Facebook</a></div></div><div class="row justify-content-center"><div class="col-sm text-center"><a class="social-link" href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord social-icon"></i> Discord</a></div><div class="col-sm text-center"><a class="social-link" href="https://t.me/share/url?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-telegram social-icon"></i> Telegram</a></div></div><div class="row justify-content-center"><div class="col-sm text-center"><a class="social-link" href="https://www.reddit.com/submit?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-reddit social-icon"></i> Reddit</a></div><div class="col-sm text-center"><a class="social-link" href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/' + proposalHash + '"><i class="fa fa-envelope social-icon" aria-hidden="true"></i> Via Email</a></div></div></div>',
                         type: 'success',
                         confirmButtonText: 'Ok'
                     }).then(function () {
-                        window.location.replace = "https://historia.network/";
+                        window.location.href = "/";
                     });
+
                 }
                 else {
                     Swal.fire({
@@ -550,7 +808,7 @@
                         allowEscapeKey: false,
                         closeOnClickOutside: false,
                         backdrop: true,
-                        confirmButtonColor: "#48B5C4",
+                        confirmButtonColor: "#545B62",
                         title: 'Error!',
                         text: result.error,
                         type: 'error',
@@ -711,6 +969,87 @@
                             autoload: false
                         },
                     });
+                    // Helper function to generate a unique ID
+                    function generateUniqueId() {
+                        return 'id-' + Math.random().toString(36).substr(2, 9);
+                    }
+
+                    // Function to handle adding unique ID and CSS rules
+                    function addUniqueIdAndCss(component) {
+                        const uniqueId = generateUniqueId();
+                        component.addAttributes({ id: uniqueId });
+
+                        // Determine the CSS rule based on the class of the component
+                        let cssRule;
+                        const componentClass = component.getAttributes().class;
+
+                        if (componentClass === 'custom-ipfs-link') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                        }`;
+                        } else if (componentClass === 'custom-ipfs-link-block') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                            padding: 5px;
+                            min-height: 50px;
+                            min-width: 50px;
+                        }`;
+                        }
+
+                        // Add CSS rule dynamically
+                        if (cssRule) {
+                            const css = editor.Css;
+                            css.addRules(cssRule);
+                        }
+                    }
+
+                    // Add the first custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link', {
+                        label: 'IPFS Link',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: 'IPFS Link',
+                            attributes: {
+                                class: 'custom-ipfs-link',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Add the second custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link-block', {
+                        label: 'IPFS Link Block',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: [],
+                            attributes: {
+                                class: 'custom-ipfs-link-block',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Ensure CSS rules are added when a new component is added to the canvas
+                    editor.on('component:add', (component) => {
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
+                    // Ensure CSS rules are added when the block is dropped onto the canvas
+                    editor.on('block:drag:stop', (model) => {
+                        const component = model.get('active');
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
                 } else {
                     grapesjs.plugins.add('tweet-plugin', (editor, options) => {
                         editor.BlockManager.add('tweet-block', {
@@ -860,13 +1199,101 @@
                         },
 
                     });
+                    // Helper function to generate a unique ID
+                    function generateUniqueId() {
+                        return 'id-' + Math.random().toString(36).substr(2, 9);
+                    }
+
+                    // Function to handle adding unique ID and CSS rules
+                    function addUniqueIdAndCss(component) {
+                        const uniqueId = generateUniqueId();
+                        component.addAttributes({ id: uniqueId });
+
+                        // Determine the CSS rule based on the class of the component
+                        let cssRule;
+                        const componentClass = component.getAttributes().class;
+
+                        if (componentClass === 'custom-ipfs-link') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                        }`;
+                        } else if (componentClass === 'custom-ipfs-link-block') {
+                            cssRule = `#${uniqueId} {
+                            display: inline-block;
+                            padding: 5px;
+                            min-height: 50px;
+                            min-width: 50px;
+                        }`;
+                        }
+
+                        // Add CSS rule dynamically
+                        if (cssRule) {
+                            const css = editor.Css;
+                            css.addRules(cssRule);
+                        }
+                    }
+
+                    // Add the first custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link', {
+                        label: 'IPFS Link',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: 'IPFS Link',
+                            attributes: {
+                                class: 'custom-ipfs-link',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Add the second custom IPFS link block
+                    editor.BlockManager.add('custom-ipfs-link-block', {
+                        label: 'IPFS Link Block',
+                        category: 'Basic',
+                        content: {
+                            type: 'link',
+                            components: [],
+                            attributes: {
+                                class: 'custom-ipfs-link-block',
+                                href: '',
+                                target: '_blank'
+                            }
+                        },
+                        attributes: { class: 'fa fa-link' }
+                    });
+
+                    // Ensure CSS rules are added when a new component is added to the canvas
+                    editor.on('component:add', (component) => {
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
+                    // Ensure CSS rules are added when the block is dropped onto the canvas
+                    editor.on('block:drag:stop', (model) => {
+                        const component = model.get('active');
+                        if (component && component.attributes.type === 'link') {
+                            addUniqueIdAndCss(component);
+                        }
+                    });
+
 
                     $('#tbName').val(result[0].name);
                     $('#tbSummary').val(result[0].summary);
                     //$('#tbIsDraft').val(result[0].IsDraft);
                     $('#tbPaymentDate').val("Today");
-                    $('#tbParentIPFSCID').html("<u><a target=\"_blank\"  href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + result[0].name + " - " + result[0].summary + "</a></u>");
-                    $('#tbParentIPFSCIDhidden').val(result[0].ipfsPid);
+                    if (result[0].ipfsPid) {
+                        $('#tbParentIPFSCIDRow').show();
+                        $('#tbParentIPFSCID').html("<u><a target=\"_blank\"  href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + result[0].parentname + " - " + result[0].parentsummary + "</a></u>");
+                        $('#tbParentIPFSCIDhidden').val(result[0].ipfsPid);
+                    } else {
+                        $('#tbParentIPFSCIDRow').hide();
+                    }
+
+
                     if (result[0].cidType == 0) {
                         $('#type').text("Record - Suggest an Edit");
                     } else if (result[0].cidType == 1) {
@@ -1056,10 +1483,12 @@
                         if (result.success) {
                             Swal.fire({
                                 title: 'Success!',
-                                text: 'You draft has been deleted.',
-                                type: 'success',
+                                text: 'Your draft has been deleted.',
+                                icon: 'success',
                                 confirmButtonColor: "#48B5C4",
                                 confirmButtonText: 'Ok'
+                            }).then(() => {
+                                window.location.href = "/Create/Create";
                             });
                         }
                         else {
@@ -1083,10 +1512,10 @@
 
             size = UpdateGrapeCnt();
 
-            if (size > 10) {
+            if (size > 20) {
                 Swal.fire({
                     title: 'Error!',
-                    text: 'The web page or file you have created exceeds the maximum size limit of 10MB.',
+                    text: 'The web page or file you have created exceeds the maximum size limit of 20MB.',
                     type: 'error',
                     confirmButtonColor: "#545B62",
                     confirmButtonText: 'Ok'
@@ -1099,7 +1528,8 @@
             var passphrase;
             Swal.fire({
                 title: "Are you sure you want to continue?",
-                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
+                html:
+                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1235,6 +1665,13 @@
                 }).done(function (result) {
                     swal.close();
                     if (result.success) {
+                        var success = result.success;
+                        var summaryName = result.summaryname;
+                        var summary = result.summary;
+                        var proposalHash = result.proposalhash;
+                        var escapedString = '@("@historiasys")';
+                        $('#submitArchive').hide();
+                        $('#submitArchive').prop('disabled', true);
                         Swal.fire({
                             allowOutsideClick: false,
                             allowEscapeKey: false,
@@ -1242,12 +1679,14 @@
                             confirmButtonColor: "#545B62",
                             backdrop: true,
                             title: 'Success!',
-                            text: 'Your document has been submitted.',
+                            html:
+                                'Your document has been submitted. Do NOT close the IPFS Window for at least 30 minutes to guarantee your document will be distributed correctly.<br><br><b>Marketing</b><br>For the best chance to get your document passed by the voters, you should market and lobby for it!<br><br>Share on social media:<br><hr><div class= "container"><div class="row justify-content-center"> <div class="col-sm text-center"> <a class="social-link" href = "http://twitter.com/share?text=' + summaryName + ' - ' + summary + '&url=https://historia.network/id/' + proposalHash + ' &hashtags=#historia,#blockchain,' + escapedString + '" target="_blank" ><i class="fa-brands fa-twitter social-icon"></i> X.com</a ></div><div class="col-sm text-center"><a class="social-link" href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-facebook-f social-icon"></i> Facebook</a></div></div><div class="row justify-content-center"><div class="col-sm text-center"><a class="social-link" href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord social-icon"></i> Discord</a></div><div class="col-sm text-center"><a class="social-link" href="https://t.me/share/url?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-telegram social-icon"></i> Telegram</a></div></div><div class="row justify-content-center"><div class="col-sm text-center"><a class="social-link" href="https://www.reddit.com/submit?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-reddit social-icon"></i> Reddit</a></div><div class="col-sm text-center"><a class="social-link" href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/' + proposalHash + '"><i class="fa fa-envelope social-icon" aria-hidden="true"></i> Via Email</a></div></div></div>',
                             type: 'success',
                             confirmButtonText: 'Ok'
                         }).then(function () {
                             window.location.href = "/";
                         });
+
                     }
                     else {
                         Swal.fire({
@@ -1276,10 +1715,10 @@
             evt.stopPropagation();
 
             size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
-            if (size > 10) {
+            if (size > 20) {
                 Swal.fire({
                     title: 'Error!',
-                    text: 'The web page or file you have created exceeds the maximum size limit of 10MB.',
+                    text: 'The web page or file you have created exceeds the maximum size limit of 20MB.',
                     type: 'error',
                     confirmButtonColor: "#545B62",
                     confirmButtonText: 'Ok'
@@ -1291,7 +1730,8 @@
             var passphrase;
             Swal.fire({
                 title: "Are you sure you want to continue?",
-                html: `<h5>You can not edit this file after submission!</h5><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">`,
+                html:
+                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,

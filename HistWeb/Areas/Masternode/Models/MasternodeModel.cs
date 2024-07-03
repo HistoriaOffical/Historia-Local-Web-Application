@@ -99,7 +99,7 @@ namespace HistWeb.Areas.Masternode.Models
     public class SignMessageModel
     {
         public string Message { get; set; }
-        public string PrivateKey { get; set; }
+        public string privateKey { get; set; }
     }
 
     public class AddUpdateMasternode

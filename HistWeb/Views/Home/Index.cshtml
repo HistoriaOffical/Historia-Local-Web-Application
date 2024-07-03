@@ -358,18 +358,12 @@
                     </div>
                     <div class="votingwrapper" style="margin-top:30px">
                         <div id="votingSection" class="votingwrappermain" style="display:none">
-                            <div class="votingdownbar">VOTING</div>
-                            <a href="#">
-                                <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
-                            </a>
+                            <div class="votingdown">VOTING</div>
+                            <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
                             <div id="yesCount" class="votingdown"></div>
-                            <a href="#">
-                                <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
-                            </a>
+                            <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
                             <div id="noCount" class="votingdown"></div>
-                            <a href="#">
-                                <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
-                            </a>
+                            <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
                             <div id="abstainCount" class="votingdown"></div>
                             <a id="proposalNameVote" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a>
                         </div>
@@ -635,9 +629,10 @@
                                         template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                         template.find('#recordTime').text("— " + record.DateAdded);
 
-                                        if (record.PastSuperBlock === 1) {
+                                        if (record.PastSuperBlock === 0) {
                                             template.find('#votingSection').show();
                                             template.find('#votenow').show();
+                                            template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                             template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
 
                                             var iconClass = 'fas fa-check-to-slot';
@@ -714,10 +709,11 @@
                                         template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                         template.find('#recordTime').text("— " + record.DateAdded);
 
-                                        if (record.PastSuperBlock === 1) {
+                                        if (record.PastSuperBlock === 0) {
                                             template.find('#votingSection').show();
                                             template.find('#votenow').show();
                                             template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                            template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                             var iconClass = 'fas fa-check-to-slot';
                                             var iconContainer = $(template).find('#VotingCycleTree');
                                             var iconElement = $('<i>').addClass(iconClass);
@@ -789,10 +785,11 @@
                                         template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                         template.find('#recordTime').text("— " + record.DateAdded);
 
-                                        if (record.PastSuperBlock === 1) {
+                                        if (record.PastSuperBlock === 0) {
                                             template.find('#votingSection').show();
                                             template.find('#votenow').show();
                                             template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                            template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                             var iconClass = 'fas fa-check-to-slot';
                                             var iconContainer = $(template).find('#VotingCycleTree');
                                             var iconElement = $('<i>').addClass(iconClass);
@@ -989,17 +986,13 @@
                             }
 
                             if (record.pastSuperBlock === 0) {
-                                if (record.voting) {
-                                    template.find('#votingSection').show();
-                                    template.find('#btnVoteYes').attr('id', `btnVoteYes_${record.hash}`);
-                                    template.find('#btnVoteNo').attr('id', `btnVoteNo_${record.hash}`);
-                                    template.find('#btnVoteAbstain').attr('id', `btnVoteAbstain_${record.hash}`);
-
-                                    template.find('#yesCount').text(record.yesCount);
-                                    template.find('#noCount').text(record.noCount);
-                                    template.find('#abstainCount').text(record.abstainCount);
-
-                                }
+                                template.find('#votingSection').show();
+                                template.find('#votenow').show();
+                                template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                template.find('#yesCount').text(record.yesCount);
+                                template.find('#noCount').text(record.noCount);
+                                template.find('#abstainCount').text(record.abstainCount);
                             }
                             else {
                                 if (record.type === '4') {

@@ -34,6 +34,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
 
 namespace HistWeb.Controllers
 {
@@ -233,7 +234,12 @@ namespace HistWeb.Controllers
 						conn.Close();
 					}
 				}
-				List<int> numbersList = new List<int>();
+                if (string.IsNullOrEmpty(url))
+                {
+                    dynamic prepJson = JObject.Parse("{success: false}");
+                    return Json(prepJson);
+                }
+                List<int> numbersList = new List<int>();
 
 				if (!string.IsNullOrEmpty(ParentIPFSCid))
 				{
@@ -394,6 +400,12 @@ namespace HistWeb.Controllers
 						conn.Close();
 					}
 				}
+
+				if(string.IsNullOrEmpty(url))
+				{
+                    dynamic prepJson = JObject.Parse("{success: false}");
+                    return Json(prepJson);
+                }
 				List<int> numbersList = new List<int>();
 
 				if (!string.IsNullOrEmpty(ParentIPFSCid))
@@ -557,7 +569,12 @@ namespace HistWeb.Controllers
 						conn.Close();
 					}
 				}
-				List<int> numbersList = new List<int>();
+                if (string.IsNullOrEmpty(url))
+                {
+                    dynamic prepJson = JObject.Parse("{success: false}");
+                    return Json(prepJson);
+                }
+                List<int> numbersList = new List<int>();
 
 				if (!string.IsNullOrEmpty(ParentIPFSCid))
 				{
@@ -1237,24 +1254,85 @@ namespace HistWeb.Controllers
 				if (pm.Type == "4")
 				{
 					try {
-						string jsonString = CallAPI("https://historia.network/home/rogai?ipfs=" + proposal1.ipfscid.ToString()).GetAwaiter().GetResult();
-						OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
-						if (data.isArchive == "1")
+
+                        string html = "";
+						int type = 0;
+                        string connectionString1 = $"Data Source={ApplicationSettings.DatabasePath}";
+                        using var conn = new SqliteConnection(connectionString1);
+                        conn.Open();
+
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            cmd.CommandType = System.Data.CommandType.Text;
+                            cmd.CommandText = "SELECT type, html FROM items WHERE proposalhash = @proposalhash";
+                            cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
+
+                            using var rdr1 = cmd.ExecuteReader();
+                            if (rdr1.Read())
+                            {
+                                type = rdr1.GetInt32(rdr1.GetOrdinal("type"));
+                                html = rdr1.GetString(rdr1.GetOrdinal("html"));
+                            }
+                        }
+						if(String.IsNullOrEmpty(html)) {
+
+							int toggle = GetDeepValue();
+
+                            if (toggle != 1)
+							{
+								string jsonString = CallAPI("https://historia.network/home/rogai?ipfs=" + proposal1.ipfscid.ToString()).GetAwaiter().GetResult();
+								OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
+								if (data.isArchive == "1")
+								{
+									pm.Type = "5";
+									pm.orgUrl = data.OGUrl;
+								}
+							} else { 
+								HomeController.GetHtmlSourceAsync(HttpUtility.HtmlEncode(pm.ProposalName), HttpUtility.HtmlEncode(pm.ProposalSummary), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString(), pm.Hash, pm.ParentIPFSCID, pm.cidtype, pm.PaymentAmount.ToString(), pm.PaymentAddress, proposal1.start_epoch.ToString(), pm.Type, 1);
+								conn.Open();
+
+								using (var cmd = conn.CreateCommand())
+								{
+									cmd.CommandType = System.Data.CommandType.Text;
+									cmd.CommandText = "SELECT type, html FROM items WHERE proposalhash = @proposalhash";
+									cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
+
+									using var rdr1 = cmd.ExecuteReader();
+									if (rdr1.Read())
+									{
+										html = rdr1.GetString(rdr1.GetOrdinal("html"));
+										string OGurl = ExtractUrl(html);
+										pm.orgUrl = OGurl;
+                                        pm.Type = rdr1.GetInt32(rdr1.GetOrdinal("type")).ToString();
+                                        HomeController.OG(OGurl, proposal1.ipfscid.ToString());
+									}
+								}
+                            }
+
+                        } else
 						{
-							pm.Type = "5";
-							pm.orgUrl = data.OGUrl;
-						}
-					} catch (Exception ex)
+                            string OGurl = ExtractUrl(html);
+                            pm.orgUrl = OGurl;
+                            pm.Type = type.ToString();
+
+                        }
+
+
+                    } catch (Exception ex)
 					{
+						Console.WriteLine(ex.ToString());
 
 					}
 
 				}
 
 				int Oid = OG(pm.orgUrl, proposal1.ipfscid.ToString());
+                if (!string.IsNullOrEmpty(pm.orgUrl) && Oid == 0)
+                {
+                    pm.Type = "5";
+                }
 
-
-				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
 				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
@@ -1269,7 +1347,8 @@ namespace HistWeb.Controllers
 							{
 								pm.oglinksid = rdr.GetInt32(rdr.GetOrdinal("Id"));
 								pm.oglinksimageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
-								pm.oglinkstitle = rdr.GetString(rdr.GetOrdinal("title"));
+                                pm.oglinksimage = rdr.GetString(rdr.GetOrdinal("image"));
+                                pm.oglinkstitle = rdr.GetString(rdr.GetOrdinal("title"));
 								pm.oglinksurl = rdr.GetString(rdr.GetOrdinal("url"));
 								pm.oglinkssitename = rdr.GetString(rdr.GetOrdinal("sitename"));
 								pm.oglinksdescription = rdr.GetString(rdr.GetOrdinal("description"));
@@ -1277,8 +1356,12 @@ namespace HistWeb.Controllers
 						}
 					}
 				}
+                if (!string.IsNullOrEmpty(pm.oglinksimage))
+                {
+                    pm.oglinksimageurl = "data:image/jpeg;base64," + pm.oglinksimage;
+                }
 
-			}
+            }
 			catch (Exception ex)
 			{
 
@@ -1289,7 +1372,53 @@ namespace HistWeb.Controllers
 			return View(model);
 		}
 
-		private static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        public int GetDeepValue()
+        {
+            int toggleValue = 0;
+            string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+            using (var conn = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+
+                        conn.Open();
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT DeepSearch FROM basexConfiguration where Id = 1";
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        {
+                            if (rdr.Read())
+                            {
+                                toggleValue = rdr.GetInt32(rdr.GetOrdinal("DeepSearch"));
+                            }
+                        }
+                    }
+
+
+					return toggleValue;
+                }
+                catch (Exception ex)
+                {
+                    return toggleValue;
+                }
+            }
+        }
+
+        public static string ExtractUrl(string html)
+        {
+            string pattern = @"url:\s*(http[s]?://[^\s]+)";
+            Match match = Regex.Match(html, pattern, RegexOptions.IgnoreCase);
+
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            return string.Empty; // or handle the case where the URL is not found
+        }
+
+        private static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
 		{
 			// Unix timestamp is seconds past epoch
 			System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);

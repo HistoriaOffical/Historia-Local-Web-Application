@@ -41,6 +41,7 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 using Org.BouncyCastle.Utilities.Net;
 using Org.BouncyCastle.Utilities;
 using MySqlX.XDevAPI;
+using System.Security.Cryptography.X509Certificates;
 
 namespace HistWeb.Controllers
 {
@@ -321,6 +322,51 @@ namespace HistWeb.Controllers
 
         }
 
+        [HttpGet]
+        public JsonResult GetIPFSObjectSize()
+        {
+            string block = "";
+
+            try
+            {
+                // Prepare call
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"spork\", \"params\": [\"show\"] }";
+                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                Stream dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+                WebResponse webResponse = webRequest.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                var Response = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(getResp);
+
+                JObject jsonResponse = JObject.Parse(getResp);
+                string size = "";
+                if (jsonResponse.ContainsKey("result"))
+                {
+                    var result = jsonResponse["result"];
+                    if (result != null)
+                    {
+                        size = result["SPORK_102_IPFS_OBJECT_SIZE"].ToString();
+
+                    }
+                }
+                 
+                //return Response["SPORK_102_IPFS_OBJECT_SIZE"]?.Value<string>() ?? -1;
+                var prepRespJson1 = new { Success = true, size = size };
+                return Json(prepRespJson1);
+            }
+            catch (Exception ex)
+            {
+                var prepRespJson1 = new { Success = false, };
+                return Json(prepRespJson1);
+            }
+        }
 
 
         [HttpPost]
@@ -2936,8 +2982,8 @@ addnode=104.156.233.45:10101
                 RunCommand(client, "ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '[\"*\"]'");
                 RunCommand(client, "ipfs config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers '[\"Location\", \"Ipfs-Hash\"]'");
                 RunCommand(client, "ipfs config --json Gateway.NoFetch 'false'");
-                RunCommand(client, "ipfs config --json Swarm.ConnMgr.HighWater '500'");
-                RunCommand(client, "ipfs config --json Swarm.ConnMgr.LowWater '200'");
+                RunCommand(client, "ipfs config --json Swarm.ConnMgr.HighWater '50'");
+                RunCommand(client, "ipfs config --json Swarm.ConnMgr.LowWater '20'");
                 string whoami = RunCommandWithOutput(client, "whoami");
 
                 // Create the service file content
@@ -4001,24 +4047,31 @@ WantedBy=multi-user.target
                             }
                         }
 
+                        // Separate the masternodes into two lists
+                        List<MasternodeModel> historiasysNodes = masternodes.Where(mn => mn.Identity.Contains("historiasys.network")).ToList();
+                        List<MasternodeModel> otherNodes = masternodes.Where(mn => !mn.Identity.Contains("historiasys.network")).ToList();
+
+                        // Shuffle the otherNodes list
                         Random rng = new Random();
-                        int n = masternodes.Count;
+                        int n = otherNodes.Count;
                         while (n > 1)
                         {
                             n--;
                             int k = rng.Next(n + 1);
-                            MasternodeModel value = masternodes[k];
-                            masternodes[k] = masternodes[n];
-                            masternodes[n] = value;
+                            MasternodeModel value = otherNodes[k];
+                            otherNodes[k] = otherNodes[n];
+                            otherNodes[n] = value;
                         }
 
-                        // Constructing the response object with a success flag
+                        // Combine the lists with historiasysNodes first
+                        List<MasternodeModel> sortedMasternodes = historiasysNodes.Concat(otherNodes).ToList();
+
                         var responseObj = new
                         {
                             success = true,
-                            data = masternodes
+                            data = sortedMasternodes
                         };
-                        return Json(responseObj);  // Serializing the response object directly
+                        return Json(responseObj);
                     }
                 }
             }
@@ -4039,8 +4092,9 @@ WantedBy=multi-user.target
                 string cleanIdentity = Identity.Replace("https://", "");
                 long PingTime = PingMasternode(cleanIdentity);
                 bool HTTPSEnabled = CheckHttpsAvailability("https://" + Identity);
+                bool HTTPEnabled = CheckHttpAvailability("http://" + Identity);
 
-                var prepRespJson = new { pingtime = PingTime, identity = Identity, httpsenabled = HTTPSEnabled, success = true };
+                var prepRespJson = new { pingtime = PingTime, identity = Identity, httpsenabled = HTTPSEnabled, httpenabled = HTTPEnabled, success = true };
                 return Json(prepRespJson);
             }
             catch (Exception ex)
@@ -4088,6 +4142,38 @@ WantedBy=multi-user.target
             }
         }
 
+        private bool CheckHttpAvailability(string url)
+        {
+            // This callback will ignore certificate errors
+            ServicePointManager.ServerCertificateValidationCallback =
+                new RemoteCertificateValidationCallback(IgnoreCertificateErrors);
+
+            try
+            {
+                string fullUrl = url + "/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html";
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(fullUrl);
+                request.Timeout = 5000;
+                request.Method = "GET";
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                {
+                    return response.StatusCode == HttpStatusCode.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                // Reset the callback to its default behavior to avoid affecting other requests
+                ServicePointManager.ServerCertificateValidationCallback = null;
+            }
+        }
+
+        private bool IgnoreCertificateErrors(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return true;
+        }
 
         [HttpGet]
         public JsonResult DeleteRegisteredMasternode(string id)
@@ -4125,7 +4211,7 @@ WantedBy=multi-user.target
         public JsonResult SignMessage([FromBody] SignMessageModel model)
         {
             string message = model.Message;
-            string privateKey = model.PrivateKey;
+            string privateKey = model.privateKey;
             try
             {
                 //Prepare call
@@ -4189,6 +4275,53 @@ WantedBy=multi-user.target
             {
                 var prepRespJson1 = new { Success = false, Error = ex.ToString() };
                 return signature;
+            }
+        }
+
+        private bool IsMasternodeStatusPoseBanned(string hash)
+        {
+            string index = "";
+            try
+            {
+
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        conn.Open();
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT collateralIndex from masternodeprivatekeys WHERE collateralHash = @collateralHash";
+                        cmd.Parameters.AddWithValue("@collateralHash", hash);
+
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        {
+                            if (rdr.Read())
+                            {
+                                index = rdr.GetString(rdr.GetOrdinal("collateralIndex"));
+                            }
+                        }
+
+
+                    }
+                }
+
+                MasternodeModel masternode = new MasternodeModel();
+                masternode = masternodelistFilterByJson(hash, index);
+                if(masternode.Status == "POSE_BANNED")
+                {
+                    return true;
+                } else
+                {
+                    return false;
+                }
+                               
+
+            }
+            catch (Exception ex)
+            {
+                return true;
             }
         }
 
@@ -4281,11 +4414,18 @@ WantedBy=multi-user.target
                             }
                         }
                     }
-
+                    if (IsMasternodeStatusPoseBanned(CollateralHash))
+                    {
+                        //Skip Voting of nodes in POSE_BANNED State, as that will fail anyways
+                        skipToNextVd = false;
+                        continue;
+                    }
 
                     if (skipToNextVd)
                     {
+                        skipToNextVd = false;
                         continue;
+
                     }
 
                     try

@@ -541,7 +541,7 @@
                                         <hr />
                                         <div class="row">
                                             <div class="col-5">
-                                                <h6 style="text-align: left !important;">Enable Deep Search</h6>
+                                                <h6 style="text-align: left !important;">Enable High Speed Connection</h6>
                                             </div>
                                             <div class="col-2">
                                                 <div class="custom-control custom-switch float-right">
@@ -553,8 +553,19 @@
                                         <div class="row">
                                             <div class="col-7">
                                                 <p style="text-align: left !important;">
-                                                    "Deep Search" runs at startup to load records that have not yet been fully downloaded, as well while the user is browsing the home page. If you are on a slow Internet connection this could cause slower responsive times. This will also increase the amount of bandwidth used. If you want full search capabilities of not only the blockchain objects (IE proposals, records, and archives) but the contents of the blockchain objects you should enable this.
+                                                    This option does a few things and is recommended for most users. However if you are on a slow internet connection, then disable this.
                                                 </p>
+                                                <ul>
+                                                    <li style="text-align: left !important;">
+                                                        Runs at startup to load records that have not yet been fully downloaded in the background. If you are on a slow Internet connection this could cause slower responsive times.
+                                                    </li>
+                                                    <li style="text-align: left !important;">
+                                                        Enable full search (Deep Search) capabilities of not only the blockchain objects (IE proposals, records, and archives).
+                                                    </li>
+                                                    <li style="text-align: left !important;">
+                                                        Better user experience.
+                                                    </li>
+                                                </ul>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -1917,6 +1928,54 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
+        function getMasterNodesSetup() {
+            $.ajax({
+                url: '@Url.Action("GetMasterNodesSetup", "Masternode", new { Area = "Masternode" })',
+                type: 'GET',
+                dataType: 'json',
+                timeout: 10000,
+                success: function (response) {
+                    Swal.close(); // Ensure the Swal is closed in success path
+
+                    // Check if the server reported a failure
+                    if (!response.success) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Initialization Complete!',
+                            text: 'Since this was the first time HLWA has run, we had to initialize some things. Before you can use HLWA you must restart Historia Core Wallet, HLWA, and make sure Historia is fully synced',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // If success, process the data
+                    var jsonRet = [];
+                    response.data.forEach(function (item) {  // Assuming response.data is an array of objects
+                        var masterNode = {
+                            identity: item.identity,
+                            status: item.status,
+                            ipAddress: item.ipAddress
+                        };
+                        jsonRet.push(masterNode);
+                    });
+
+                    // Reinitialize or update the DataTable with new data
+                    var masternodesTable = $('#masternodesTable').DataTable();
+                    masternodesTable.clear().rows.add(jsonRet).draw();
+                },
+                error: function (xhr, textStatus, error) {
+                    Swal.close(); // Close the loading Swal
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Could not connect to Historia Core Wallet, check your settings on the Historia Core Setup tab and try again.',
+                        confirmButtonText: 'OK'
+                    });
+                    console.error('AJAX error:', textStatus, error);
+                }
+            });
+        }
+
     $(document).ready(async function () {
 
             function checkIPFSHost() {
@@ -2067,53 +2126,70 @@
                 Swal.showLoading();
             },
         });
-        sleep(5000);
+
         $.ajax({
-            url: '@Url.Action("GetMasterNodesSetup", "Masternode", new { Area = "Masternode" })',
+            url: '@Url.Action("IsInitializedHLWA", "Home", new { Area = "Home" })',
             type: 'GET',
             dataType: 'json',
-            timeout: 10000, // Set timeout
+            timeout: 10000,
             success: function (response) {
-                Swal.close();  // Ensure the Swal is closed in success path
-
-                // Check if the server reported a failure
+                Swal.close();
                 if (!response.success) {
                     Swal.fire({
-                        icon: 'alert',
-                        title: 'Initalization Complete!',
-                        text: 'Since this was the first time HLWA has run, we had to initialize some things. Before you can use HLWA you must restart Historia Core Wallet, HLWA, and make sure Historia is fully synced',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                
-                // If success, process the data
-                var jsonRet = [];
-                response.data.forEach(function(item) {  // Assuming response.data is an array of objects
-                    var masterNode = {
-                        identity: item.identity,
-                        status: item.status,
-                        ipAddress: item.ipAddress
-                    };
-                    jsonRet.push(masterNode);
-                });
+                        icon: 'info',
+                        title: 'Initialization Complete!',
+                        html: 'Are you on a high-speed internet connection?<br>This will provide a better experience and is recommend, but does require more bandwidth. If you are on slow internet connection, click no.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'No',
+                        reverseButtons: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', function (data) {
+                                if (data.value == 0) {
+                                    $('#btnImportHistoriaRecordsLabel').html("Off");
+                                    $('#btnImportHistoriaRecords').prop('checked', false);
+                                } else {
+                                    $('#btnImportHistoriaRecordsLabel').html("On");
+                                    $('#btnImportHistoriaRecords').prop('checked', true);
+                                }
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'High Speed Internet Confirmed!',
+                                    text: 'This will download all records and archives to your local machine in the background. Give it a few minutes and go back to the main page.',
+                                    confirmButtonText: 'Ok',
+                                });
+                                    Swal.fire({
+                                        icon: 'info',
+                                        title: 'Please choose a Content Disstribution Masternode Server!',
+                                        text: 'Because Historia Network is a distributed network, you have to choose a Content Distribution Masternode server to connect for you to receive content.',
+                                        confirmButtonText: 'Ok',
+                                    });
 
-                // Reinitialize or update the DataTable with new data
-                var masternodesTable = $('#masternodesTable').DataTable();
-                masternodesTable.clear().rows.add(jsonRet).draw();
+                            }).always(() => {
+                                getMasterNodesSetup();
+                            });
+                        } else {
+                            getMasterNodesSetup();
+                        }
+                    });
+                } else {
+                    getMasterNodesSetup();
+                }
             },
-            error: function(xhr, textStatus, error) {
-                Swal.close(); // Close the loading Swal
+            error: function (xhr, textStatus, error) {
+                Swal.close();
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
-                    text: 'Could not connect to Historia Core Wallet, check your settings on the Historia Core Setup tab and try again.',
+                    text: 'Could not initialize HLWA. Please try again later.',
                     confirmButtonText: 'OK'
                 });
                 console.error('AJAX error:', textStatus, error);
             }
         });
 
+ 
 
         $('#btnUnlockWalletVoting').on('click', function () {
 
@@ -2342,11 +2418,12 @@
                     var message = `
                     Identity: <b>${responseData.identity}</b><br>
                     Ping Time: <b>${responseData.pingtime} ms</b><br>
+                    HTTP Enabled: ${responseData.httpenabled ? '<span style="color: green;"><b>Yes</b></span>' : '<span style="color: red;"><b>No</b></span>'}<br>
                     HTTPS Enabled: ${responseData.httpsenabled ? '<span style="color: green;"><b>Yes</b></span>' : '<span style="color: red;"><b>No</b></span>'}<br>
                 `;
 
                     // If HTTPS is enabled, change the text of the OK button to "Save" and attach the click event
-                    if (responseData.httpsenabled) {
+                    if (responseData.httpsenabled || responseData.httpenabled) {
                         Swal.fire({
                             title: 'Test Result',
                             html: message,
@@ -2397,7 +2474,7 @@
                         // If HTTPS is not enabled, show only an informative alert
                         Swal.fire({
                             title: 'Test Result',
-                            html: message,
+                            html: message + "<br>Try a different server",
                             icon: 'info',
                             confirmButtonText: 'OK'
                         });
@@ -2810,10 +2887,10 @@
                     }
                 });
             });
-       
-        $('#btnImportHistoriaRecords').on('click', function (e) {
+
+            $('#btnImportHistoriaRecords').on('click', async function (e) {
                 if ($('#btnImportHistoriaRecordsLabel').html() === "On") {
-                    Swal.fire({
+                    const result = await Swal.fire({
                         title: 'Deep Search',
                         html: 'Are you sure you want to disable Deep Search?' +
                             '<br>',
@@ -2822,110 +2899,138 @@
                         showCancelButton: true,
                         confirmButtonText: 'Ok',
                         denyButtonText: 'Cancel',
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', null, function (data) {
-                                if (data.value == 0) {
-                                    $('#btnImportHistoriaRecordsLabel').html("Off");
-                                    $('#btnImportHistoriaRecords').prop('checked', false);
-                                } else {
-                                    $('#btnImportHistoriaRecordsLabel').html("On");
-                                    $('#btnImportHistoriaRecords').prop('checked', true);
-                                }
-                            });
-                        }
                     });
-                    return false;
+
+                    if (result.isConfirmed) {
+                        await $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', function (data) {
+                            if (data.value == 0) {
+                                $('#btnImportHistoriaRecordsLabel').html("Off");
+                                $('#btnImportHistoriaRecords').prop('checked', false);
+                            } else {
+                                $('#btnImportHistoriaRecordsLabel').html("On");
+                                $('#btnImportHistoriaRecords').prop('checked', true);
+                            }
+                        });
+                    }
+                    return false; // Ensure function does not proceed until the above operations complete
                 }
 
                 var IPFSGateway = "@Model.IPFSHost";
                 if (typeof IPFSGateway === "undefined" || IPFSGateway === "") {
-                    Swal.fire({
+                    await Swal.fire({
                         title: 'Masternode Gateway not found',
-                        html: 'Please set an Masternode Host and Masternode Port, and hit the Save button before attempting to import.' +
+                        html: 'Please set a Masternode Host and Masternode Port, and hit the Save button before attempting to import.' +
                             '<br>',
                         icon: 'warning',
                         showConfirmButton: true,
                         showCancelButton: false,
                         confirmButtonText: 'Ok',
-                        denyButtonText: 'Cancel',
                     });
                     return false;
                 }
 
-                Swal.fire({
+                const result = await Swal.fire({
                     title: 'Import all records?',
                     html: 'This will import all proposals and records into your local database. This will take a while.' +
                         '<br>',
                     icon: 'warning',
                     confirmButtonText: 'Ok',
                     showCancelButton: true,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: "/Home/ImportHistoriaClientRecords",
-                            type: 'GET',
-                            contentType: false,
-                            processData: false,
-                            beforeSend: function () {
-                                Swal.fire({
-                                    showConfirmButton: false,
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    closeOnClickOutside: false,
-                                    backdrop: true,
-                                    title: 'Importing',
-                                    html: 'Attempting to import all records into the local database.' +
-                                        '<br>' +
-                                        '<br>Do not leave this page until you receive success or failure message!',
-                                    didOpen: () => {
-                                        Swal.showLoading()
-                                    }
-                                })
-                            },
-                            complete: function (data) {
-                            }
-                        }).done(function (result) {
-                            swal.close();
-                            if (result.success) {
-                                Swal.fire({
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    closeOnClickOutside: false,
-                                    confirmButtonColor: "#545B62",
-                                    backdrop: true,
-                                    title: 'Success!',
-                                    text: 'Import has been successful.',
-                                    icon: 'success',
-                                    confirmButtonText: 'Ok'
-                                });
-                                $('#btnImportHistoriaRecordsLabel').html("On");
-                                $('#btnImportHistoriaRecords').prop('checked', true);
-                            } else {
-                                Swal.fire({
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    closeOnClickOutside: false,
-                                    backdrop: true,
-                                    confirmButtonColor: "#545B62",
-                                    title: 'Error!',
-                                    text: result.error,
-                                    icon: 'error',
-                                    confirmButtonText: 'Ok'
-                                });
-                                $('#btnImportHistoriaRecordsLabel').html("Off");
-                                $('#btnImportHistoriaRecords').prop('checked', false);
-                            }
-                        }).always(function (result) {
-                        });
-                        return false;
-                    } else if (result.isDenied) {
-                        return false;
-                    } else {
-                        // do nothing if the dialog is dismissed
-                    }
                 });
+
+                if (result.isConfirmed) {
+                    try {
+                        await new Promise((resolve, reject) => {
+                            $.ajax({
+                                url: "/Home/ImportHistoriaClientRecords",
+                                type: 'GET',
+                                contentType: false,
+                                processData: false,
+                                beforeSend: function () {
+                                    Swal.fire({
+                                        showConfirmButton: false,
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        closeOnClickOutside: false,
+                                        backdrop: true,
+                                        title: 'Importing',
+                                        html: 'Attempting to import all records into the local database.' +
+                                            '<br>' +
+                                            '<br>Do not leave this page until you receive success or failure message!',
+                                        didOpen: () => {
+                                            Swal.showLoading();
+                                        }
+                                    });
+                                },
+                                success: function (result) {
+                                    Swal.close(); // Fixed from swal.close() to Swal.close()
+                                    if (result.success) {
+                                        Swal.fire({
+                                            allowOutsideClick: false,
+                                            allowEscapeKey: false,
+                                            closeOnClickOutside: false,
+                                            confirmButtonColor: "#545B62",
+                                            backdrop: true,
+                                            title: 'Success!',
+                                            text: 'Import has been successful.',
+                                            icon: 'success',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                        $('#btnImportHistoriaRecordsLabel').html("On");
+                                        $('#btnImportHistoriaRecords').prop('checked', true);
+                                    } else {
+                                        Swal.fire({
+                                            allowOutsideClick: false,
+                                            allowEscapeKey: false,
+                                            closeOnClickOutside: false,
+                                            backdrop: true,
+                                            confirmButtonColor: "#545B62",
+                                            title: 'Error!',
+                                            text: result.error,
+                                            icon: 'error',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                        $('#btnImportHistoriaRecordsLabel').html("Off");
+                                        $('#btnImportHistoriaRecords').prop('checked', false);
+                                    }
+                                    resolve();
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) { // Added fail callback
+                                    Swal.fire({
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        closeOnClickOutside: false,
+                                        backdrop: true,
+                                        confirmButtonColor: "#545B62",
+                                        title: 'Error!',
+                                        text: 'An error occurred while importing records: ' + textStatus,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok'
+                                    });
+                                    reject();
+                                },
+                                complete: function () {
+                                    // This function runs after done or fail callbacks
+                                }
+                            });
+                        });
+                    } catch (error) {
+                        // Handle the error if needed
+                    }
+
+                    // Returning false to prevent further action until AJAX request completes
+                    return false; // Ensure the function does not proceed until AJAX request completes
+                } else if (result.isDenied) {
+                    return false; // Added to handle the case where the action is denied
+                } else {
+                    // do nothing if the dialog is dismissed
+                }
             });
+
+
+
+
+
 
         $('#btnEnabledIpfsApi').on('click', function (e) {
 

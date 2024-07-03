@@ -51,6 +51,15 @@
                     <label class="col-form-label" for="tbReward">Reward Amount Requested: <span style="color:#f00">*</span> </label>
                     <input class="form-control" id="tbReward" type="text" placeholder="" onchange="validatePaymentAmount();" required maxlength="10" />
                 </div>
+            </div>
+            <div class="row" id="parentid" style="max-width:1500px; display:none;">
+                <div class="col-12 createuppertab">
+                    <label class="col-form-label" for="tbParentIPFSCID">In response to: <span style="" id="tbParentIPFSCID"><u><a href="" style="color: white;"></a></u></span> </label>
+                    <input type="hidden" id="tbParentIPFSCIDhidden" value="" />
+                </div>
+            </div>
+
+            <div class="row" style="max-width:1500px">
                 <div class="card-body">
                     <div id="preview">
                         <div class="row">
@@ -144,6 +153,7 @@
         var archiveURL = searchParams.get('ArchiveURL');
         var cidtype = searchParams.get('cidtype');
         var pid = searchParams.get('pid');
+        var ipfsurl = searchParams.get('ipfsurl');
 
         var filename = searchParams.get('filename');
         if (type == 1) {
@@ -460,11 +470,7 @@
                         }
                     });
 
-
-
-
-
-                    const editor = grapesjs.init({
+                    editor = grapesjs.init({
                         blocks: true,
                         container: '#gjs',
                         plugins: ['gjs-preset-webpage', 'tweet-plugin'],
@@ -604,11 +610,7 @@
                         }
                     });
 
-
-
-
-
-                    const editor = grapesjs.init({
+                    editor = grapesjs.init({
                         blocks: true,
                         container: '#gjs',
                         plugins: ['gjs-preset-webpage', 'tweet-plugin'],
@@ -893,6 +895,38 @@
                             const url = "/media/" + filename;
                             const ft = response.filetype;
                             displayBase64Content(response.base64, ft, filename);
+                            GetParentInfo();
+                        },
+
+                    });
+                }
+
+            }
+        }
+
+        let parentName = "";
+        let parentSummary = "";
+        function GetParentInfo() {
+            var ext;
+            ext = 1;
+            let searchParams = new URLSearchParams(window.location.search)
+            var pid = searchParams.get('pid');
+            if (ext == 1) {
+
+                if (filename) {
+                    $.ajax({
+                        url: '@Url.Action("GetParentInfo", "Create", new { Area = "Create" })?pid=' + pid,
+                        type: 'GET',
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            parentName = response.parentname;
+                            parentSummary = response.parentsummary;
+                            if (pid !== null && pid !== undefined && pid !== "") {
+                                $('#parentid').show();
+                                $('#tbParentIPFSCID').html("<u><a href=/Proposals/Proposals/ProposalDetails?hash=" + pid + " style='color: white;'>" + parentName + "-" + parentSummary + "</a></u>");
+                                $('#tbParentIPFSCIDhidden').val(ipfsurl);
+                            }
                         },
 
                     });
@@ -1076,7 +1110,7 @@
                             $("#totalSize").html(size);
                             break;
                         case 'audio':
-                            $('#tbName').val('This is the title. Change this.');
+                            $('#tbName').val('This is the title.');
                             $('#tbSummary').val('Describe the audio.');
                             dateElement = document.createElement('p');
                             dateElement.classList.add('card-date');
@@ -1210,10 +1244,10 @@
                     //$("#archiveDiv").html(result[0].template);
                     $("#oglinkid").val(result[0].oglinkid);
                     var size = convertBytesToMegabytes(result[0].totalSize);
-                    if (size > 10) {
+                    if (size > 20) {
                         Swal.fire({
                             title: 'Error!',
-                            text: 'The webpage or file you have created exceeds the maximum size limit of 10MB.',
+                            text: 'The webpage or file you have created exceeds the maximum size limit of 20MB.',
                             type: 'error',
                             confirmButtonColor: "#48B5C4",
                             confirmButtonText: 'Ok'
@@ -1242,10 +1276,10 @@
             evt.preventDefault();
 
             size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
-            if (size > 10) {
+            if (size > 20) {
                 Swal.fire({
                     title: 'Error!',
-                    text: 'The web page or file you have created exceeds the maximum size limit of 10MB.',
+                    text: 'The web page or file you have created exceeds the maximum size limit of 20MB.',
                     type: 'error',
                     confirmButtonColor: "#545B62",
                     confirmButtonText: 'Ok'
@@ -1259,7 +1293,7 @@
             Swal.fire({
                 title: "Are you sure you want to continue?",
                 html:
-                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="text" id="passphrase" class="swal2-input" placeholder="Passphrase">',
+                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li  style="text-align: left;">Grammar is important - Check the grammar.</li><li style="text-align: left;">Check formatting - Is capitalization correct? Does the submission look professionally written?</li><li  style="text-align: left;">Check content - Are images properly formatted and sized? Are there captions below images?</li><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1352,6 +1386,7 @@
                 data.append('PaymentAmount', $('#tbReward').val());
                 data.append('IsDraft', 1);
                 data.append('PaymentDate', $('#EndCycleDate').html());
+                data.append('IPFSPID', $('#tbParentIPFSCIDhidden').val());
                 data.append('passphrase', passphrase);
                 data.append('formData', form.serialize());
 
@@ -1388,9 +1423,9 @@
                     swal.close();
                     if (result.success) {
                         var success = result.Success;
-                        var summaryName = result.SummaryName;
-                        var summary = result.Summary;
-                        var proposalHash = result.ProposalHash;
+                        var summaryName = result.summaryname;
+                        var summary = result.summary;
+                        var proposalHash = result.proposalhash;
                         var escapedString = '@("@historiasys")';
                         $('#submitArchive').hide();
                         $('#submitArchive').prop('disabled', true);
@@ -1402,7 +1437,7 @@
                             backdrop: true,
                             title: 'Success!',
                             html:
-                                'Your document has been submitted.<br><br><b>Marketing</b><br>For the best chance to get your document passed by the voters, you should market and lobby for it!<br><br>Share on social media:<br><br><div class="container"><div class="row"><div class="col-sm"><a href="http://twitter.com/share?text=' + summaryName + ' - ' + summary + '&url=https://historia.network/id/' + proposalHash + ' &hashtags=#historia,#blockchain,' + escapedString + '"><i class="fa-brands fa-twitter"></i> X.com</a></div><div class="col-sm"><a href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-facebook-f"></i> Facebook</a></div></div><div class="row"><div class="col-sm"><a href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a></div><div class="col-sm">  <a href="https://t.me/share/url?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram</a></div></div><div class="row">         <div class="col-sm"><a href="https://www.reddit.com/submit?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-reddit"></i> Reddit</a></div><div class="col-sm"><a href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/' + proposalHash + '"><i class="fa fa-envelope" aria-hidden="true"></i> Via Email</a></div></div>',
+                                'Your document has been submitted. Do NOT close the IPFS Window for at least 30 minutes to guarantee your document will be distributed correctly.<br><br><b>Marketing</b><br>For the best chance to get your document passed by the voters, you should market and lobby for it!<br><br>Share on social media:<br><hr><div class= "container"><div class="row justify-content-center"> <div class="col-sm text-center"> <a class="social-link" href = "http://twitter.com/share?text=' + summaryName + ' - ' + summary + '&url=https://historia.network/id/' + proposalHash + ' &hashtags=#historia,#blockchain,' + escapedString + '" target="_blank" ><i class="fa-brands fa-twitter social-icon"></i> X.com</a ></div><div class="col-sm text-center"><a class="social-link" href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-facebook-f social-icon"></i> Facebook</a></div></div><div class="row justify-content-center"><div class="col-sm text-center"><a class="social-link" href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord social-icon"></i> Discord</a></div><div class="col-sm text-center"><a class="social-link" href="https://t.me/share/url?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-telegram social-icon"></i> Telegram</a></div></div><div class="row justify-content-center"><div class="col-sm text-center"><a class="social-link" href="https://www.reddit.com/submit?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-reddit social-icon"></i> Reddit</a></div><div class="col-sm text-center"><a class="social-link" href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/' + proposalHash + '"><i class="fa fa-envelope social-icon" aria-hidden="true"></i> Via Email</a></div></div></div>',
                             type: 'success',
                             confirmButtonText: 'Ok'
                         }).then(function () {
@@ -1431,222 +1466,6 @@
             });
             return false;
         });
-
-        function submitArchive1() {
-            var size = parseFloat($('#archiveDiv').html().length / 1000000).toFixed(2);
-            var subscribed = 0;
-            var submissions = 0;
-
-            if (size > 10) {
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'The web page or file you have created exceeds the maximum size limit of 10MB.',
-                    type: 'error',
-                    confirmButtonColor: "#48B5C4",
-                    confirmButtonText: 'Ok'
-                });
-                return false;
-            }
-            Swal.fire({
-                title: "Are you sure you want to continue?",
-                html:
-                    '<h5>You can not edit this document after submission!</h5><b>Before submitting we recommend checking the following:</b><br><br><ul><li style="text-align: left;">Name - Did you add an apprioprate name?</li><li style="text-align: left;">Summary - Does your summary do a good job summarizing the article?</li><li style="text-align: left;">Reward Address - Is it correct?</li><li style="text-align: left;">Reward Amount - We recommend at least asking for more than the cost of submission.</li></ul>',
-                type: "warning",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                closeOnClickOutside: false,
-                backdrop: true,
-                confirmButtonColor: "#48B5C4",
-                showCancelButton: true,
-                confirmButtonClass: "btn-danger",
-                confirmButtonText: "Yes, submit this document!",
-                cancelButtonText: "No, cancel it!",
-                closeOnConfirm: true,
-                closeOnCancel: true,
-
-
-            }).then(function (confirm) {
-                if (!confirm.value) {
-                    Swal.fire({
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        closeOnClickOutside: false,
-                        backdrop: true,
-                        confirmButtonColor: "#48B5C4",
-                        title: 'Cancelled!',
-                        text: 'Your document has not been submitted.',
-                        type: 'error',
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                var form = $('#formStep1');
-                var data = new FormData(document.getElementById('formStep1'));
-
-                let searchParams = new URLSearchParams(window.location.search)
-                var id = searchParams.get('Id');
-                var type = searchParams.get('Type');
-
-                if ($('#tbName').val().length === 0) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Unable to Process. Please add a "Name"',
-                        type: 'error',
-                        confirmButtonColor: "#48B5C4",
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                if ($('#tbSummary').val().length === 0) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Unable to Process. Please add a "Summary"',
-                        type: 'error',
-                        confirmButtonColor: "#48B5C4",
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                if ($('#tbAddress').val().length === 0) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Unable to Process. Please add a "Reward Address"',
-                        type: 'error',
-                        confirmButtonColor: "#48B5C4",
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                if ($('#tbReward').val().length === 0) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Unable to Process. Please add a "Reward Amount"',
-                        type: 'error',
-                        confirmButtonColor: "#48B5C4",
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                if (/\d/.test($('#tbReward').val())) {
-
-                } else {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Reward Amount is not a number.',
-                        type: 'error',
-                        confirmButtonColor: "#48B5C4",
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                if ($('#tbReward').val() > $('#totalCoins').text()) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Reward Amount is more that available budget.',
-                        type: 'error',
-                        confirmButtonColor: "#48B5C4",
-                        confirmButtonText: 'Ok'
-                    });
-                    return false;
-                }
-
-                var uid = generateUUID();
-                data.append('uniqueId', uid);
-                data.append('Type', type);
-
-                data.append('id', id);
-
-                data.append('Name', $('#tbName').val());
-                data.append('Summary', $('#tbSummary').val());
-                data.append('html', $('#archiveDiv').html());
-                data.append('PaymentAddress', $('#tbAddress').val());
-                data.append('PaymentAmount', $('#tbReward').val());
-                data.append('IsDraft', 1);
-                data.append('PaymentDate', $('#EndCycleDate').html());
-                data.append('oglinkid', $('#oglinkid').val());
-                data.append('formData', form.serialize());
-
-                $.ajax({
-                    url: '@Url.Action("Submit", "Create", new { Area = "Create" })',
-                    type: 'POST',
-                    contentType: false,
-                    processData: false,
-                    data: data,
-                    beforeSend: function () {
-                        Swal.fire({
-                            showConfirmButton: false,
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            closeOnClickOutside: false,
-                            backdrop: true,
-                            title: 'Processing Your Document.',
-                            html:
-                                'Attempting to submit your document to the blockchain.' +
-                                '<br><br><b>Estimated Time:10-30 minutes</b><br>' +
-                                '<br>Do not leave this page until you receive success or failure message!',
-
-                            didOpen: () => {
-                                const content = Swal.getHtmlContainer()
-                                const $ = content.querySelector.bind(content)
-                                Swal.showLoading()
-                            }
-                        })
-                    },
-                    complete: function (data) {
-                    }
-
-                }).done(function (result) {
-                    swal.close();
-                    if (result.success) {
-                        var success = result.Success;
-                        var summaryName = result.SummaryName;
-                        var summary = result.Summary;
-                        var proposalHash = result.ProposalHash;
-                        var escapedString = '@("@historiasys")';
-                        $('#submitArchive').hide();
-                        $('#submitArchive').prop('disabled', true);
-                        Swal.fire({
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            closeOnClickOutside: false,
-                            confirmButtonColor: "#545B62",
-                            backdrop: true,
-                            title: 'Success!',
-                            html:
-                                'Your document has been submitted.<br><br><b>Marketing</b><br>For the best chance to get your document passed by the voters, you should market and lobby for it!<br><br>Share on social media:<br><br><div class="container"><div class="row"><div class="col-sm"><a href="http://twitter.com/share?text=' + summaryName + ' - ' + summary + '&url=https://historia.network/id/' + proposalHash + ' &hashtags=#historia,#blockchain,' + escapedString + '"><i class="fa-brands fa-twitter"></i> X.com</a></div><div class="col-sm"><a href="https://www.facebook.com/sharer/sharer.php?u=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-facebook-f"></i> Facebook</a></div></div><div class="row"><div class="col-sm"><a href="https://discordapp.com/invite/b3FJPpn" target="_blank"><i class="fa-brands fa-discord"></i> Discord</a></div><div class="col-sm">  <a href="https://t.me/share/url?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-telegram"></i> Telegram</a></div></div><div class="row">         <div class="col-sm"><a href="https://www.reddit.com/submit?url=https://historia.network/id/' + proposalHash + '" target="_blank"><i class="fa-brands fa-reddit"></i> Reddit</a></div><div class="col-sm"><a href="mailto:?subject=Check%20out%20this%20link&body=Heres%20the%20link%3A%2https://historia.network/id/' + proposalHash + '"><i class="fa fa-envelope" aria-hidden="true"></i> Via Email</a></div></div>',
-                            type: 'success',
-                            confirmButtonText: 'Ok'
-                        }).then(function () {
-                            window.location.href = "/";
-                        });
-
-                    }
-                    else {
-                        Swal.fire({
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            closeOnClickOutside: false,
-                            backdrop: true,
-                            confirmButtonColor: "#545B62",
-                            title: 'Error!',
-                            text: result.error,
-                            type: 'error',
-                            confirmButtonText: 'Ok'
-                        });
-                    }
-                }).always(function (result) {
-
-                });
-
-                return false;
-            });
-        }
 
         function generateUUID() { // Public Domain/MIT
             var d = new Date().getTime();
@@ -1808,10 +1627,12 @@
                         if (result.success) {
                             Swal.fire({
                                 title: 'Success!',
-                                text: 'You draft has been deleted.',
-                                type: 'success',
+                                text: 'Your draft has been deleted.',
+                                icon: 'success',
                                 confirmButtonColor: "#48B5C4",
                                 confirmButtonText: 'Ok'
+                            }).then(() => {
+                                window.location.href = "/Create/Create";
                             });
                         }
                         else {

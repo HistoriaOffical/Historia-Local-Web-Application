@@ -151,6 +151,10 @@
             font-family: "Open Sans", sans-serif;
             line-height: 1;
         }
+
+        .spinner-border.text-black {
+            color: #D3D3D3; 
+        }
     </style>
 }
 
@@ -162,7 +166,12 @@
                     <li class="nav-item"><a id="allTab" href="#all" data-target="#all" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="selectedType = 'all'; clearRecords(); lazyLoadAll(selectedType, 0);">All</a></li>
                     <li class="nav-item"><a id="proposalsTab" href="#proposals" data-target="#proposals" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'proposals'; clearRecords(); lazyLoadAll(selectedType, 0);">Proposals</a></li>
                     <li class="nav-item"><a id="recordTab" href="#records" data-target="#records" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'records'; clearRecords(); lazyLoadAll(selectedType, 0);">Records</a></li>
-                    <li class="nav-item" id="searchTab" style="display:none"><a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close" onclick="">Search<i class="fa fa-times" style="margin-left: 5px;"></i></a></li>
+                    <li class="nav-item" id="searchTab" style="display:none">
+                        <a href="#search" data-target="#search" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-close">
+                            Search
+                            <i class="fa fa-times" style="margin-left: 5px;" onclick="closeSearchTab()"></i>
+                        </a>
+                    </li>
                     <li class="nav-item ml-auto">
                         <a id="treeTab" href="#tree" data-target="#tree" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="selectedType = 'tree'; clearRecords(); lazyLoadAll(selectedType, 0, '', 50);"><i class="fa fa-folder-tree" style="margin-left: 5px; margin-right: 5px;"></i>Tree View</a>
                     </li>
@@ -172,62 +181,125 @@
                 <div class="tab-content">
                     <div id="all" class="tab-pane fade show active">
                         <div id="allloadingdiv" style="text-align:center;margin-bottom:20px;">
-                            <h4>Is Historia Core Client Setup and Running?</h4>
-                        </div>
+                            <br />
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="spinner-border text-black" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <h4 class="card-title mt-3">Loading...</h4>
+                                </div>
+                            </div>
+                        </div> 
                         <div id="allRecordsContainer">
                         </div>
                         <div class="row mt-4" id="allRecordsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">Nothing Available</h4>
+                                        <p class="card-text">Either Historia Core Wallet has not fully synced or there is nothing up for vote at the moment.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div id="proposals" class="tab-pane fade show">
                         <div id="proposalloadingdiv" style="text-align:center;margin-bottom:20px;">
-                            Loading...
+                            <br />
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="spinner-border text-black" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <h4 class="card-title mt-3">Loading...</h4>
+                                </div>
+                            </div>
                         </div>
                         <div id="proposalsContainer">
                         </div>
                         <div class="row mt-4" id="proposalsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">No Proposals Available</h4>
+                                        <p class="card-text">Either Historia Core Wallet has not fully synced or there is nothing up for vote at the moment.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div id="records" class="tab-pane fade show">
                         <div id="recordsloadingdiv" style="text-align:center;margin-bottom:20px;">
-                            Loading...
+                            <br />
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="spinner-border text-black" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <h4 class="card-title mt-3">Loading...</h4>
+                                </div>
+                            </div>
                         </div>
                         <div id="recordsContainer">
                         </div>
                         <div class="row mt-4" id="recordsNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">No Records Available</h4>
+                                        <p class="card-text">Either Historia Core Wallet has not fully synced or there is nothing up for vote at the moment.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div id="search" class="tab-pane fade">
                         <div id="searchloadingdiv" style="text-align:center;margin-bottom:20px;">
-                            Loading...
+                            <br />
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="spinner-border text-black" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <h4 class="card-title mt-3">Loading...</h4>
+                                </div>
+                            </div>
                         </div>
                         <div id="searchContainer">
                         </div>
-                        <div class="row mt-4" id="searchNoRecordMsg">
+                        <div class="row mt-4" id="searchNoRecordMsg" style="display:none">
                             <div class="col-12 mx-auto">
-                                <h4>No search results found</h4>
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">Search Complete</h4>
+                                        <p class="card-text">No search results found.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div id="tree" class="tab-pane fade show">
                         <div id="treeloadingdiv" style="text-align:center;margin-bottom:20px;">
-                            Loading...
+                            <br />
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="spinner-border text-black" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <h4 class="card-title mt-3">Loading...</h4>
+                                </div>
+                            </div>
                         </div>
                         <div id="treeContainer" style="margin-top: 1em" class="generalTree">
                         </div>
                         <div class="row mt-4" id="treeNoRecordMsg" style="display:none">
-                            <div class="col-12 mx-auto">
-                                <h4>Either Historia client has not synced or there are nothing up for vote</h4>
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h4 class="card-title">Nothing Available</h4>
+                                    <p class="card-text">Either Historia Core Wallet has not fully synced,  or there is nothing up for vote at the moment.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -263,7 +335,7 @@
                             <h4 id="oglinkstitle" class="card-title"></h4>
                             <p id="oglinksdescription" class="card-text"></p>
                             <i class="fas fa-link"> </i>
-                            <a id="oglinksurl" href='' target='_blank' class='stretched-link'></a>
+                            <a id="oglinksurl" href='' target='_blank' class='stretched-link' onclick="checkMasternodeSetup(event, this)"></a>
                         </div>
                     </div>
                     <div class='card-vertical'>
@@ -272,7 +344,7 @@
                             <h4 id="oglinkstitle" class='card-title'></h4>
                             <p id="oglinksdescription" class='card-text'></p>
                             <i class='fas fa-link'> </i>
-                            <a id="oglinksurl" href='' target='_blank' class='stretched-link'></a>
+                            <a id="oglinksurl" href='' target='_blank' class='stretched-link' onclick="checkMasternodeSetup(event, this)"></a>
                         </div>
                     </div>
                 </div>
@@ -286,18 +358,12 @@
                     </div>
                     <div class="votingwrapper" style="margin-top:30px">
                         <div id="votingSection" class="votingwrappermain" style="display:none">
-                            <div class="votingdownbar">VOTING</div>
-                            <a href="#">
-                                <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
-                            </a>
+                            <div class="votingdown">VOTING</div>
+                            <img id="btnVoteYes" src="/images/up_arrow_small.svg" alt="" class="image-3" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
                             <div id="yesCount" class="votingdown"></div>
-                            <a href="#">
-                                <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
-                            </a>
+                            <img id="btnVoteNo" src="/images/down_arrow_small.svg" alt="" class="image-7" style="cursor: pointer;" data-toggle="popover" title="" data-placement="top">
                             <div id="noCount" class="votingdown"></div>
-                            <a href="#">
-                                <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
-                            </a>
+                            <img id="btnVoteAbstain" src="/images/vote_null.svg" alt="" class="image-3" style="cursor: pointer;" width="20px" data-toggle="popover" title="" data-placement="top">
                             <div id="abstainCount" class="votingdown"></div>
                             <a id="proposalNameVote" href="/Proposals/Proposals/ProposalDetails?hash=" class="stretched-link"></a>
                         </div>
@@ -460,6 +526,27 @@
             return str;
         }
 
+        function closeSearchTab() {
+            window.location.href = "/";
+        }
+
+        function checkMasternodeSetup(event, element) {
+            event.preventDefault(); // Prevent the default action of the link
+
+            $.get('@Url.Action("CheckMasternodeSetup", "Masternode", new { area = "Masternode" })', null, function(data) {
+                if (!data.success) {
+                    Swal.fire({
+                        title: 'Error',
+                        icon: "error",
+                        html: "You haven't setup a masternode to access content yet.<br><br>Please select a masternode on the settings page <a href='/Home/Settings' style='text-decoration: underline;'>here</a>",
+                        confirmButtonText: 'Ok'
+                    });
+                } else {
+                    window.open(element.href, '_blank'); // Navigate to the link
+                }
+            });
+        }
+
         function getRandomInt(min, max) {
           return Math.floor(Math.random() * (max - min + 1) + min);
         }
@@ -542,9 +629,10 @@
                                         template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                         template.find('#recordTime').text("— " + record.DateAdded);
 
-                                        if (record.PastSuperBlock === 1) {
+                                        if (record.PastSuperBlock === 0) {
                                             template.find('#votingSection').show();
                                             template.find('#votenow').show();
+                                            template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                             template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
 
                                             var iconClass = 'fas fa-check-to-slot';
@@ -581,7 +669,6 @@
                             });
                         }
                     } catch (error) {
-                        console.log("Error: Unable to parse the response as JSON");
                         template = $('#treeTemplateEmpty').clone().show();
                         $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
                         $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
@@ -596,11 +683,10 @@
                 data: { phash: Hash, level: level }, /*Increment based on current level*/
                 dataType: 'json',
                 success: function (result, status, xhr) {
-                    //console.log(JSON.stringify(result, null, 0));
                     try {
                         const resultObj = JSON.parse(result);
                         if (resultObj.success === false) {
-                            //console.log("Error: " + resultObj.message);
+                            console.log("Error: " + resultObj.message);
                         } else {
                             resultObj.forEach((record, idx) => {
                                 if (record.ParentIPFSCid) {
@@ -623,10 +709,11 @@
                                         template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                         template.find('#recordTime').text("— " + record.DateAdded);
 
-                                        if (record.PastSuperBlock === 1) {
+                                        if (record.PastSuperBlock === 0) {
                                             template.find('#votingSection').show();
                                             template.find('#votenow').show();
                                             template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                            template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                             var iconClass = 'fas fa-check-to-slot';
                                             var iconContainer = $(template).find('#VotingCycleTree');
                                             var iconElement = $('<i>').addClass(iconClass);
@@ -661,7 +748,7 @@
                             });
                         }
                     } catch (error) {
-                        //console.log("Error: Unable to parse the response as JSON");
+                        console.log("Error: Unable to parse the response as JSON");
                     }
                 }
             });
@@ -673,14 +760,12 @@
                 data: { phash: Hash, level: level}, /*Increment based on current level*/
                 dataType: 'json',
                 success: function (result, status, xhr) {
-                    console.log(JSON.stringify(result, null, 0));
                     try {
                         const resultObj = JSON.parse(result);
                         if (resultObj.success === false) {
-                           //console.log("Error: " + resultObj.message);
+                           console.log("Error: " + resultObj.message);
                         } else {
                             resultObj.forEach((record, idx) => {
-                                console.log('record: ', record);
                                 if (record.ParentIPFSCid) {
                                     template = $('#treeTemplate').clone().show();
                                     template.attr("id", `treeTemplate_${record.IPFSHash}`);
@@ -700,10 +785,11 @@
                                         template.find('#proposalName').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                         template.find('#recordTime').text("— " + record.DateAdded);
 
-                                        if (record.PastSuperBlock === 1) {
+                                        if (record.PastSuperBlock === 0) {
                                             template.find('#votingSection').show();
                                             template.find('#votenow').show();
                                             template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                            template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
                                             var iconClass = 'fas fa-check-to-slot';
                                             var iconContainer = $(template).find('#VotingCycleTree');
                                             var iconElement = $('<i>').addClass(iconClass);
@@ -721,15 +807,12 @@
                                             iconContainer.append(iconElement);
                                             $('#template').replaceWith(template);
                                         }
-
-                                        console.log('actualClickedId/actualClickedChildId', actualClickedId, actualClickedChildId)
                                         if ($(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).length !== 0) {
                                             $(`#collapseTreeChildren_${actualClickedId}_${actualClickedChildId}`).append(template);
                                             if (!$(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).is(":visible"))
                                                 $(`#collapseTreeContent_${actualClickedId}_${actualClickedChildId}`).show();
                                         }
                                         else {
-                                            console.log('adding to ', actualClickedId, $(`#collapseTreeChildren_${actualClickedId}`))
                                             $(`#collapseTreeChildren_${actualClickedId}`).append(template);
                                         }
                                     }
@@ -791,7 +874,6 @@
                 dataType: 'json',
                 success: function (result, status, xhr) {
                     pageIndex = pageIndex + 1;
-                    //console.log(JSON.stringify(result, null, 2));
                     result.records && result.records.length > 0 && result.records.map((record, idx) => {
                         let template;
                         let add = true;
@@ -904,17 +986,13 @@
                             }
 
                             if (record.pastSuperBlock === 0) {
-                                if (record.voting) {
-                                    template.find('#votingSection').show();
-                                    template.find('#btnVoteYes').attr('id', `btnVoteYes_${record.hash}`);
-                                    template.find('#btnVoteNo').attr('id', `btnVoteNo_${record.hash}`);
-                                    template.find('#btnVoteAbstain').attr('id', `btnVoteAbstain_${record.hash}`);
-
-                                    template.find('#yesCount').text(record.yesCount);
-                                    template.find('#noCount').text(record.noCount);
-                                    template.find('#abstainCount').text(record.abstainCount);
-
-                                }
+                                template.find('#votingSection').show();
+                                template.find('#votenow').show();
+                                template.find('#votenow').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                template.find('#proposalNameVote').attr('href', `/Proposals/Proposals/ProposalDetails?hash=${record.hash}`);
+                                template.find('#yesCount').text(record.yesCount);
+                                template.find('#noCount').text(record.noCount);
+                                template.find('#abstainCount').text(record.abstainCount);
                             }
                             else {
                                 if (record.type === '4') {
@@ -1201,14 +1279,13 @@
                 var winScrolled = $(window).height() + $(window).scrollTop();
                 if (docHeight - winScrolled < 1) {
                     let nowScroll = $(this).scrollTop();
-                    //console.log("lastScroll:" + lastScroll + "nowScroll:" + nowScroll + "docHeight:" + docHeight + "winScrolled:" + winScrolled);
                     if (nowScroll >= lastScroll) {
                         if (typeof queryR === "undefined" || queryR === "") {
                             lazyLoadAll(selectedType, pageIndex, "", 5);
                         } else {
                             lazyLoadAll(selectedType, pageIndex, queryR, 5);
                         }
-                        pageIndex = pageIndex + 1;
+                        //pageIndex = pageIndex + 1; This was causing a bug. Leaving in for now commented to make sure to remind dev. 
                     }
                     lastScroll = nowScroll;
 
@@ -1216,7 +1293,6 @@
             });
 
             if (typeof queryR === "undefined" || queryR === "") {
-
                 lazyLoadAll(selectedType, pageIndex, "", 5);
             } else {
 

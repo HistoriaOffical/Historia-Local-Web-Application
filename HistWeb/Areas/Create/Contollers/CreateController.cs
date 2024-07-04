@@ -20,7 +20,7 @@ using Newtonsoft.Json.Converters;
 using HistWeb.Areas.Masternode.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
-using Ganss.XSS;
+using Ganss.Xss;
 using System.Net.Mail;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Hosting;
@@ -32,6 +32,7 @@ using System.Web;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
 using System.Security.Cryptography;
+using Ipfs;
 
 namespace HistWeb.Controllers
 {
@@ -79,15 +80,14 @@ namespace HistWeb.Controllers
 			try
 			{
 				List<object> items = new List<object>();
-				var connString = _configuration.GetConnectionString("HistoriaContextConnection");
-
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
 						conn.Open();
 						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT * FROM items WHERE imported !=0";
+						cmd.CommandText = "SELECT * FROM items WHERE IsDraft == 1";
 
 						using (SqliteDataReader rdr = cmd.ExecuteReader())
 						{
@@ -160,7 +160,8 @@ namespace HistWeb.Controllers
 				Console.WriteLine("Resuming with Id: " + Id);
 				try
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -202,7 +203,69 @@ namespace HistWeb.Controllers
 			return Json(new { Success = false, Error = "Can not load" });
 		}
 
-		[HttpGet]
+        [HttpGet]
+        public IActionResult GetParentInfo(string pid)
+        {
+            var sanitizer = new HtmlSanitizer();
+            string filetype = "";
+            Console.WriteLine("Exception GetParentInfo: pid: " + pid);
+            try
+            {
+                if (!string.IsNullOrEmpty(pid))
+                {
+
+                    HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                    webRequest.Credentials = new NetworkCredential(_userName, _password);
+                    webRequest.ContentType = "application/json-rpc";
+                    webRequest.Method = "POST";
+                    webRequest.Timeout = 5000;
+                    string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
+                    byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                    webRequest.ContentLength = byteArray.Length;
+                    Stream dataStream = webRequest.GetRequestStream();
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                    dataStream.Close();
+
+                    WebResponse webResponse = webRequest.GetResponse();
+                    StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                    string getResp = sr.ReadToEnd();
+                    dynamic proposals = JObject.Parse(getResp);
+
+                    //Get Datastring Info
+                    var ds = proposals.result.DataString.ToString();
+                    string p1 = ds;
+                    dynamic proposal1 = JObject.Parse(p1);
+
+                    //Get Voting Info
+                    var ds1 = proposals.result.FundingResult.ToString();
+                    string p2 = ds1;
+                    dynamic proposal2 = JObject.Parse(p2);
+
+                    string hostname = _ipfsUrl;
+                    var ParentName = sanitizer.Sanitize(proposal1.summary.name.ToString());
+                    var ParentSummary = sanitizer.Sanitize(proposal1.summary.description.ToString());
+
+                    var IpfsPid = proposal1.ipfscid.ToString();
+
+                    Console.WriteLine("Exception GetUploadedMedia: filePath: File not found #2");
+                    return Json(new { Success = "true", parentname = ParentName, parentsummary = ParentSummary, ipfs= IpfsPid });
+                }
+                else
+                {
+                    // Handle no file uploaded
+                    Console.WriteLine("Exception GetUploadedMedia: filePath: File not found #2");
+                    return Json(new { Success = "false" });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that may occur during the upload process
+                Console.WriteLine("Exception GetUploadedMedia: filePath: File exception.");
+                return Json(new { Success = "false" });
+            }
+        }
+
+        [HttpGet]
 		public IActionResult GetUploadedMedia(string filename)
 		{
 			string filetype = "";
@@ -212,7 +275,8 @@ namespace HistWeb.Controllers
 				if (!string.IsNullOrEmpty(filename))
 				{
 
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 
 
@@ -231,7 +295,7 @@ namespace HistWeb.Controllers
 							}
 						}
 					}
-					string filePath = Path.Combine("wwwroot", "media", filename); 
+					string filePath = Path.Combine(ApplicationSettings.MediaPath, filename); 
 					Console.WriteLine("Exception GetUploadedMedia: filePath: " + filePath);
 					// Check if the file exists
 					if (System.IO.File.Exists(filePath))
@@ -287,8 +351,8 @@ namespace HistWeb.Controllers
 					Console.WriteLine("Exception UploadMedia: filename: " + fileName);
 
 					// Set the file path where you want to store the file
-					string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "media", fileName);
-					string filePathDB = Path.Combine("wwwroot", "media", fileName);
+					string filePath = Path.Combine(ApplicationSettings.MediaPath, fileName);
+					string filePathDB = Path.Combine(ApplicationSettings.MediaPath, fileName);
 
 					using (var stream = new FileStream(filePath, FileMode.Create))
 					{
@@ -302,7 +366,7 @@ namespace HistWeb.Controllers
 						// Save the file to the server
 						Console.WriteLine("Exception UploadMedia: filePath: " + filePath);
 						UpdateMediaDatabase(fileName, filePath, file.Length.ToString(), filetype);
-						return Json(new { Success = "true", FilePath = "/wwwroot/media/" + filePathDB, filename = fileName });
+						return Json(new { Success = "true", FilePath = ApplicationSettings.MediaPath + filePathDB, filename = fileName });
 
 					}
 					else
@@ -338,8 +402,8 @@ namespace HistWeb.Controllers
 		}
 		private void UpdateMediaDatabase(string fileName, string filePath, string filesize, string filetype)
 		{
-			var connString = _configuration.GetConnectionString("HistoriaContextConnection");
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				conn.Open();
 				using (var cmd = conn.CreateCommand())
@@ -558,55 +622,61 @@ namespace HistWeb.Controllers
 		[HttpGet]
 		public async Task<IActionResult> CreateBuilderLoadEdit(string id, string Type, string Template, string pid, string ipfspid, string cidtype, string isDraft)
 		{
-			List<object> items = new List<object>();
-			var sanitizer = new HtmlSanitizer();
-			int superblock = 0;
-			int isArchive = 0;
-			HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
-			webRequest.Credentials = new NetworkCredential(_userName, _password);
-			webRequest.ContentType = "application/json-rpc";
-			webRequest.Method = "POST";
-			webRequest.Timeout = 5000;
-			string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
-
-			// serialize json for the request
-			byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-			webRequest.ContentLength = byteArray.Length;
-			Stream dataStream = webRequest.GetRequestStream();
-			dataStream.Write(byteArray, 0, byteArray.Length);
-			dataStream.Close();
-			try
+            var sanitizer = new HtmlSanitizer();
+            List<object> items = new List<object>();
+            try
 			{
-				WebResponse webResponse = webRequest.GetResponse();
-				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-				string getResp = sr.ReadToEnd();
-				dynamic proposals = JObject.Parse(getResp);
 
-				//Get Datastring Info
-				var ds = proposals.result.DataString.ToString();
-				string p1 = ds;
-				dynamic proposal1 = JObject.Parse(p1);
-
-				//Get Voting Info
-				var ds1 = proposals.result.FundingResult.ToString();
-				string p2 = ds1;
-				dynamic proposal2 = JObject.Parse(p2);
-
-				string hostname = _ipfsUrl;
-
-				if (!string.IsNullOrEmpty(pid) && isDraft != "1")
+				if (pid != "0" && isDraft != "1")
 				{
-					if (cidtype != "0")
+
+
+                    int superblock = 0;
+                    int isArchive = 0;
+                    HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                    webRequest.Credentials = new NetworkCredential(_userName, _password);
+                    webRequest.ContentType = "application/json-rpc";
+                    webRequest.Method = "POST";
+                    webRequest.Timeout = 5000;
+                    string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
+
+                    // serialize json for the request
+                    byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                    webRequest.ContentLength = byteArray.Length;
+                    Stream dataStream = webRequest.GetRequestStream();
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                    dataStream.Close();
+
+                    WebResponse webResponse = webRequest.GetResponse();
+                    StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                    string getResp = sr.ReadToEnd();
+                    dynamic proposals = JObject.Parse(getResp);
+
+                    //Get Datastring Info
+                    var ds = proposals.result.DataString.ToString();
+                    string p1 = ds;
+                    dynamic proposal1 = JObject.Parse(p1);
+
+                    //Get Voting Info
+                    var ds1 = proposals.result.FundingResult.ToString();
+                    string p2 = ds1;
+                    dynamic proposal2 = JObject.Parse(p2);
+
+                    string hostname = _ipfsUrl;
+
+                    if (cidtype != "0")
 					{
 						var Name = "";
 						var Summary = "";
-						var html = "";
+                        var ParentName = sanitizer.Sanitize(proposal1.summary.name.ToString());
+                        var ParentSummary = sanitizer.Sanitize(proposal1.summary.description.ToString());
+                        var html = "";
 						var IpfsPid = proposal1.ipfscid.ToString();
 						var PaymentAddress = "";
 						var PaymentAmount = "";
 						var IsDraft = "0";
 						Type = proposal1.type.ToString();
-						var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+						var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype, parentname = ParentName, parentsummary = ParentSummary };
 						items.Add(item);
 					}
 					else
@@ -614,7 +684,9 @@ namespace HistWeb.Controllers
 
 						var Name = sanitizer.Sanitize(proposal1.summary.name.ToString());
 						var Summary = sanitizer.Sanitize(proposal1.summary.description.ToString());
-						System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
+                        var ParentName = sanitizer.Sanitize(proposal1.summary.name.ToString());
+                        var ParentSummary = sanitizer.Sanitize(proposal1.summary.description.ToString());
+                        System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
 						//client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
 						var url = "https://" + _ipfsUrl + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
 						var html = await client.GetStringAsync(url);
@@ -624,16 +696,15 @@ namespace HistWeb.Controllers
 						var PaymentAmount = "";
 						var IsDraft = "0";
 						Type = proposal1.type.ToString();
-						var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+						var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype, parentname = ParentName, parentsummary = ParentSummary };
 						items.Add(item);
 
 					}
 				}
 				else
 				{
-					var connString = _configuration.GetConnectionString("HistoriaContextConnection");
-
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -649,13 +720,13 @@ namespace HistWeb.Controllers
 									var Name = !rdr.IsDBNull(rdr.GetOrdinal("Name")) ? rdr.GetString(rdr.GetOrdinal("Name")) : "";
 									var Summary = !rdr.IsDBNull(rdr.GetOrdinal("Summary")) ? rdr.GetString(rdr.GetOrdinal("Summary")) : "";
 									var html = !rdr.IsDBNull(rdr.GetOrdinal("html")) ? rdr.GetString(rdr.GetOrdinal("html")) : "";
-									var IpfsPid = proposal1.ipfscid.ToString();
+									//var IpfsPid = proposal1.ipfscid.ToString();
 									var css = !rdr.IsDBNull(rdr.GetOrdinal("css")) ? rdr.GetString(rdr.GetOrdinal("css")) : "";
 									var PaymentAddress = "";
 									var PaymentAmount = "";
 									var IsDraft = "0";
-									Type = proposal1.type.ToString();
-									var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+									//Type = proposal1.type.ToString();
+									var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, CidType = cidtype };
 									items.Add(item);
 
 								}
@@ -692,7 +763,144 @@ namespace HistWeb.Controllers
 		}
 
 
-		[HttpGet]
+
+        [HttpGet]
+        public async Task<IActionResult> CreateBuilderLoadEditDraft(string id, string Type, string Template, string pid, string ipfspid, string cidtype, string isDraft)
+        {
+            List<object> items = new List<object>();
+            var sanitizer = new HtmlSanitizer();
+            int superblock = 0;
+            int isArchive = 0;
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+            webRequest.Credentials = new NetworkCredential(_userName, _password);
+            webRequest.ContentType = "application/json-rpc";
+            webRequest.Method = "POST";
+            webRequest.Timeout = 5000;
+            string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"get\", \"" + pid + "\"] }";
+
+            // serialize json for the request
+            byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+            webRequest.ContentLength = byteArray.Length;
+            Stream dataStream = webRequest.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            try
+            {
+                WebResponse webResponse = webRequest.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                dynamic proposals = JObject.Parse(getResp);
+
+                //Get Datastring Info
+                var ds = proposals.result.DataString.ToString();
+                string p1 = ds;
+                dynamic proposal1 = JObject.Parse(p1);
+
+                //Get Voting Info
+                var ds1 = proposals.result.FundingResult.ToString();
+                string p2 = ds1;
+                dynamic proposal2 = JObject.Parse(p2);
+
+                string hostname = _ipfsUrl;
+
+                if (!string.IsNullOrEmpty(pid) && isDraft != "1")
+                {
+                    if (cidtype != "0")
+                    {
+                        var Name = "";
+                        var Summary = "";
+                        var html = "";
+                        var IpfsPid = proposal1.ipfscid.ToString();
+                        var PaymentAddress = "";
+                        var PaymentAmount = "";
+                        var IsDraft = "0";
+                        Type = proposal1.type.ToString();
+                        var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                        items.Add(item);
+                    }
+                    else
+                    {
+
+                        var Name = sanitizer.Sanitize(proposal1.summary.name.ToString());
+                        var Summary = sanitizer.Sanitize(proposal1.summary.description.ToString());
+                        System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
+                        //client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36");
+                        var url = "https://" + _ipfsUrl + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
+                        var html = await client.GetStringAsync(url);
+
+                        var IpfsPid = proposal1.ipfscid.ToString();
+                        var PaymentAddress = "";
+                        var PaymentAmount = "";
+                        var IsDraft = "0";
+                        Type = proposal1.type.ToString();
+                        var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                        items.Add(item);
+
+                    }
+                }
+                else
+                {
+                    string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                    using (var conn = new SqliteConnection(connectionString))
+                    {
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            conn.Open();
+                            cmd.CommandType = System.Data.CommandType.Text;
+                            cmd.CommandText = "SELECT * FROM items WHERE id = @id";
+                            cmd.Parameters.AddWithValue("id", id);
+                            using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            {
+                                while (rdr.Read())
+                                {
+
+                                    var Name = !rdr.IsDBNull(rdr.GetOrdinal("Name")) ? rdr.GetString(rdr.GetOrdinal("Name")) : "";
+                                    var Summary = !rdr.IsDBNull(rdr.GetOrdinal("Summary")) ? rdr.GetString(rdr.GetOrdinal("Summary")) : "";
+                                    var html = !rdr.IsDBNull(rdr.GetOrdinal("html")) ? rdr.GetString(rdr.GetOrdinal("html")) : "";
+                                    var IpfsPid = proposal1.ipfscid.ToString();
+                                    var css = !rdr.IsDBNull(rdr.GetOrdinal("css")) ? rdr.GetString(rdr.GetOrdinal("css")) : "";
+                                    var PaymentAddress = "";
+                                    var PaymentAmount = "";
+                                    var IsDraft = "0";
+                                    Type = proposal1.type.ToString();
+                                    var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                                    items.Add(item);
+
+                                }
+                            }
+                        }
+                    }
+
+
+
+                }
+                return Json(items);
+
+            }
+            catch (Exception ex)
+            {
+
+                var Name = "";
+                var Summary = "";
+                var html = "Could not load record from IPFS. Check IPFS Gateway in Settings and verify the connection.";
+                var IpfsPid = "";
+                var css = "";
+                var PaymentAddress = "";
+                var PaymentAmount = "";
+                var IsDraft = "0";
+                Type = "0";
+                var item = new { pid = pid, Name = sanitizer.Sanitize(Name), Summary = sanitizer.Sanitize(Summary), html = html, PaymentAddress = PaymentAddress, PaymentAmount = PaymentAmount, IsDraft = IsDraft, Type = Type, IpfsPid = IpfsPid, CidType = cidtype };
+                items.Add(item);
+                return Json(items);
+
+            }
+
+
+            return Json(new { Success = false, Error = "Can not load" });
+        }
+
+
+        [HttpGet]
 		public IActionResult CreateBuilderLoadTemplate([FromQuery(Name = "Template")] string Template)
 		{
 			List<object> items = new List<object>();
@@ -703,7 +911,8 @@ namespace HistWeb.Controllers
 			{
 				try
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -750,7 +959,8 @@ namespace HistWeb.Controllers
 
 			try
 			{
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -787,7 +997,8 @@ namespace HistWeb.Controllers
 			{
 				while (items.Count == 0)
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -872,7 +1083,8 @@ namespace HistWeb.Controllers
 
 				if (id != "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -923,7 +1135,8 @@ namespace HistWeb.Controllers
 
 				if (id != "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -958,7 +1171,8 @@ namespace HistWeb.Controllers
 
 				if (id == "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -986,7 +1200,8 @@ namespace HistWeb.Controllers
 				else
 				{
 
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -1031,7 +1246,8 @@ namespace HistWeb.Controllers
 			try
 			{
 				List<object> items = new List<object>();
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -1076,7 +1292,8 @@ namespace HistWeb.Controllers
 
 				if (id != "0")
 				{
-					using (var conn = new SqliteConnection("Data Source=basex.db"))
+					string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+					using (var conn = new SqliteConnection(connectionString))
 					{
 						using (var cmd = conn.CreateCommand())
 						{
@@ -1103,6 +1320,48 @@ namespace HistWeb.Controllers
 		[HttpPost]
 		public async Task<JsonResult> Submit(IFormCollection formCollection)
 		{
+            lockWallet(); // If wallet is unlocked before hand, this will fail, we will unlock later on.
+            try
+			{
+
+				Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{ApplicationSettings.IPFSApiHost}:{ApplicationSettings.IPFSApiPort}");
+
+				string HtmlTest = "<html><body>Test Connection to IPFS API1</body></html>";
+				string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", ""));
+				Directory.CreateDirectory(tempDirectory);
+
+				var filePath = tempDirectory;
+				using (var stream = new FileStream(Path.Combine(filePath, "index.html"), FileMode.Create))
+				{
+					byte[] info = new UTF8Encoding(true).GetBytes(HtmlTest);
+					stream.Write(info, 0, info.Length);
+				}
+
+				//Add test file/directory to IPFS API.
+				Ipfs.CoreApi.AddFileOptions options = new Ipfs.CoreApi.AddFileOptions() { Pin = true };
+				Ipfs.IFileSystemNode ret = await client.FileSystem.AddFileAsync(filePath + "/index.html", options);
+
+				string IpfsCidTemp = ret.Id.Hash.ToString();
+				if (!string.IsNullOrEmpty(IpfsCidTemp))
+				{
+					//return Json(new { success = true });
+				}
+				else
+				{
+					dynamic prepRespJsonFail = new { Success = false, Error = "IPFS API is not running or not accessible. Enable IPFS API on Settings Page -> Advanced Settings -> Enable IPFS API Server" };
+					return Json(prepRespJsonFail);
+				}
+
+			}
+			catch (Exception ex)
+			{
+				dynamic prepRespJsonFail = new { Success = false, Error = "IPFS API is not running or not accessible. Enable IPFS API on Settings Page -> Advanced Settings -> Enable IPFS API Server" };
+				return Json(prepRespJsonFail);
+			}
+
+
+
+
 			var sanitizer = new HtmlSanitizer();
 			string html = formCollection["html"];
 			string css = sanitizer.Sanitize(formCollection["css"]);
@@ -1145,24 +1404,38 @@ namespace HistWeb.Controllers
 			{
 				try
 				{
-					bool validPassphrase = UnlockWallet(passphrase);
+					bool validPassphrase = UnlockWallet(passphrase); // Unlock wallet here
 					if (!validPassphrase)
 					{
 						dynamic prepRespJsonFail = new { Success = false, Error = "Invalid Passphrase" };
-						return Json(prepRespJsonFail);
+						lockWallet();
+
+                        return Json(prepRespJsonFail);
 					}
 				}
 				catch (Exception ex)
 				{
 					dynamic prepRespJsonFail = new { Success = false, Error = "Unable to validate unlock wallet. Is Historia Core running?" };
-					return Json(prepRespJsonFail);
+                    lockWallet();
+                    return Json(prepRespJsonFail);
+
 				}
 			}
 			string endEpoch = CalcEndEpoch(PaymentDate);
 			string HtmlFinal = GenerateHTMLForIpfs(html, css, SummaryName, Summary, isArchive);
 			string IpfsCid;
 
-			if (!string.IsNullOrEmpty(HtmlFinal))
+
+            byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(HtmlFinal);
+            const int maxSizeInBytes = 20 * 1024 * 1024;
+            if(byteArray.Length > maxSizeInBytes)
+			{
+                dynamic prepRespJson = new { Success = false, Error = "Object is larger than allowed: "+ byteArray.Length + " bytes." };
+                lockWallet();
+                return Json(prepRespJson);
+            }
+
+            if (!string.IsNullOrEmpty(HtmlFinal))
 			{
 				try
 				{
@@ -1182,13 +1455,15 @@ namespace HistWeb.Controllers
 				catch (Exception ex)
 				{
 					dynamic prepRespJsonFail = new { Success = false, Error = "Can not add file to IPFS. Is your IPFS API Server setup properly?" };
-					return Json(prepRespJsonFail);
+                    lockWallet();
+                    return Json(prepRespJsonFail);
 				}
 			}
 			else
 			{
 				dynamic prepRespJsonFail = new { Success = false, Error = "Something went wrong" };
-				return Json(prepRespJsonFail);
+                lockWallet();
+                return Json(prepRespJsonFail);
 			}
 
 			//Do submission via gobject submit
@@ -1199,24 +1474,28 @@ namespace HistWeb.Controllers
 				if (proposalhash == "1")
 				{
 					dynamic prepRespJsonFail = new { Success = false, Error = "Could Not Submit Proposal. Can't reach your Historia Core Wallet" };
-					return Json(prepRespJsonFail);
+                    lockWallet();
+                    return Json(prepRespJsonFail);
 				}
 				else
 				{
 					dynamic prepRespJsonFail = new { Success = false, Error = "Could Not Submit Proposal. Do you have available coins in your wallet?" };
-					return Json(prepRespJsonFail);
+                    lockWallet();
+                    return Json(prepRespJsonFail);
 				}
 			}
 
 			try
 			{
-				dynamic prepRespJson = new { Success = true };
-				return Json(prepRespJson);
+				dynamic prepRespJson = new { Success = true, proposalhash=proposalhash, summaryname = SummaryName, summary = Summary };
+                lockWallet();
+                return Json(prepRespJson);
 			}
 			catch (Exception ex)
 			{
 				var prepRespJson1 = new { Success = false };
-				return Json(prepRespJson1);
+                lockWallet();
+                return Json(prepRespJson1);
 			}
 		}
 
@@ -1300,7 +1579,7 @@ namespace HistWeb.Controllers
 				webRequest.ContentType = "application/json-rpc";
 				webRequest.Method = "POST";
 				webRequest.Timeout = 5000;
-				string jsonstring = $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"walletpassphrase\", \"params\": [\"{passphrase}\", 60] }}";
+				string jsonstring = $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"walletpassphrase\", \"params\": [\"{passphrase}\", 6000] }}";
 
 				byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
 				webRequest.ContentLength = byteArray.Length;
@@ -1319,7 +1598,34 @@ namespace HistWeb.Controllers
 			}
 		}
 
-		private string CalcEndEpoch(string PaymentDate)
+        private void lockWallet()
+        {
+            try
+            {
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                webRequest.Timeout = 5000;
+                string jsonstring = $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"walletlock\", \"params\": [] }}";
+
+                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                Stream dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+                WebResponse webResponse = webRequest.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+
+            }
+            catch (Exception ex)
+            {
+                var prepRespJson = new { success = false, error = "Something went wrong" };
+            }
+        }
+
+        private string CalcEndEpoch(string PaymentDate)
 		{
 			string endEpoch = "";
 			if (string.IsNullOrEmpty(PaymentDate))
@@ -1339,31 +1645,40 @@ namespace HistWeb.Controllers
 			return endEpoch;
 		}
 
-		private string GenerateHTMLForIpfs(string html, string css, string title, string description, bool isArchive)
-		{
-			string htmlRet;
+        private string GenerateHTMLForIpfs(string html, string css, string title, string description, bool isArchive)
+        {
+            string htmlRet;
 
-			if (isArchive)
-			{
-				htmlRet =
-				"<!DOCTYPE html><html lang = \"en-US\" ><head><title>" + title + "</title><meta name = \"description\" content = \"" + description + "\" />" +
-				"<meta name = \"keywords\" content = \"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive\" />" +
-				"<meta name =\"robots\" content = \"index, follow\" ><meta http-equiv = \"Content-Type\" content = \"text/html; charset=utf-8\" />" +
-				"<meta name = \"viewport\" content = \"width=device-width, initial-scale=1\" /><meta http-equiv = \"X-UA-Compatible\" " +
-				"content = \"IE=edge\" ></head>" + html + "</html>";
-			}
-			else
-			{
-				htmlRet =
-				"<!DOCTYPE html><html lang = \"en-US\" ><head><title>" + title + "</title><meta name = \"description\" content = \"" + description + "\" />" +
-				"<meta name = \"keywords\" content = \"Historia, History, blockchain, cryptocurrency, HTA\" />" +
-				"<meta name =\"robots\" content = \"index, follow\" ><meta http-equiv = \"Content-Type\" content = \"text/html; charset=utf-8\" />" +
-				"<meta name = \"viewport\" content = \"width=device-width, initial-scale=1\" /><meta http-equiv = \"X-UA-Compatible\" " +
-				"content = \"IE=edge\" ><style>" + css + "</style></head>" + html + "</html>";
-			}
-			return htmlRet;
-		}
-		public class TweetContents
+            string pattern = @"(<a\s+[^>]*href=""https?:\/\/[^\/]+)(\/[^""]*)(""[^>]*class=""(custom-ipfs-link|custom-ipfs-link-block)""[^>]*>)";
+
+            // Regex replacement to convert to relative links
+            string replacement = @"<a href=""$2""$3";
+
+            // Perform the replacement
+            html = Regex.Replace(html, pattern, replacement);
+
+            if (isArchive)
+            {
+                htmlRet =
+                "<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
+                "<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive\" />" +
+                "<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
+                "content=\"IE=edge\" ></head>" + html + "</html>";
+            }
+            else
+            {
+                htmlRet =
+                "<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
+                "<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA\" />" +
+                "<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
+                "content=\"IE=edge\" ><style>" + css + "</style></head>" + html + "</html>";
+            }
+            return htmlRet;
+        }
+
+        public class TweetContents
 		{
 			public Stream Screenshot { get; set; }
 		}
@@ -1494,8 +1809,10 @@ namespace HistWeb.Controllers
 				break;
 			}
 
-			//Get Screenshot of Archive Site via PuppeteerSharp
-			var image25jpg = "";
+            //Get Screenshot of Archive Site via PuppeteerSharp
+            var image5jpg = "";
+            var image10jpg = "";
+            var image25jpg = "";
 			var image50jpg = "";
 			var image75jpg = "";
 			var image100jpg = "";
@@ -1521,7 +1838,7 @@ namespace HistWeb.Controllers
 
 						NavigationOptions navigationOptions = new NavigationOptions()
 						{
-							Timeout = 60000,
+							Timeout = 200000,
 							WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
 						};
 
@@ -1558,7 +1875,7 @@ namespace HistWeb.Controllers
 
 						size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(imagepng);
 						double megabytes = size / (1024.0 * 1024.0);
-						if (megabytes < 9.00)
+						if (megabytes < 15.00)
 						{
 							image = imagepng;
 						}
@@ -1572,8 +1889,8 @@ namespace HistWeb.Controllers
 							});
 							size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image75jpg);
 							megabytes = size / (1024.0 * 1024.0);
-							if (megabytes < 9.00)
-							{
+                            if (megabytes < 15.00)
+                            {
 								image = image75jpg;
 							}
 							else
@@ -1586,8 +1903,8 @@ namespace HistWeb.Controllers
 								});
 								size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image50jpg);
 								megabytes = size / (1024.0 * 1024.0);
-								if (megabytes < 9.00)
-								{
+                                if (megabytes < 15.00)
+                                {
 									image = image50jpg;
 								}
 								else
@@ -1600,10 +1917,39 @@ namespace HistWeb.Controllers
 									});
 									size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image25jpg);
 									megabytes = size / (1024.0 * 1024.0);
-									if (megabytes < 9.00)
-									{
+                                    if (megabytes < 15.00)
+                                    {
 										image = image25jpg;
-									}
+									} else
+									{
+                                        image10jpg = await page.ScreenshotBase64Async(new ScreenshotOptions()
+                                        {
+                                            FullPage = true,
+                                            Quality = 10,
+                                            Type = ScreenshotType.Jpeg,
+                                        });
+                                        size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image10jpg);
+                                        megabytes = size / (1024.0 * 1024.0);
+                                        if (megabytes < 15.00)
+                                        {
+                                            image = image10jpg;
+                                        } else
+										{
+                                            image5jpg = await page.ScreenshotBase64Async(new ScreenshotOptions()
+                                            {
+                                                FullPage = true,
+                                                Quality = 5,
+                                                Type = ScreenshotType.Jpeg,
+                                            });
+                                            size = Encoding.Default.GetByteCount(HTML) + Encoding.Default.GetByteCount(image10jpg);
+                                            megabytes = size / (1024.0 * 1024.0);
+                                            if (megabytes < 15.00)
+                                            {
+                                                image = image5jpg;
+                                            }
+                                        }
+
+                                    }
 
 								}
 
@@ -1625,7 +1971,8 @@ namespace HistWeb.Controllers
 
 			try
 			{
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{

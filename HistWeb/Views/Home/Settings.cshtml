@@ -15,129 +15,578 @@
         .custom-control-input:checked ~ .custom-control-label::before {
             background-color: #007bff !important;
         }
+
+        .icon-button {
+            cursor: pointer;
+            color: #6c757d; /* This matches the btn-secondary color */
+        }
+
+        .icon-button:hover {
+            color: #343a40; /* Darker color on hover */
+        }
+
+        #logs {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #log-content {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        #log-content p {
+            margin: 5px 0;
+        }
+
+        #ssh-log-content {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        #ssh-log-content p {
+            margin: 5px 0;
+        }
+
+
+        #result {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+       result p {
+            margin: 5px 0;
+        }
+
+        /* Style different log types differently if needed */
+        .error {
+            color: red;
+        }
+
+        .info {
+            color: blue;
+        }
+
+        .warning {
+            color: orange;
+        }
+
+        .swal-wide-70 {
+            width: 70% !important;
+        }
+
+       .swal-wide {
+            width: 60% !important;
+        }
+
+       .swal-wide-50 {
+            width: 50% !important;
+        }
+        .swal2-content {
+            text-align: left;
+        }
+
+        .save-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-left: 5px;
+        }
+
+        .save-button:hover {
+            color: #0056b3;
+        }
+
+        .saved-message {
+            color: green;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .copyable {
+            cursor: pointer;
+        }
+
+        .table tr {
+            margin-bottom: 5px; 
+        }
+
     </style>
 }
 <div>
     <form id="profile-form" method="post">
-        <div class="card">
+        <div class="text-center">
             <div class="card-body">
                 <div class="row">
-                    <div class="col-2">
-                        <h5>Historia Core Setup</h5>
-
-                    </div>
-                    <div class="col-4">
-                        <div class="form-group float-right">
-                            <button id="btnTestHistoriaClient" type="button" class="btn btn-secondary btn-sm">Test Connection to Historia Client</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-
-                        <div class="form-group">
-                            <label id="HistoriaClientIPAddressLabel">Historia Core Client IP Address</label>
-                            <input asp-for="HistoriaClientIPAddress" class="form-control" value="@Model.HistoriaClientIPAddress" />
-                        </div>
-                        <div class="form-group">
-                            <label id="HistoriaRPCPortLabel">Historia Core Client RPC Port</label>
-                            <input asp-for="HistoriaRPCPort" class="form-control" value="@Model.HistoriaRPCPort" />
-                        </div>
-
-                        <div class="form-group">
-                            <label id="HistoriaRPCUserNameLabel">Historia Core Client Username</label>
-                            <input asp-for="HistoriaRPCUserName" class="form-control" value="@Model.HistoriaRPCUserName" />
-                        </div>
-
-                        <div class="form-group">
-                            <label id="HistoriaRPCPasswordLabel">Historia Core Client Password</label>
-                            <input asp-for="HistoriaRPCPassword" class="form-control" value="@Model.HistoriaRPCPassword" />
-                        </div>
-                    </div>
-                </div>
-                <br />
-                <div class="w-100"></div>
-                <div class="row">
-                    <div class="col-2">
-                        <h5>IPFS Gateway Setup</h5>
-                    </div>
-                    <div class="col-4">
-                        <div class="form-group float-right">
-                            <button id="btnTestIPFS" type="button" class="btn btn-secondary btn-sm">Test Connection to IPFS Server</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label id="IPFSHostLabel">IPFS Host</label>
-                            <input asp-for="IPFSHost" class="form-control" value="@Model.IPFSHost" />
-                        </div>
-                        <div class="form-group">
-                            <label id="IPFSPortLabel">IPFS Port</label>
-                            <input id="IPFSPort" class="form-control" value="@Model.IPFSPort" />
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-2">
-                        <h5>IPFS API Setup</h5>
-                    </div>
-                    <div class="col-4">
-                        <div class="form-group float-right">
-                            <button id="btnTestIPFSApi" type="button" class="btn btn-secondary btn-sm">Test Connection to IPFS API Server</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="form-group">
-                            <label id="IPFSApiHostLabel">IPFS API Host</label>
-                            <input asp-for="IPFSApiHost" class="form-control" value="@Model.IPFSApiHost" />
-                        </div>
-                        <div class="form-group">
-                            <label id="IPFSApiPortLabel">IPFS API Port</label>
-                            <input asp-for="IPFSApiPort" class="form-control" value="@Model.IPFSApiPort" />
-                        </div>
-
-                    </div>
-                </div>
-
-                <br />
-
-                <div class="row">
-                    <div class="col-1">
-                        <div class="custom-control custom-switch float-left">
-                            <input type="checkbox" class="custom-control-input" id="btnImportHistoriaRecords">
-                            <label class="custom-control-label" id="btnImportHistoriaRecordsLabel" for="btnImportHistoriaRecords">Off</label>
-                        </div>
-                    </div>
-                    <div class="col-2">
-                        <label><b>Enable Deep Search</b></label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        "Deep Search" runs at startup to load records that have not yet been fully downloaded, as well while the user is browsing the home page. If you are on a slow Internet connection this could cause slower responsive times. This will also increase the amount of bandwidth used. If you want full search capabilities of not only the blockchain objects (IE proposals, records, and archives) but the contents of the blockchain objects you should enable this.
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-12">
-                        <div class="form-group float-right">
-                            <button id="btnSaveSettings" type="button" class="btn btn-secondary btn">Save Settings</button>&nbsp;
-                            <button id="btnInstructions" type="button" class="btn btn-secondary btn">
-                                <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="color:white;">Setup Instructions</a>
-                            </button>
+                        <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                            <li class="nav-item"><a id="gatewayTab" href="#gateway" data-target="#gateway" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="">Masternode Gateway</a></li>
+                            <li class="nav-item"><a id="coreTab" href="#core" data-target="#core" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Historia Core Setup</a></li>
+                            <li class="nav-item"><a id="masternodesTab" href="#masternodes" data-target="#masternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="Loading(); sleep(1000); fillMasternodes();">Manage Masternodes & Voting Nodes</a></li>
+                            <li class="nav-item"><a id="setupvotingnodesTab" href="#setupvotingnodes" data-target="#setupvotingnodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="fillMasternodes(); NodeQueue(100); checkVotingNodeSetupFlag(); ">Setup Voting Nodes</a></li>
+                            <li class="nav-item"><a id="setupmasternodesTab" href="#setupmasternodes" data-target="#setupmasternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="fillMasternodes(); NodeQueue(5000); checkMasternodeSetupFlag(); ">Setup Masternodes</a></li>
+                            <li class="nav-item"><a id="ipfsapiTab" href="#ipfsapi" data-target="#ipfsapi" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Advanced Settings</a></li>
+                        </ul>
+                        <br />
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="tab-content">
+                                    <div id="gateway" class="tab-pane fade show active">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <h5 style="text-align: left;">Masternode Gateway Setup</h5>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    Because Historia Network is a distributed network, you have to choose a Content Distribution Masternode HTTPS server to connect for you to receive content.
 
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table class="table table-striped my-5 w-100" id="masternodesTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>URL</th>
+                                                            <th>IP Address</th>
+                                                            <th>Status</th>
+
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                       
+
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group">
+                                                    <h6 id="IPFSHostLabel" style="text-align: left !important;">Masternode Gateway</h6>
+                                                    <input asp-for="IPFSHost" class="form-control" value="@Model.IPFSHost" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <h6 id="IPFSPortLabel" style="text-align: left !important;">Masternode Port</h6>
+                                                    <input id="IPFSPort" class="form-control" value="@Model.IPFSPort" />
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestIPFS" type="button" class="btn btn-secondary btn-sm">Test & Save IPFS Server</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div id="core" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <h5 style="text-align: left;">Historia Core Setup</h5>
+
+                                            </div>
+
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    This is how this web application connects to the Historia Core Wallet. We have imported these settings from the Historia Core Wallet, we don't recommend changing them unless you know what you are doing or unless something is broken.
+
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaClientIPAddressLabel" style="text-align: left;">Historia Core Client IP Address</h6>
+                                                    <input asp-for="HistoriaClientIPAddress" class="form-control" value="@Model.HistoriaClientIPAddress" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaRPCPortLabel" style="text-align: left;">Historia Core Client RPC Port</h6>
+                                                    <input asp-for="HistoriaRPCPort" class="form-control" value="@Model.HistoriaRPCPort" />
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaRPCUserNameLabel" style="text-align: left;">Historia Core Client Username</h6>
+                                                    <input asp-for="HistoriaRPCUserName" class="form-control" value="@Model.HistoriaRPCUserName" />
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <h6 id="HistoriaRPCPasswordLabel" style="text-align: left;">Historia Core Client Password</h6>
+                                                    <input asp-for="HistoriaRPCPassword" class="form-control" value="@Model.HistoriaRPCPassword" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestHistoriaClient" type="button" class="btn btn-secondary btn-sm">Test & Save Historia Core Wallet connection</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div id="masternodes" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <h5 style="text-align: left;">Manage Masternodes & Voting Nodes</h5>
+
+                                            </div>
+
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    To import and manage your Masternodes & Voting Nodes, please hit the Import button below. If you setup a new Masternode or Voting node, you must run the Import again to manage this node. Once imported, you can diagnose, restart, or revoke your nodes. To move coins associated with these nodes, you must first revoke them from the network. 
+                                                </p>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table class="table table-striped my-4 w-100" id="myMasternodesTableImport">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Identity</th>
+                                                            <th>Status</th>
+                                                            <th>Collateral Hash</th>
+                                                            <th>Collateral Index</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+   
+       
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestHistoriaClient" type="button" class="btn btn-secondary btn-sm" onclick="ImportMasternodes();">Import Masternodes & Voting Nodes</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div id="setupvotingnodes" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <h5 style="text-align: left;">Setup Voting Nodes</h5>
+
+                                            </div>
+                                            <div class="col-6">
+                                                <h5 style="text-align: left;">Why setup a voting node?</h5>
+                                            </div>
+                                           
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <p style="text-align: left;">
+                                                    To setup a voting node, hit the Setup Voting Node button.
+
+                                                </p>
+                                                <h6 style="text-align: left;">Documentation</h6>
+                                                <p style="text-align: left;">If you would like to vote, you can setup your own voting node. Please see the technical documentation site: <a href="https://docs.historia.network/en/latest/votingnodes/index.html" style="text-decoration:underline" target="_blank">Voting Node Setup</a></p>
+                                                <h6 style="text-align: left;">Requirements</h6>
+                                                <ul style="text-align: left;">
+                                                    <li style="text-align: left;">100 HTA Required plus some extra in transaction fees</li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-6">
+                                                <ul style="text-align: left;">
+                                                    <li >You have the authority to determine which content is permanently stored on the blockchain.</li>
+                                                    <li>Your contribution plays a pivotal role in shaping the content and direction of the Historia Network.</li>
+                                                    <li>Participating in voting contributes to the overall well-being of the network!</li>
+                                                    <li>By locking 100 HTA for the voting node, you aid in maintaining price stability.</li>
+
+                                                </ul>
+                                                
+                                                <div class="form-group">
+                                                    <button id="btnSetupVotingNode" type="button" class="btn btn-secondary btn-sm">Setup Voting Node</button><br />
+                                                    <small>(You can revoke your voting node and unlock your coins at anytime)</small>
+                                                </div>
+                                                <p></p>
+                                                <p id="VNProcessingVoting" style="text-align: center; display: none">Voting Node is being setup, please wait before voting.</p>
+                                                <div class="form-group">
+                                                    <p id="VPWalletLockedVoting" style="text-align: center; display: none">Setup paused, please enter your Historia Core Wallet passphrase again to continue.</p>
+                                                    <button id="btnUnlockWalletVoting" style="text-align: center; display: none" type="button" class="btn btn-secondary btn-sm">Unlock Wallet</button>
+                                                    <button id="btnDeleteVotingSetupAttempt" style="text-align: center; display: none" type="button" class="btn btn-secondary btn-sm">Delete Current Setup Attemptp</button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                                                    <li class="nav-item"><a id="vnlogsTab" href="#votingnodesetuplogs" data-target="#votingnodesetuplogs" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Voting Node Setup Logs</a></li>
+                                                </ul>
+                                                <br />
+                                                <div class="tab-content">
+                                                    <div id="votingnodesetuplogs" class="tab-pane fade show active">
+                                                        <div class="row">
+                                                            <div class="col-12">
+                                                                <div class="row">
+                                                                    <div class="col-12">
+                                                                        <div id="logs" class="container" style="text-align: left; max-height: 300px; overflow-y: auto">
+                                                                            <div id="log-content">
+
+                                                                            </div>
+                                                                        </div>
+                                                                        <br />
+                                                                        <div class="form-group float-right">
+                                                                            <button id="btnClearVotingLogs" type="button" class="btn btn-secondary btn-sm">Clear Logs</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                     </div>       
+
+                                    <div id="setupmasternodes" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <h5 style="text-align: left;">Setup MasterNodes</h5>
+                                            </div>
+                                            <div class="col-6">
+                                                <h5 style="text-align: left;">Why setup a masternode?</h5>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <p style="text-align: left;">
+                                                    Setting up a masternode involves a more complex process. If you already have a Linux server operating in the cloud, this wizard can automate the setup procedure for you.
+                                                </p>
+                                                <h6 style="text-align: left;">Documentation</h6>
+                                                <p style="text-align: left;">
+                                                    For detailed instructions on setting up a masternode, please refer to the technical documentation site here: <a href="https://docs.historia.network/en/latest/masternodes/index.html" style="text-decoration:underline" target="_blank">Masternode Node Setup</a>
+                                                </p>
+                                                <h6 style="text-align: left;">Requirements</h6>
+                                                <ul style="text-align: left;">
+                                                    <li style="text-align: left;">5000 HTA Required plus some extra in transaction fees</li>
+                                                    <li style="text-align: left;">A Ubuntu 20.04 (Linux) server, ideally a Virtual Private Server (VPS), is necessary.</li>
+                                                    <li style="text-align: left;">An IPv4 address is required.</li>
+                                                    <li style="text-align: left;">A unique DNS name, (such as mn1.historiasys.network), is necessary.</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-6">
+                                                <ul style="text-align: left;">
+                                                    <li>By hosting the content of the Historia Network, a masternode ensures that the data remains indelible and unalterable.</li>
+                                                    <li>Masternode operators are financially compensated in HTA for their management and maintenance services.</li>
+                                                    <li>Masternode operators enjoy the same voting privileges as Voting Node operators.</li>
+                                                    <li>Committing 5,000 HTA to a masternode contributes to the stability of the HTA price.</li>
+                                                </ul>
+
+                                                <p id="VNProcessingMasternode" style="text-align: center; display: none">Masternodenode is being setup, please wait before voting. To follow the progress, view the Setup Logs tab below.</p>
+                                                <div class="form-group">
+                                                    <p id="VPWalletLockedMasternode" style="text-align: center; display: none">Setup paused, please enter your Historia Core Wallet passphrase again to continue.</p>
+                                                    <button id="btnUnlockWalletMasternode" style="text-align: center; display: none" type="button" class="btn btn-secondary btn-sm">Unlock Wallet</button>
+                                                    <button id="btnDeleteMasternodeSetupAttempt" style="text-align: center; display: none" type="button" class="btn btn-secondary btn-sm">Delete Current Setup Attempt</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
+                                                    <li class="nav-item"><a id="sshTab" href="#sshserversettings" data-target="#sshserversettings" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="">SSH Server Settings</a></li>
+                                                    <li class="nav-item"><a id="logsTab" href="#sshlogs" data-target="#sshlogs" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Setup Logs</a></li>
+                                                </ul>
+                                                <br />
+                                                <div class="tab-content">
+                                                    <div id="sshserversettings" class="tab-pane fade show active">
+                                                        <div class="row">
+                                                            <div class="col-6">
+                                                                <div class="form-group">
+                                                                    <h6 id="ipAddress" style="text-align: left !important;">SSH Server IP Address</h6>
+                                                                    <input type="text" id="SSHipAddress" class="form-control" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <h6 id="port" style="text-align: left !important;">SSH Server Port</h6>
+                                                                    <input type="number" id="SSHport" class="form-control" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <h6 id="dns" style="text-align: left !important;">Your DNS name</h6>
+                                                                    <input type="text" id="DNSName" class="form-control" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <h6 id="username" style="text-align: left !important;">Server Username</h6>
+                                                                    <input type="text" id="SSHusername" class="form-control" required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <h6 id="password" style="text-align: left !important;">Server Password</h6>
+                                                                    <input type="password" id="SSHpassword" class="form-control" required>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-6"> 
+                                                                <div class="row">
+                                                                    <div class="col-12">
+                                                                        <h6 style="text-align: left !important;">SSH Connection Logs</h6>
+                                                                        <div id="logs" class="container" style="text-align: left; max-height: 300px; overflow-y: auto">
+                                                                            <div id="result">
+                                                                                No logs found
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-6 form-group">
+                                                                <div class="form-group float-left">
+                                                                    <button id="btntestSshConnection" type="button" onclick="Loading(); testSshConnection()" class="btn btn-secondary btn-sm">Test Connection</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div id="sshlogs" class="tab-pane fade show">
+                                                        <div class="row">
+                                                            <div class="col-12">
+                                                                <div class="row">
+                                                                    <div class="col-12">
+                                                                        <div id="logs" class="container" style="text-align: left; max-height: 300px; overflow-y: auto">
+                                                                            <div id="ssh-log-content">
+                                                                                <p>No logs found.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <br />
+                                                                        <div class="form-group float-right">
+                                                                            <button id="btnClearMasternodeLogs" type="button" class="btn btn-secondary btn-sm">Clear Logs</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="ipfsapi" class="tab-pane fade show">
+                                        <div class="row">
+                                            <div class="col-3">
+                                                <h5 style="text-align: left;">Advanced Setttings</h5>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left;">
+                                                    These are advanced settings that most users don't need to enable.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <h6 style="text-align: left !important;">Enable IPFS API Server</h6>
+                                            </div>
+                                            <div class="col-2">
+                                                <div class="custom-control custom-switch float-right">
+                                                    <input type="checkbox" class="custom-control-input" id="btnEnabledIpfsApi">
+                                                    <label class="custom-control-label" id="btnEnabledIpfsApiLabel" for="btnEnabledIpfsApi">Off</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left !important;">
+                                                    If you want to use the Create process, you must enable the IPFS API server to submit to the network. We have imported the settings below, and you should not have to change these settings. This will open a seperate command prompt window. Do NOT close this window until you are are done submitting via the Create process.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group">
+                                                    <h6 id="IPFSApiHostLabel" style="text-align: left !important;">IPFS API IP Address</h6>
+                                                    <input asp-for="IPFSApiHost" class="form-control" value="@Model.IPFSApiHost" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <h6 id="IPFSApiPortLabel" style="text-align: left !important;">IPFS API Port</h6>
+                                                    <input asp-for="IPFSApiPort" class="form-control" value="@Model.IPFSApiPort" />
+                                                </div>
+                                                <br />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnTestIPFSApi" type="button" class="btn btn-secondary btn-sm">Test & Save Connection to IPFS API Server</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div class="row">
+                                            <div class="col-5">
+                                                <h6 style="text-align: left !important;">Enable High Speed Connection</h6>
+                                            </div>
+                                            <div class="col-2">
+                                                <div class="custom-control custom-switch float-right">
+                                                    <input type="checkbox" class="custom-control-input" id="btnImportHistoriaRecords">
+                                                    <label class="custom-control-label" id="btnImportHistoriaRecordsLabel" for="btnImportHistoriaRecords">Off</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left !important;">
+                                                    This option does a few things and is recommended for most users. However if you are on a slow internet connection, then disable this.
+                                                </p>
+                                                <ul>
+                                                    <li style="text-align: left !important;">
+                                                        Runs at startup to load records that have not yet been fully downloaded in the background. If you are on a slow Internet connection this could cause slower responsive times.
+                                                    </li>
+                                                    <li style="text-align: left !important;">
+                                                        Enable full search (Deep Search) capabilities of not only the blockchain objects (IE proposals, records, and archives).
+                                                    </li>
+                                                    <li style="text-align: left !important;">
+                                                        Better user experience.
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="form-group float-right">
+                                                    <button id="btnInstructions" type="button" class="btn btn-secondary btn">
+                                                        <a href="https://docs.historia.network/en/latest/votingnodes/setup-local-basex.html" target="_blank" style="color:white;">Setup Instructions</a>
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        <br /><br />
                     </div>
                 </div>
             </div>
-            <br /> <br /> <br />
-
-
+        </div>
     </form>
 </div>
 
@@ -145,8 +594,1280 @@
 
 @section Scripts {
     <script type="text/javascript">
-        window.addEventListener('DOMContentLoaded', function () {
+        var createdUsername = null;
+        var createdPassword = null;
 
+        function clearVotingLogs() {
+            $.ajax({
+                url: '@Url.Action("DeleteLogEntries", "Masternode", new { Area = "Masternode" })',
+                type: 'GET',
+                data: { filter: 'VOTINGNODE' },
+                success: function (data) {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Voting logs have been cleared.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while clearing the logs.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred while clearing the logs.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+        function clearDiagLogs() {
+            $.ajax({
+                url: '@Url.Action("DeleteLogEntries", "Masternode", new { Area = "Masternode" })',
+                type: 'GET',
+                data: { filter: 'DIAGNOSIS' },
+                success: function (data) {
+
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred while clearing the logs.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+        function clearMasternodeLogs() {
+            $.ajax({
+                url: '@Url.Action("DeleteLogEntries", "Masternode", new { Area = "Masternode" })',
+                type: 'GET',
+                data: { filter: 'MASTERNODE' },
+                success: function (data) {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Masternode logs have been cleared.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while clearing the logs.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred while clearing the logs.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+        async function testSshConnectionDiag(collateralHash) {
+            var ipAddress = $('#SSHipAddressSWAL').val();
+            var port = $('#SSHportSWAL').val();
+            var username = $('#SSHusernameSWAL').val();
+            var password = $('#SSHpasswordSWAL').val();
+            var dnsName = $('#DNSNameSWAL').val();
+
+            // Validate all fields
+            if (!ipAddress || !port || !username || !password || !dnsName) {
+                Swal.fire('Error', 'All fields are required.', 'error');
+                return;
+            }
+            Loading();
+            clearDiagLogs();
+            try {
+                const response = await $.ajax({
+                    url: '@Url.Action("TestSshConnection", "Masternode", new { Area = "Masternode" })',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        IpAddress: ipAddress,
+                        Port: port,
+                        Username: username,
+                        Password: password,
+                        DNS: dnsName
+                    }),
+                    contentType: 'application/json; charset=utf-8'
+                });
+
+                Swal.fire({
+                    title: 'Connection Tested',
+                    text: 'The masternode is ready to start the diagnosis.',
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonText: 'Run Diagnosis',
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        Swal.close();
+                        Loading();
+                        await runDiagnosis(collateralHash, ipAddress, port, username, password, dnsName);
+                    }
+                });
+            } catch (error) {
+                Swal.fire('Error', 'There was an error testing the SSH connection.', 'error');
+                console.log('Error:', error);
+            }
+        }
+
+
+        function testSshConnection() {
+            var ipAddress = $('#SSHipAddress').val();
+            var port = $('#SSHport').val();
+            var username = $('#SSHusername').val();
+            var password = $('#SSHpassword').val();
+            var dnsName = $('#DNSName').val();
+            var noSudo = 0;
+            // Validate all fields
+            if (!ipAddress || !port || !username || !password || !dnsName) {
+                Swal.fire('Error', 'All fields are required.', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("TestSshConnection", "Masternode", new { Area = "Masternode" })',
+                type: 'POST',
+                data: JSON.stringify({
+                    IpAddress: ipAddress,
+                    Port: port,
+                    Username: username,
+                    Password: password,
+                    DNS: dnsName
+                }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    $('#result').text(response.message);
+
+                    if (response.message.includes("User is root")) {
+                        Swal.fire({
+                            title: 'User is root',
+                            html: 'It is not recommended to setup a masternode as the root user. Please create a new user below.<br><input id="newUsername" class="swal2-input" placeholder="New Username"><input id="newPassword" type="password" class="swal2-input" placeholder="New Password">',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Create User',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                var newUsername = $('#newUsername').val();
+                                var newPassword = $('#newPassword').val();
+                                createUser(ipAddress, port, username, password, newUsername, newPassword);
+                            }
+                        });
+                    } else if (response.message.includes("does not have sudo access")) {
+                        Swal.fire({
+                            title: 'User lacks sudo access',
+                            html: 'User needs sudo access to set up properly. Please provide root credentials.<br><input id="rootUsername" class="swal2-input" placeholder="Root Username"><input id="rootPassword" type="password" class="swal2-input" placeholder="Root Password">',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Give Sudo Access',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                var rootUsername = $('#rootUsername').val();
+                                var rootPassword = $('#rootPassword').val();
+                                giveSudoAccess(ipAddress, port, rootUsername, rootPassword, username);
+                            }
+                        });
+                    } else if (response.message.includes("has sudo access")) {
+                        Swal.fire({
+                            title: 'Server ready',
+                            text: 'The server is ready to start the setup process.',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Setup',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                startSetup();
+                            }
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $('#result').text('Error: ' + error);
+                }
+            });
+        }
+
+        function createUser(ipAddress, port, sshUsername, sshPassword, newUsername, newPassword) {
+            $.ajax({
+                url: '@Url.Action("CreateUser", "Masternode", new { Area = "Masternode" })',
+                type: 'POST',
+                data: JSON.stringify({
+                    IpAddress: ipAddress,
+                    Port: port,
+                    SshUsername: sshUsername,
+                    SshPassword: sshPassword,
+                    NewUsername: newUsername,
+                    NewPassword: newPassword
+                }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    if (response.success) {
+                        createdUsername = newUsername;
+                        createdPassword = newPassword;
+                        Swal.fire('Success', 'New user created successfully.', 'success').then((result) => {
+                            startSetup();
+                        });
+                    } else {
+                        Swal.fire('Error', 'Failed to create new user: ' + response.error, 'error');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire('Error', 'Failed to create new user.', 'error');
+                }
+            });
+        }
+
+        function startSetup() {
+            var ipAddress = $('#SSHipAddress').val();
+            var port = $('#SSHport').val();
+            var username = createdUsername || $('#SSHusername').val();
+            var password = createdPassword || $('#SSHpassword').val();
+            var dnsName = $('#DNSName').val();
+
+            // Validate all fields
+            if (!ipAddress || !port || !username || !password || !dnsName) {
+                Swal.fire('Error', 'All fields are required.', 'error');
+                return;
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("SetupMasternodeQueue", "Masternode", new { Area = "Masternode" })',
+                data: JSON.stringify({
+                    IpAddress: ipAddress,
+                    Port: port,
+                    Username: username,
+                    Password: password,
+                    DNS: dnsName
+                }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'alert',
+                            title: 'Masternode Has Been Queued for Setup!',
+                            text: 'Your masternode has been queued for setup. You can leave this page, but do not close this Historia Local Web, or close the Historia Core Wallet. This process can take up to 1 hour. You can check progress by coming back to this page and viewing the Logs tab.',
+                            confirmButtonText: 'OK'
+                        }).then(function () {
+                            // Switch to the "Setup Logs" tab
+                            $('#logsTab').tab('show');
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error
+                        });
+                        return false;
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred.'
+                    });
+                }
+            });
+        }
+
+
+        function giveSudoAccess(ipAddress, port, rootUsername, rootPassword, targetUsername) {
+            $.ajax({
+                url: '@Url.Action("GiveSudoAccess", "Masternode", new { Area = "Masternode" })',
+                type: 'POST',
+                data: JSON.stringify({
+                    IpAddress: ipAddress,
+                    Port: port,
+                    RootUsername: rootUsername,
+                    RootPassword: rootPassword,
+                    TargetUsername: targetUsername
+                }),
+                contentType: 'application/json; charset=utf-8',
+                success: function (response) {
+                    Swal.fire('Success', 'Sudo access granted successfully.', 'success');
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire('Error', 'Failed to grant sudo access.', 'error');
+                }
+            });
+        }
+
+        function fillForm(data) {
+            if (!data) {
+                console.error("Data is undefined or null");
+                return;
+            }
+
+            if (!data.identity) {
+                console.error("Identity property is missing in data:", data);
+                return;
+            }
+
+            // Remove 'https://' from the identity if it exists
+            var cleanIdentity = data.identity.replace(/^https:\/\//i, '');  // Using regex to ensure case insensitivity
+
+            // Set the cleaned identity to the IPFSHost input
+            $('#IPFSHost').val(cleanIdentity);
+            $('#IPFSPort').val("443");  // Assuming you store port in the DataTable
+        }
+
+        function NodeQueue(nodetype) {
+            $.get('@Url.Action("NodeQueue", "Masternode", new { Area = "Masternode" })', { filter: nodetype }, function (data) {
+                if (data.success) {
+                    if (nodetype == "100") {
+                        $('#VNProcessingVoting').show();
+                    } else if (nodetype == "5000") {
+                        $('#VNProcessingMasternode').show();
+                    }
+                    $('#btnSetupVotingNode').prop('disabled', true);
+                    $('#btntestSshConnection').prop('disabled', true);
+                    $.get('@Url.Action("IsUnlockWallet", "Masternode", new { Area = "Masternode" })', null, function (data) {
+                        if (!data.success) {
+                            if (nodetype == "100") {
+                                $('#VPWalletLockedVoting').show();
+                                $('#btnUnlockWalletVoting').show();
+                                $('#btnDeleteMasternodeSetupAttempt').show();
+                            } else if (nodetype == "5000") {
+                                $('#VPWalletLockedMasternode').show();
+                                $('#btnUnlockWalletMasternode').show();
+                                $('#btnRestartMasternodeSetup').show();
+                            }
+
+                        } else {
+                            $('#VPWalletLockedVoting').hide();
+                            $('#VPWalletLockedMasternode').hide();
+                            $('#btnUnlockWalletVoting').hide();
+                            $('#btnUnlockWalletMasternode').hide();
+                            $('#btnRestartVotingSetup').hide();
+                            $('#btnDeleteMasternodeSetupAttempt').hide();
+                        }
+                    });
+                } else {
+                    $('#VNProcessingVoting').hide();
+                    $('#VNProcessingMasternode').hide();
+                }
+            });
+
+        }
+
+        function Loading() {
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                onBeforeOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+        }
+
+        function fillMasternodes() {
+            $.get('@Url.Action("GetMyMasternodes", "Masternode", new { Area = "Masternode" })', null, function (data) {
+                myMasternodesTable = $('#myMasternodesTableImport').DataTable({
+                    data: data,
+                    destroy: true,
+                    info: false,
+                    fixedHeader: false,
+                    lengthChange: false,
+                    autoWidth: false,
+                    responsive: true,
+                    searching: false,
+                    columns: [
+                        {
+                            data: null,
+                            render: function (data, type, full, meta) {
+                                if (data.identity == "VOTER") {
+                                    return "VOTER";
+                                } else {
+                                    return '<a href="' + data.identity + '/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html">' + data.identity + '</a>';
+                                }
+                            }
+                        },
+                        {
+                            data: "status",
+                        },
+                        {
+                            data: "collateralHash",
+                            render: function (data, type, row) {
+                                if (type === 'display' && data.length > 25) {
+                                    return data.substr(0, 25) + '...';
+                                }
+                                return data;
+                            }
+                        },
+                        { data: "collateralIndex" },
+                        {
+                            data: null,
+                            render: function (data, type, full, meta) {
+                                if (data.identity == "VOTER") {
+                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="RevokeVoterBtn" class="fas fa-times-circle icon-button" title="Revoke Voter" onClick="RevokeVoterNode(\'' + data.collateralHash + '\');"></i>';
+
+                                } else {
+                                    var DNS = data.identity.replace(/^https?:\/\//, '');
+                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="ToolsBtn" class="fas fa-tools icon-button" title="Diagnosis" onClick="GetTools(\'' + data.collateralHash + '\', \'' + data.ipAddress + '\', \'' + DNS + '\');"></i>&nbsp<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasterNode(\'' + data.collateralHash + '\');"></i>';
+
+                                }
+                            }
+                        },
+                    ],
+                });
+
+                // Close the SweetAlert after data is loaded
+                Swal.close();
+            });
+        }
+
+        function GetInfo(collateralHash) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetMasterNodesInfo", "Masternode", new { Area = "Masternode" })',
+                data: JSON.stringify({ collateralHash: collateralHash }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success === false) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error,
+                        });
+                    } else {
+                        let wrapText = (text, maxLength) => {
+                            if (!text) return '';
+                            return text.match(new RegExp('.{1,' + maxLength + '}', 'g')).join('<br>');
+                        };
+
+                        let htmlContent = `
+                        <div class="container">
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <table class="table table-bordered">
+                                        <tbody>
+                                            <tr>
+                                                <th style="text-align: left;">ProTxHash:</th>
+                                                <td class="copyable">${wrapText(response.proTxHash, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">CollateralHash:</th>
+                                                <td class="copyable">${wrapText(response.collateralHash, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">CollateralIndex:</th>
+                                                <td class="copyable">${response.collateralIndex}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Identity:</th>
+                                                <td class="copyable">${wrapText(response.identity, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Owner Address:</th>
+                                                <td class="copyable">${wrapText(response.ownerAddress, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Voting Address:</th>
+                                                <td class="copyable">${wrapText(response.votingAddress, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Collateral Address:</th>
+                                                <td class="copyable">${wrapText(response.collateralAddress, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">PubKey Operator:</th>
+                                                <td class="copyable">${wrapText(response.pubKeyOperator, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">IPFS Peer ID:</th>
+                                                <td class="copyable">${wrapText(response.ipfsPeerId, 50)}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Status:</th>
+                                                <td class="copyable">${response.status}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">IP Address:</th>
+                                                <td class="copyable">${response.ipAddress}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Last Paid Time:</th>
+                                                <td class="copyable">${response.lastpaidtime}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Last Paid Block:</th>
+                                                <td class="copyable">${response.lastpaidblock}</td>
+                                            </tr>
+                                            <tr>
+                                                <th style="text-align: left;">Payee:</th>
+                                                <td class="copyable">${wrapText(response.payee, 50)}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <hr>
+                                    <p>You can update these fields, but if they are not empty, don't change them:</p>
+                                    <div class="form-group row">
+                                        <label for="feeSourceAddress" class="col-md-3 col-form-label" style="text-align: left;"><strong>Fee Source Address:</strong></label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="feeSourceAddress" class="form-control" value="${response.feeSourceAddress}" placeholder="Enter Fee Source Address" size="68">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="blsprivkey" class="col-md-3 col-form-label" style="text-align: left;"><strong>BLS Private Key:</strong></label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="blsprivkey" class="form-control" value="${response.blsprivkey}" placeholder="Enter BLS Private Key" size="68">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="blspublickey" class="col-md-3 col-form-label" style="text-align: left;"><strong>BLS Public Key:</strong></label>
+                                        <div class="col-md-9">
+                                            <input type="text" id="blspublickey" class="form-control" value="${response.blspublickey}" placeholder="Enter BLS Public Key" size="68">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+
+                        if (!response.feeSourceAddress || !response.blsprivkey || !response.blspublickey) {
+                            htmlContent += '<p id="manage-message" style="color: red;">You cannot manage this masternode until you update empty fields.</p>';
+                        }
+
+                        Swal.fire({
+                            title: 'MasterNode Information',
+                            html: htmlContent,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            cancelButtonText: 'Close',
+                            customClass: {
+                                popup: 'swal-wide-70',
+                                content: 'swal2-content'
+                            },
+                            didRender: () => {
+                                $('.copyable').on('click', function () {
+                                    let textToCopy = $(this).html().replace(/<br>/g, '');
+                                    navigator.clipboard.writeText(textToCopy).then(() => {
+                                        let copiedMessage = $('<div class="copiedMessage">Copied</div>');
+                                        copiedMessage.css({
+                                            display: 'block',
+                                            position: 'absolute',
+                                            background: 'lightblue',
+                                            color: 'black',
+                                            padding: '5px',
+                                            borderRadius: '5px',
+                                            zIndex: 1000,
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)'
+                                        });
+                                        $(this).closest('tr').css('position', 'relative').append(copiedMessage);
+                                        copiedMessage.fadeIn().delay(2000).fadeOut(() => {
+                                            copiedMessage.remove();
+                                        });
+                                    });
+                                });
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                saveAllFields(collateralHash);
+                            }
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred: ' + error,
+                    });
+                }
+            });
+        }
+
+
+
+
+        function saveAllFields(collateralHash) {
+            const feeSourceAddress = $('#feeSourceAddress').val() || '';
+            const blsprivkey = $('#blsprivkey').val() || '';
+            const blspublickey = $('#blspublickey').val() || '';
+            const data = {
+                collateralHash: collateralHash,
+                feeSourceAddress: feeSourceAddress,
+                blsprivkey: blsprivkey,
+                blspublickey: blspublickey
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("SaveMasternodeFields", "Masternode", new { Area = "Masternode" })',
+                data: JSON.stringify(data),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Fields updated successfully.',
+                        }).then(() => {
+                            fillMasternodes();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error,
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred: ' + error,
+                    });
+                }
+            });
+        }
+
+        function GetTools(collateralHash, SSHipAddress, DNS) {
+            Swal.fire({
+                title: 'Diagnosis Tools',
+                html: `
+                        <p>Attempt to diagnose common masternode problems.</p>
+                        <div class="form-group">
+                            <h6 id="ipAddress" style="text-align: left !important;">SSH Server IP Address</h6>
+                            <input type="text" id="SSHipAddressSWAL" value=${SSHipAddress} class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <h6 id="port" style="text-align: left !important;">SSH Server Port</h6>
+                            <input type="number" id="SSHportSWAL" value="22" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <h6 id="dns" style="text-align: left !important;">Your DNS name</h6>
+                                    <input type="text" id="DNSNameSWAL" value="${DNS}"" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <h6 id="username" style="text-align: left !important;">Server Username</h6>
+                            <input type="text" id="SSHusernameSWAL" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <h6 id="password" style="text-align: left !important;">Server Password</h6>
+                            <input type="password" id="SSHpasswordSWAL" class="form-control" required>
+                        </div>
+                        <button id="btntestSshConnection" type="button" onclick="testSshConnectionDiag('${collateralHash}');" class="btn btn-secondary btn-sm">Test Connection</button>
+
+                    `,
+                showConfirmButton: false,
+                customClass: {
+                    popup: 'swal-wide',
+                    content: 'swal2-content'
+                }
+            });
+
+        }
+
+        async function runDiagnosis(collateralHash, ipAddress, port, username, password, dnsName) {
+
+            Swal.fire({
+                title: 'Diagnosing Masternode Problems...',
+                html: `<div id="diagnosisResults" style="display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; margin-right: 0px; margin-left: -15px;">
+                           <div class="col-md-7">
+                               <div style="text-align:left;">Are ports open from externally?</div>
+                               <div style="text-align:left;">Is Web Server up?</div>
+                               <div style="text-align:left;">Is SSL Certificate Valid?</div>
+                               <div style="text-align:left;">Is DNS correct?</div>
+                               <div style="text-align:left;">Is IPFS running on web server?</div>
+                               <div style="text-align:left;">Is IPFS running locally?</div>
+                               <div style="text-align:left;">Do you have enough free hard drive space?</div>
+                               <div style="text-align:left;">Is Historia Running?</div>
+                               <div style="text-align:left;">Is Historia config proper?</div>
+                           </div>
+                           <div class="col-md-5">
+                               <div style="text-align:right;"><b id="externalPortsResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="webServerResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="websslServerResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="dnsResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="ipfsResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="ipfsLocallyResult">Checking...</b></div>
+                                <div style="text-align:right;"><b id="hardDriveSpaceResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="historiaRunningResult">Checking...</b></div>
+                               <div style="text-align:right;"><b id="historiaConfigResult">Checking...</b></div>
+                           </div>
+                       </div>`,
+                icon: 'info',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                customClass: {
+                    popup: 'swal-wide',
+                    content: 'swal2-content'
+                }
+            });
+
+            const endpoints = [
+                { url: '@Url.Action("CheckPorts", "Masternode", new { Area = "Masternode" })', elementId: 'externalPortsResult' },
+                { url: '@Url.Action("CheckWebServer", "Masternode", new { Area = "Masternode" })', elementId: 'webServerResult' },
+                { url: '@Url.Action("CheckSslCertificate", "Masternode", new { Area = "Masternode" })', elementId: 'websslServerResult' },
+                { url: '@Url.Action("CheckDNS", "Masternode", new { Area = "Masternode" })', elementId: 'dnsResult' },
+                { url: '@Url.Action("CheckWebIPFSServer", "Masternode", new { Area = "Masternode" })', elementId: 'ipfsResult' },
+                { url: '@Url.Action("CheckIPFS", "Masternode", new { Area = "Masternode" })', elementId: 'ipfsLocallyResult' },
+                { url: '@Url.Action("CheckHardDriveSpace", "Masternode", new { Area = "Masternode" })', elementId: 'hardDriveSpaceResult' },
+                { url: '@Url.Action("CheckHistoria", "Masternode", new { Area = "Masternode" })', elementId: 'historiaRunningResult' },
+                { url: '@Url.Action("CheckHistoriaConfig", "Masternode", new { Area = "Masternode" })', elementId: 'historiaConfigResult' }
+            ];
+
+            let results = {};
+
+            for (let endpoint of endpoints) {
+                try {
+                    const response = await $.ajax({
+                        type: 'POST',
+                        url: endpoint.url,
+                        data: JSON.stringify({ collateralHash, ipAddress, port, username, password, dnsName }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json'
+                    });
+
+                    const resultText = response.success ? 'Yes' : 'No';
+                    const resultColor = response.success ? 'green' : 'red';
+                    results[endpoint.elementId] = { text: resultText, color: resultColor };
+                    $('#' + endpoint.elementId).text(resultText).css('color', resultColor);
+                } catch (error) {
+                    results[endpoint.elementId] = { text: 'Error', color: 'red' };
+                    $('#' + endpoint.elementId).text('Error').css('color', 'red');
+                }
+            }
+
+            Swal.update({
+                title: 'Diagnosis Complete',
+                icon: 'success',
+                html: `<div id="diagnosisResults" style="display: flex; -ms-flex-wrap: wrap; flex-wrap: wrap; margin-right: 0px; margin-left: -15px;">
+                           <div class="col-md-7">
+                               <div style="text-align:left;">Are ports open from externally?</div>
+                               <div style="text-align:left;">Is Web Server up?</div>
+                               <div style="text-align:left;">Is SSL Certificate Valid?</div>
+                               <div style="text-align:left;">Is DNS correct?</div>
+                               <div style="text-align:left;">Is IPFS running on web server?</div>
+                               <div style="text-align:left;">Is IPFS running locally?</div>
+                               <div style="text-align:left;">Do you have enough free hard drive space?</div>
+                               <div style="text-align:left;">Is Historia Running?</div>
+                               <div style="text-align:left;">Is Historia config proper?</div>
+                           </div>
+                           <div class="col-md-5">
+                               <div style="text-align:right; color: ${results.externalPortsResult.color};"><b id="externalPortsResult">${results.externalPortsResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.webServerResult.color};"><b id="webServerResult">${results.webServerResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.websslServerResult.color};"><b id="websslServerResult">${results.websslServerResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.dnsResult.color};"><b id="dnsResult">${results.dnsResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.ipfsResult.color};"><b id="ipfsResult">${results.ipfsResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.ipfsLocallyResult.color};"><b id="ipfsLocallyResult">${results.ipfsLocallyResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.hardDriveSpaceResult.color};"><b id="hardDriveSpaceResult">${results.hardDriveSpaceResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.historiaRunningResult.color};"><b id="historiaRunningResult">${results.historiaRunningResult.text}</b></div>
+                               <div style="text-align:right; color: ${results.historiaConfigResult.color};"><b id="historiaConfigResult">${results.historiaConfigResult.text}</b></div>
+                           </div>
+                       </div>`,
+                showConfirmButton: true,
+                confirmButtonText: 'View Logs',
+                showCancelButton: true,
+                allowOutsideClick: true,
+                preConfirm: () => {
+                    viewLogs('DIAGNOSIS');
+                }
+            });
+        }
+
+
+
+
+
+        function viewLogs(filter) {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetLogEntries", "Masternode", new { Area = "Masternode" })',
+                data: { filter: filter },
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.length > 0) {
+                        let logContent = '<div id="logs" class="container" style="text-align: left; max-height: 300px; overflow-y: auto">';
+                        logContent += '<div id="log-content">';
+                        response.forEach(log => {
+                            var logMessage = `[${log.timestamp}] [${log.logType}]: ${log.log}`;
+                            logContent+= '<p>' + logMessage + '</p>'
+                        });
+                        logContent += '</div></div>';
+
+                        Swal.fire({
+                            title: 'Log Entries',
+                            html: logContent,
+                            icon: 'info',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Close',
+                            customClass: {
+                                popup: 'swal-wide',
+                                content: 'swal2-content'
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Log Entries',
+                            text: 'No log entries found.',
+                            icon: 'info',
+                            confirmButtonText: 'Close',
+                            customClass: {
+                                popup: 'swal-wide',
+                                content: 'swal2-content'
+                            }
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An unexpected error occurred: ' + error,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+
+
+        function RevokeVoterNode(collateralHash) {
+
+            Swal.fire({
+                title: "Revoke Voter Node?",
+                html:
+                    'Are you sure you want to revoke your voting privileges for this node? You must enter your Historia Core wallet passphrase. <br> <input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, revoke these keyst!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (confirm.value) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "600" }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+
+                                Swal.fire({
+                                    title: 'Loading...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    showConfirmButton: false,
+                                    onBeforeOpen: () => {
+                                        Swal.showLoading();
+                                    },
+                                });
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("RevokeNode", "Masternode", new { Area = "Masternode" })',
+                                    data: JSON.stringify({ collateralHash: collateralHash}),
+                                    contentType: 'application/json; charset=utf-8',
+                                    dataType: 'json',
+                                    success: function (result) {
+                                        try {
+                                            Swal.close();
+                                            Swal.fire({
+                                                icon: 'alert',
+                                                title: 'Voting Node Has Been Revoked!',
+                                                text: 'You can move the coins associated with that voting node now.',
+                                                confirmButtonText: 'OK'
+                                            });
+                                        } catch (e) {
+                                            console.error("Error processing data:", e);
+                                        }
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        console.error("AJAX error:", textStatus, errorThrown);
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.error
+                                });
+                                return false;
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+
+                } else {
+                    return false;
+                }
+            });
+         }
+
+
+        function RevokeMasternoderNode(collateralHash) {
+            Swal.fire({
+                title: "Revoke Voter Node?",
+                html:
+                    'Are you sure you want to revoke your voting privileges for this node? You must enter your Historia Core wallet passphrase. <input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, revoke this node!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (confirm.value) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "60" }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+
+                                Swal.fire({
+                                    title: 'Loading...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    showConfirmButton: false,
+                                    onBeforeOpen: () => {
+                                        Swal.showLoading();
+                                    },
+                                });
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("RevokeNode", "Masternode", new { Area = "Masternode" })',
+                                    success: function (tableData) {
+                                        try {
+
+                                            Swal.close();
+                                        } catch (e) {
+                                            console.error("Error processing data:", e);
+                                        }
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        console.error("AJAX error:", textStatus, errorThrown);
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.error
+                                });
+                                return false;
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+
+                } else {
+                    return false;
+                }
+            });
+        }
+
+
+        function RestartNode(collateralHash, VotingPrivateKeyBool, blsprivkeyBool, blspublickeyBool, feeSourceAddressBool) {
+            if (!VotingPrivateKeyBool || !blsprivkeyBool || !blspublickeyBool || !feeSourceAddressBool) {
+                Swal.fire('Error', 'Masternode not setup for management. Click on the Information icon.', 'error');
+                return;
+            }
+            Swal.fire({
+                title: "Attempt to Restart this Masternode?",
+                html:
+                    'Please verify that your masternode is up and running properly before attempting to restart. You must enter your Historia Core wallet passphrase. <br> <input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, attempt to restart!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (confirm.value) {
+  
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "600" }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+
+                                Swal.fire({
+                                    title: 'Loading...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    showConfirmButton: false,
+                                    onBeforeOpen: () => {
+                                        Swal.showLoading();
+                                    },
+                                });
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("RestartMasterNode", "Masternode", new { Area = "Masternode" })',
+                                    data: JSON.stringify({ collateralHash: collateralHash }),
+                                    contentType: 'application/json; charset=utf-8',
+                                    dataType: 'json',
+                                    success: function (result) {
+                                        if (result.success === true) {
+                                            Swal.close();
+                                            Swal.fire({
+                                                icon: 'success', 
+                                                title: 'An attempt to restart has been sent!',
+                                                text: 'Check the masternode status after one block has passed.',
+                                                confirmButtonText: 'OK'
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error', 
+                                                title: 'Something went wrong.',
+                                                text: 'You probably have invalid BLS Public Key, BLS Private Key or the Fee Source Address values set.',
+                                                confirmButtonText: 'OK'
+                                            });
+                                        }
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        console.error("AJAX error:", textStatus, errorThrown);
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.error
+                                });
+                                return false;
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+
+                } else {
+                    return false;
+                }
+            });
+        }
+
+
+        function ImportMasternodes() {
+
+            var passphrase;
+            Swal.fire({
+                title: "Are you sure you want to continue?",
+                html:
+                    '<b><h5>You must enter your Historia Core wallet passphrase. If your wallet is not encrypted, encrypt your wallet first, otherwise this process will fail.</h5><input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                type: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                closeOnClickOutside: false,
+                backdrop: true,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, Import Nodes!",
+                cancelButtonText: "No, cancel it!",
+                closeOnConfirm: true,
+                closeOnCancel: true,
+                preConfirm: () => {
+                    passphrase = Swal.getPopup().querySelector('#passphrase').value
+                }
+
+            }).then(function (confirm) {
+                if (confirm.value) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "100" }), 
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+
+                                Swal.fire({
+                                    title: 'Loading...',
+                                    text: 'Please wait',
+                                    allowOutsideClick: false,
+                                    showConfirmButton: false,
+                                    onBeforeOpen: () => {
+                                        Swal.showLoading();
+                                    },
+                                });
+
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '@Url.Action("ImportMyMasterNodes", "Masternode", new { Area = "Masternode" })',
+                                    success: function (tableData) {
+                                        try {
+                                            var parsedData = JSON.parse(tableData);
+                                            Swal.close();
+                                            var jsonRet = [];
+
+                                            if (parsedData.result && typeof parsedData.result === 'object') {
+                                                for (var prop in parsedData.result) {
+                                                    var mn = parsedData.result[prop];
+                                                    var masterNode = {};
+                                                    masterNode.Status = mn.status;
+                                                    masterNode.Payee = mn.payee;
+                                                    masterNode.LastSeen = new Date(mn.lastpaidtime * 1000);
+                                                    masterNode.IPAddress = mn.address;
+                                                    masterNode.Identity = "https://" + mn.identity;
+
+                                                    jsonRet.push(masterNode);
+                                                }
+                                            } else {
+                                                console.error("Invalid data structure:", parsedData);
+                                            }
+
+                                            var masternodesTable = $('#myMasternodesTableImport').DataTable({
+                                                destroy: true,
+                                                data: jsonRet,
+                                                info: false,
+                                                fixedHeader: false,
+                                                lengthChange: false,
+                                                autoWidth: false,
+                                                responsive: true,
+                                                columns: [
+                                                    {
+                                                        data: null,
+                                                        render: function (data, type, full, meta) {
+                                                            return '<a href="' + data.identity + '/ipfs/Qmd76KSvQn51VpsputPNGgdpAQsd73E5ZRxqjhtBsrGS6b/index.html">' + data.identity + '</a>';
+                                                        }
+                                                    },
+                                                    { data: "IPAddress" },
+                                                    { data: "Status" },
+                                                    { data: "Payee" },
+                                                    {
+                                                        data: null,
+                                                        render: function (data, type, full, meta) {
+                                                            if (data.identity == "VOTER") {
+                                                                return '<i id="RevokeVoterBtn" class="fas fa-times-circle icon-button" title="Revoke Voter" onClick="RevokeVoterNode(' + data.collateralHash + ');"></i>';
+                                                            } else {
+                                                                return '<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasterNode(' + data.collateralHash + ');"></i>';
+                                                            }
+                                                        }
+                                                    },
+                                                ],
+                                            });
+                                            Swal.close();
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Import successful!',
+                                                confirmButtonText: 'OK'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    fillMasternodes();
+                                                }
+                                            });
+                                        } catch (e) {
+                                            console.error("Error processing data:", e);
+                                        }
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        console.error("AJAX error:", textStatus, errorThrown);
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.error
+                                });
+                                return false;
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+
+                } else {
+                    return false;
+                }
+            });
+      
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
 
             $.get('@Url.Action("GetDeepValue", "Home", new { Area = "Home" })', null, function (data) {
                 if (data.value == 0) {
@@ -158,150 +1879,1169 @@
                 }
             });
 
-            document.getElementById('btnTestIPFS').onclick = (e) => {
-                var data = {
-                    IPFSHost: $('#IPFSHost').val(),
-                    IPFSPort: $('#IPFSPort').val(),
-                };
-                $.ajax({
-                    url: "/Home/TestIPFS",
-                    type: "POST",
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    data: JSON.stringify(data),
-                    success: function (resp) {
-                        if (resp.success) {
-                            Swal.fire({
-                                title: 'IPFS tested successfully!',
-                                text: 'IPFS tested successfully!',
-                                type: 'success',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                        else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'Please check all fields and try again',
-                                type: 'error',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                    },
-                    error: function (req, status, error) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'Please check all fields and try again',
-                            type: 'error',
-                            confirmButtonText: 'Ok'
-                        });
-                    }
-                });
-            };
-            document.getElementById('btnTestIPFSApi').onclick = (e) => {
-                var data = {
-                    IPFSAPIHost: $('#IPFSApiHost').val(),
-                    IPFSAPIPort: $('#IPFSApiPort').val(),
-                };
-                $.ajax({
-                    url: "/Home/TestIPFSAPI",
-                    type: "POST",
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    data: JSON.stringify(data),
-                    success: function (resp) {
-                        if (resp.success) {
-                            Swal.fire({
-                                title: 'IPFS API tested successfully!',
-                                text: 'IPFS  API  tested successfully!',
-                                type: 'success',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                        else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'Please check all fields and try again',
-                                type: 'error',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                    },
-                    error: function (req, status, error) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'Please check all fields and try again',
-                            type: 'error',
-                            confirmButtonText: 'Ok'
-                        });
-                    }
-                });
-            };
+           $.get('@Url.Action("GetIpfsApiValue", "Home", new { Area = "Home" })', null, function (data) {
+                if (data.value == 0) {
+                    $('#btnEnabledIpfsApiLabel').html("Off");
+                    $('#btnEnabledIpfsApi').prop('checked', false);
+                } else {
+                    $('#btnEnabledIpfsApiLabel').html("On");
+                    $('#btnEnabledIpfsApi').prop('checked', true);
+                }
+            });
 
-            document.getElementById('btnTestHistoriaClient').onclick = (e) => {
-                var data = {
-                    HistoriaClientIPAddress: $('#HistoriaClientIPAddress').val(),
-                    HistoriaRPCPort: $('#HistoriaRPCPort').val(),
-                    HistoriaRPCUserName: $('#HistoriaRPCUserName').val(),
-                    HistoriaRPCPassword: $('#HistoriaRPCPassword').val(),
-                };
-                $.ajax({
-                    url: "/Home/TestHistoriaClient",
-                    type: "POST",
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    data: JSON.stringify(data),
-                    success: function (resp) {
-                        if (resp.success) {
-                            Swal.fire({
-                                title: 'Historia Client tested successfully!',
-                                text: 'Historia Client tested successfully!',
-                                type: 'success',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                        else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'Please check all fields and try again',
-                                type: 'error',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                    },
-                    error: function (req, status, error) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'Please check all fields and try again',
-                            type: 'error',
-                            confirmButtonText: 'Ok'
-                        });
-                    }
-                });
-            };
 
-            document.getElementById('btnImportHistoriaRecords').onclick = (e) => {
 
-                if ($('#btnImportHistoriaRecordsLabel').html() === "On") {
+        });
+
+        function checkVotingNodeSetupFlag() {
+            $.get('@Url.Action("GetVotingNodeSetupFlag", "Masternode", new { Area = "Masternode" })', function (data) {
+                if (data.success) {
                     Swal.fire({
-                        title: 'Deep Search',
-                        html: 'Are you sure you want to disable Deep Search?' +
+                        title: 'Voting Node Setup',
+                        text: 'Your voting node has been setup successful!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }).fail(function (xhr, status, error) {
+                console.error('Error checking voting node setup flag:', error);
+            });
+        }
+
+        function checkMasternodeSetupFlag() {
+            $.get('@Url.Action("GetMasternodeSetupFlag", "Masternode", new { Area = "Masternode" })', function (data) {
+                if (data.Success) {
+                    Swal.fire({
+                        title: 'Voting Node Setup',
+                        text: 'Your voting node has been setup successful!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }).fail(function (xhr, status, error) {
+                console.error('Error checking voting node setup flag:', error);
+            });
+        }
+
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function getMasterNodesSetup() {
+            $.ajax({
+                url: '@Url.Action("GetMasterNodesSetup", "Masternode", new { Area = "Masternode" })',
+                type: 'GET',
+                dataType: 'json',
+                timeout: 10000,
+                success: function (response) {
+                    Swal.close(); // Ensure the Swal is closed in success path
+
+                    // If success, process the data
+                    var jsonRet = [];
+                    response.data.forEach(function (item) {  // Assuming response.data is an array of objects
+                        var masterNode = {
+                            identity: item.identity,
+                            status: item.status,
+                            ipAddress: item.ipAddress
+                        };
+                        jsonRet.push(masterNode);
+                    });
+
+                    // Reinitialize or update the DataTable with new data
+                    var masternodesTable = $('#masternodesTable').DataTable();
+                    masternodesTable.clear().rows.add(jsonRet).draw();
+                },
+                error: function (xhr, textStatus, error) {
+                    Swal.close(); // Close the loading Swal
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Could not connect to Historia Core Wallet, check your settings on the Historia Core Setup tab and try again.',
+                        confirmButtonText: 'OK'
+                    });
+                    console.error('AJAX error:', textStatus, error);
+                }
+            });
+        }
+
+    $(document).ready(async function () {
+
+            function checkIPFSHost() {
+                return $('#IPFSHost').val() === '127.0.0.1';
+            }
+
+            $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+                if (checkIPFSHost()) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: "Warning",
+                        text: "You did not select a Masternode Gateway. Please select and save a valid Masternode Gateway.",
+                        icon: "warning",
+
+                    });
+                }
+            });
+
+            $('#btnClearVotingLogs').on('click', function() {
+                clearVotingLogs();
+            });
+
+            $('#btnClearMasternodeLogs').on('click', function () {
+                clearMasternodeLogs();
+            });
+
+            var pollingInterval = null;
+
+            function fetchLogEntries() {
+                $.get('@Url.Action("GetLogEntries", "Masternode", new { Area = "Masternode" })', { filter: "VOTINGNODE" }, function (data) {
+                    var logContent = $('#log-content');
+                    logContent.empty();
+                    if (data.length === 0) {
+                        logContent.append('<p>No logs exist.</p>');
+                    } else {
+                        data.forEach(function (logEntry) {
+                            var logMessage = `[${logEntry.timestamp}] [${logEntry.logType}]: ${logEntry.log}`;
+                            logContent.append('<p>' + logMessage + '</p>');
+                        });
+                    }
+                }).fail(function (xhr, status, error) {
+                    console.error('Error fetching log entries:', error);
+                });
+            }
+
+            function fetchSshLogEntries() {
+                $.get('@Url.Action("GetLogEntries", "Masternode", new { Area = "Masternode" })', { filter: "MASTERNODE" }, function (data) {
+                    var sshLogContent = $('#ssh-log-content');
+                    sshLogContent.empty();
+                    if (data.length === 0) {
+                        sshLogContent.append('<p>No logs exist.</p>');
+                    } else {
+                        data.forEach(function (logEntry) {
+                            var logMessage = `[${logEntry.timestamp}] [${logEntry.logType}]: ${logEntry.log}`;
+                            sshLogContent.append('<p>' + logMessage + '</p>');
+                            logsTab
+                        });
+                    }
+                }).fail(function (xhr, status, error) {
+                    console.error('Error fetching SSH log entries:', error);
+                });
+            }
+
+            // Function to start polling
+            function startPolling(fetchFunction) {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                }
+                fetchFunction();
+                pollingInterval = setInterval(fetchFunction, 5000);
+            }
+
+            // Function to stop polling
+            function stopPolling() {
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+                }
+            }
+
+            // Tab shown event handler
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var target = $(e.target).attr("href");
+                if (target === '#setupvotingnodes') {
+                    startPolling(fetchLogEntries);
+                } else if (target === '#setupmasternodes' || target === '#sshlogs') {
+                    startPolling(fetchSshLogEntries);
+                } else {
+                    stopPolling();
+                }
+            });
+
+            // Initial check if the tab is already active on page load
+
+            if ($('#setupvotingnodes').hasClass('show active')) {
+                startPolling(fetchLogEntries);
+            } else if ($('#setupmasternodes').hasClass('show active') || $('#sshlogs').hasClass('show active')) {
+                startPolling(fetchSshLogEntries);
+            } else {
+                stopPolling();
+            }
+
+
+        var masternodesTable1 = $('#masternodesTable').DataTable({
+            data: null,
+            info: false,
+            fixedHeader: false,
+            lengthChange: false,
+            autoWidth: false,
+            responsive: false,
+            ordering: false,
+            pageLength: 10, // Set the number of results per page to 5
+            columns: [
+                { data: "identity" },
+                { data: "ipAddress" },
+                { data: "status" },
+            ],
+        });
+
+        var masternodesTable = $('#myMasternodesTableImport').DataTable({
+            data: null,
+            info: false,
+            fixedHeader: false,
+            lengthChange: false,
+            autoWidth: false,
+            responsive: false,
+            columns: [
+                { data: "identity" },
+                    { data: "status" },
+                { data: "status" },
+                { data: "payee" },
+
+            ],
+        });
+
+        // Event listener for opening a row detail when a row is clicked
+        $('#masternodesTable tbody').on('click', 'tr', function () {
+            var data = masternodesTable1.row(this).data();
+            fillForm(data);
+        });
+
+        Swal.fire({
+            title: 'Initializating...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            onBeforeOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+            $.ajax({
+                url: '@Url.Action("IsInitializedHLWA", "Home", new { Area = "Home" })',
+                type: 'GET',
+                dataType: 'json',
+                timeout: 10000,
+                success: function (response) {
+                    Swal.close();
+                    if (!response.success) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Initialization Complete!',
+                            html: 'Are you on a high-speed internet connection?<br>This will provide a better experience and is recommend, but does require more bandwidth. If you are on slow internet connection, click no.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes',
+                            cancelButtonText: 'No',
+                            reverseButtons: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', function (data) {
+                                    if (data.value == 0) {
+                                        $('#btnImportHistoriaRecordsLabel').html("Off");
+                                        $('#btnImportHistoriaRecords').prop('checked', false);
+                                    } else {
+                                        $('#btnImportHistoriaRecordsLabel').html("On");
+                                        $('#btnImportHistoriaRecords').prop('checked', true);
+                                    }
+                                    Swal.fire({
+                                        icon: 'info',
+                                        title: 'High Speed Internet Confirmed!',
+                                        text: 'This will download all records and archives to your local machine in the background. Give it a few minutes and go back to the main page.',
+                                        confirmButtonText: 'Ok',
+                                    }).then(() => {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Please choose a Content Distribution Masternode Server!',
+                                            text: 'Because Historia Network is a distributed network, you have to choose a Content Distribution Masternode server to connect to receive content.',
+                                            confirmButtonText: 'Ok',
+                                        }).then(() => {
+                                            getMasterNodesSetup();
+                                        });
+                                    });
+                                });
+                            } else {
+                                getMasterNodesSetup();
+                            }
+                        });
+                    } else {
+                        getMasterNodesSetup();
+                    }
+                },
+                error: function (xhr, textStatus, error) {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Could not initialize HLWA. Please try again later.',
+                        confirmButtonText: 'OK'
+                    });
+                    console.error('AJAX error:', textStatus, error);
+                }
+            });
+
+ 
+
+        $('#btnUnlockWalletVoting').on('click', function () {
+
+            Swal.fire({
+                title: "Unlock Wallet",
+                html:
+                    '<p>To complete your voting node setup, please enter your Historia Core wallet passphrase below:</p>' +
+                    '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
+                icon: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Unlock Wallet",
+                cancelButtonText: "No, cancel it!",
+                preConfirm: () => {
+                    const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                    if (!passphrase) {
+                        Swal.showValidationMessage(`Please enter a passphrase`);
+                    }
+                    return passphrase;
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+
+                    const passphrase = result.value;
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Wallet Unlocked',
+                                    text: 'You can leave this page now, and setup will continue.',
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok',
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Could not unlock wallet',
+                                    text: response.error
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+           
+
+        $('#btnUnlockWalletMasternode').on('click', function () {
+                Swal.fire({
+                    title: "Unlock Wallet",
+                    html:
+                        '<p>To complete your Masternode setup, please unlock your wallet by entering the passphrase below:</p>' +
+                        '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Unlock Wallet",
+                    cancelButtonText: "No, cancel it!",
+                    preConfirm: () => {
+                        const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                        if (!passphrase) {
+                            Swal.showValidationMessage(`Please enter a passphrase`);
+                        }
+                        return passphrase;
+                    }
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        const passphrase = result.value;
+                        $.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                            data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
+                            contentType: 'application/json; charset=utf-8',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Wallet Unlocked',
+                                        text: 'You can leave this page now, and setup will continue.',
+                                        icon: 'success',
+                                        confirmButtonText: 'Ok',
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Could not unlock wallet',
+                                        text: response.error
+                                    });
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An unexpected error occurred.'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+        
+        $('#btnDeleteVotingSetupAttempt').on('click', function (e) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Are you sure you want to cancel the setup process of the voting node?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteNodeQueue", "Masternode", new { Area = "Masternode" })',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: 'The setup process has been canceled.',
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error deleting the node queue: ' + response.error,
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok'
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'An unexpected error occurred.',
+                                icon: 'error',
+                                confirmButtonText: 'Ok'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+        $('#btnDeleteMasternodeSetupAttempt').on('click', function (e) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Are you sure you want to cancel the setup process of the masternode?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, cancel!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteNodeQueue", "Masternode", new { Area = "Masternode" })',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Deleted!',
+                                        text: 'The setup process has been canceled.',
+                                        icon: 'success',
+                                        confirmButtonText: 'Ok'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            location.reload();
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: 'There was an error deleting the node queue: ' + response.error,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok'
+                                    });
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'An unexpected error occurred.',
+                                    icon: 'error',
+                                    confirmButtonText: 'Ok'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+
+        $('#btnTestIPFS').on('click', function (e) {
+            var data = {
+                IPFSHost: $('#IPFSHost').val(),
+                IPFSPort: $('#IPFSPort').val(),
+            };
+
+            $.getJSON('@Url.Action("TestMasterNode", "Masternode", new { Area = "Masternode" })', { Identity: $('#IPFSHost').val() }, function (data) {
+                try {
+                    // Attempt to parse JSON if it's a JSON string, not an object
+                    var responseData = typeof data === "string" ? JSON.parse(data) : data;
+
+                    // Construct message for Swal alert
+                    var message = `
+                    Identity: <b>${responseData.identity}</b><br>
+                    Ping Time: <b>${responseData.pingtime} ms</b><br>
+                    HTTP Enabled: ${responseData.httpenabled ? '<span style="color: green;"><b>Yes</b></span>' : '<span style="color: red;"><b>No</b></span>'}<br>
+                    HTTPS Enabled: ${responseData.httpsenabled ? '<span style="color: green;"><b>Yes</b></span>' : '<span style="color: red;"><b>No</b></span>'}<br>
+                `;
+
+                    // If HTTPS is enabled, change the text of the OK button to "Save" and attach the click event
+                    if (responseData.httpsenabled || responseData.httpenabled) {
+                        Swal.fire({
+                            title: 'Test Result',
+                            html: message,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                var data = {
+                                    IPFSHost: $('#IPFSHost').val(),
+                                    IPFSPort: $('#IPFSPort').val(),
+                                };
+                                $.ajax({
+                                    url: "/Home/SaveMasternodeSettings",
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    dataType: "json",
+                                    data: JSON.stringify(data),
+                                    success: function (resp) {
+                                        if (resp.success) {
+                                            Swal.fire({
+                                                title: 'Masternode Settings Saved!',
+                                                text: 'Your choice has been updated!',
+                                                icon: 'success',
+                                                confirmButtonText: 'Ok'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'Please check all fields and try again',
+                                                icon: 'error',
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
+                                    },
+                                    error: function (req, status, error) {
+                                        alert(error);
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        // If HTTPS is not enabled, show only an informative alert
+                        Swal.fire({
+                            title: 'Test Result',
+                            html: message + "<br>Try a different server",
+                            icon: 'info',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error processing masternode data:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Could not process masternode data.'
+                    });
+                }
+            }).fail(function (jqXHR, textStatus, error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to fetch masternode data: ' + error,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        });
+
+        $('#btnTestIPFSApi').on('click', function (e) {
+            var data = {
+                IPFSAPIHost: $('#IPFSApiHost').val(),
+                IPFSAPIPort: $('#IPFSApiPort').val(),
+            };
+            $.ajax({
+                url: "/Home/TestIPFSAPI",
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(data),
+                success: function (resp) {
+                    if (resp.success) {
+                        Swal.fire({
+                            title: 'IPFS API Server Successfully Tested!',
+                            text: 'Do you want to save the settings?',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.ajax({
+                                    url: "/Home/SaveIPFSApiSettings",
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    dataType: "json",
+                                    data: JSON.stringify(data),
+                                    success: function (saveResp) {
+                                        if (saveResp.success) {
+                                            Swal.fire({
+                                                title: 'IPFS API Server Settings Saved!',
+                                                text: 'Your settings have been updated!',
+                                                icon: 'success',
+                                                confirmButtonText: 'Ok'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'Failed to save Core Wallet settings.',
+                                                icon: 'error',
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
+                                    },
+                                    error: function (req, status, error) {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Failed to save Core Wallet settings: ' + error,
+                                            icon: 'error',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Please check all fields and try again',
+                            icon: 'error',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                },
+                error: function (req, status, error) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please check all fields and try again',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+        });
+
+        $('#btnTestHistoriaClient').on('click', function (e) {
+            var data = {
+                HistoriaClientIPAddress: $('#HistoriaClientIPAddress').val(),
+                HistoriaRPCPort: $('#HistoriaRPCPort').val(),
+                HistoriaRPCUserName: $('#HistoriaRPCUserName').val(),
+                HistoriaRPCPassword: $('#HistoriaRPCPassword').val(),
+            };
+            $.ajax({
+                url: "/Home/TestHistoriaClient",
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(data),
+                success: function (resp) {
+                    if (resp.success) {
+                        Swal.fire({
+                            title: 'Historia Client tested successfully!',
+                            text: 'Do you want to save the settings?',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.ajax({
+                                    url: "/Home/SaveCoreSettings",
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    dataType: "json",
+                                    data: JSON.stringify(data),
+                                    success: function (saveResp) {
+                                        if (saveResp.success) {
+                                            Swal.fire({
+                                                title: 'Historia Core Settings Saved!',
+                                                text: 'Your settings have been updated!',
+                                                icon: 'success',
+                                                confirmButtonText: 'Ok'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'Failed to save Core Wallet settings.',
+                                                icon: 'error',
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
+                                    },
+                                    error: function (req, status, error) {
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Failed to save Core Wallet settings: ' + error,
+                                            icon: 'error',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Please check all fields and try again',
+                            icon: 'error',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                },
+                error: function (req, status, error) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please check all fields and try again',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+        });
+
+        $('#btnSetupVotingNode').on('click', function (e) {
+                Swal.fire({
+                    title: "Setup Voting Node",
+                    html:
+                        '<h5>Are you sure you want to continue?</h5>' +
+                        '<ul style="list-style-position: inside; text-align: left; padding-left: 0;" ><li>You must have at least 101 HTA in your wallet.</li> ' +
+                        '<li>Small Transaction fees to register will occur.</li>' +
+                        '<li>This process can take up to one hour. </li>' +
+                        '<li>Do not leave this page until it is finished.</li></ul>' +
+                        'Enter your Historia Core wallet passphrase below:' +
+                        '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, setup now!",
+                    cancelButtonText: "No, cancel it!",
+                    preConfirm: () => {
+                        const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                        if (!passphrase) {
+                            Swal.showValidationMessage(`Please enter a passphrase`);
+                        }
+                        return passphrase;
+                    }
+                }).then(function (confirm) {
+                    if (confirm.value) {
+                        const passphrase = confirm.value;
+                        $.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                            data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
+                            contentType: 'application/json; charset=utf-8',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Working...',
+                                        text: 'Please wait. This is going to take awhile. Do not close Historia Wallet or this web page',
+                                        allowOutsideClick: false,
+                                        showConfirmButton: false,
+                                        onBeforeOpen: () => {
+                                            Swal.showLoading();
+                                        },
+                                    });
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '@Url.Action("GetAvaliableBalance", "Masternode", new { Area = "Masternode" })',
+                                        contentType: 'application/json; charset=utf-8',
+                                        success: function (response) {
+                                            if (response.success) {
+                                                if (response.amount > 100) {
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '@Url.Action("SetupVotingNodeQueue", "Masternode", new { Area = "Masternode" })',
+                                                        data: JSON.stringify(),
+                                                        contentType: 'application/json; charset=utf-8',
+                                                        dataType: 'json',
+                                                        success: function (response) {
+                                                            if (response.success) {
+                                                                Swal.close();
+                                                                Swal.fire({
+                                                                    icon: 'info',
+                                                                    title: 'Voting Node Has Been Queued for Setup!',
+                                                                    text: 'Your voting node has been queued for setup. You can leave this page, but do not close this Historia Local Web, or close the Historia Core Wallet. This process can take up to 1 hour. You can check progress by coming back to this page.',
+                                                                    confirmButtonText: 'OK'
+                                                                });
+                                                                $('#btnSetupVotingNode').prop('disabled', true);
+                                                            } else {
+                                                                Swal.fire({
+                                                                    icon: 'error',
+                                                                    title: 'Error',
+                                                                    text: response.error
+                                                                });
+                                                                return false;
+                                                            }
+                                                        },
+                                                        error: function (xhr, status, error) {
+                                                            Swal.fire({
+                                                                icon: 'error',
+                                                                title: 'Error',
+                                                                text: 'An unexpected error occurred.'
+                                                            });
+                                                        }
+                                                    });
+                                                } else {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'You must have at least 101 HTA available in your wallet. The current available amount is ' + response.amount + '. The available amount is of coins not already locked in voting nodes or masternodes.',
+                                                        text: response.error
+                                                    });
+                                                    return false;
+                                                }
+                                            } else {
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Error',
+                                                    text: response.error
+                                                });
+                                                return false;
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: 'An unexpected error occurred.'
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Could not unlock wallet',
+                                        text: response.error
+                                    });
+                                    return false;
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An unexpected error occurred.'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+   
+        $('#btnSetupMasternode').on('click', function (e) {
+                Swal.fire({
+                    title: "Setup Masternode Node",
+                    html:
+                        '<h5>Are you sure you want to continue?</h5>' +
+                        '<ul style="list-style-position: inside; text-align: left; padding-left: 0;" ><li>You must have at least 5001 HTA in your wallet.</li> ' +
+                        '<li>Small Transaction fees to register will occur.</li>' +
+                        '<li>This process can take up to one hour. </li>' +
+                        '<li>Do not leave this page until it is finished.</li></ul>' +
+                        'Enter your Historia Core wallet passphrase below:' +
+                        '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, setup now!",
+                    cancelButtonText: "No, cancel it!",
+                    preConfirm: () => {
+                        const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                        if (!passphrase) {
+                            Swal.showValidationMessage(`Please enter a passphrase`);
+                        }
+                        return passphrase;
+                    }
+                }).then(function (confirm) {
+                    if (confirm.value) {
+                        const passphrase = confirm.value;
+                        $.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                            data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
+                            contentType: 'application/json; charset=utf-8',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Working...',
+                                        text: 'Please wait. This is going to take awhile. Do not close Historia Wallet or this web page',
+                                        allowOutsideClick: false,
+                                        showConfirmButton: false,
+                                        onBeforeOpen: () => {
+                                            Swal.showLoading();
+                                        },
+                                    });
+
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '@Url.Action("GetAvaliableBalance", "Masternode", new { Area = "Masternode" })',
+                                        contentType: 'application/json; charset=utf-8',
+                                        success: function (response) {
+                                            if (response.success) {
+                                                if (response.amount > 5000) {
+                                                    startSetup();
+                                                } else {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'You must have at least 5001 HTA available in your wallet. The current available amount is ' + response.amount + '. The available amount is of coins not already locked in voting nodes or masternodes.',
+                                                        text: response.error
+                                                    });
+                                                    return false;
+                                                }
+                                            } else {
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Error',
+                                                    text: response.error
+                                                });
+                                                return false;
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: 'An unexpected error occurred.'
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Could not unlock wallet',
+                                        text: response.error
+                                    });
+                                    return false;
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An unexpected error occurred.'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
+
+            $('#btnImportHistoriaRecords').on('click', async function (e) {
+                if ($('#btnImportHistoriaRecordsLabel').html() === "On") {
+                    const result = await Swal.fire({
+                        title: 'High Speed Internet',
+                        html: 'Are you sure you want to disable High Speed Internet? This is not recommended unless you are on a slow internet connection.' +
                             '<br>',
                         icon: 'warning',
                         showConfirmButton: true,
                         showCancelButton: true,
                         confirmButtonText: 'Ok',
                         denyButtonText: 'Cancel',
+                    });
+
+                    if (result.isConfirmed) {
+                        await $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', function (data) {
+                            if (data.value == 0) {
+                                $('#btnImportHistoriaRecordsLabel').html("Off");
+                                $('#btnImportHistoriaRecords').prop('checked', false);
+                            } else {
+                                $('#btnImportHistoriaRecordsLabel').html("On");
+                                $('#btnImportHistoriaRecords').prop('checked', true);
+                            }
+                        });
+                    }
+                    return false; // Ensure function does not proceed until the above operations complete
+                }
+
+                var IPFSGateway = "@Model.IPFSHost";
+                if (typeof IPFSGateway === "undefined" || IPFSGateway === "") {
+                    await Swal.fire({
+                        title: 'Masternode Gateway not found',
+                        html: 'Please set a Masternode Host and Masternode Port, and hit the Save button before attempting to import.' +
+                            '<br>',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        showCancelButton: false,
+                        confirmButtonText: 'Ok',
+                    });
+                    return false;
+                }
+
+                const result = await Swal.fire({
+                    title: 'Import all records?',
+                    html: 'This will import all proposals and records into your local database. This will take a while.' +
+                        '<br>',
+                    icon: 'warning',
+                    confirmButtonText: 'Ok',
+                    showCancelButton: true,
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        await new Promise((resolve, reject) => {
+                            $.ajax({
+                                url: "/Home/ImportHistoriaClientRecords",
+                                type: 'GET',
+                                contentType: false,
+                                processData: false,
+                                beforeSend: function () {
+                                    Swal.fire({
+                                        showConfirmButton: false,
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        closeOnClickOutside: false,
+                                        backdrop: true,
+                                        title: 'Importing',
+                                        html: 'Attempting to import all records into the local database.' +
+                                            '<br>' +
+                                            '<br>Do not leave this page until you receive success or failure message!',
+                                        didOpen: () => {
+                                            Swal.showLoading();
+                                        }
+                                    });
+                                },
+                                success: function (result) {
+                                    Swal.close(); // Fixed from swal.close() to Swal.close()
+                                    if (result.success) {
+                                        Swal.fire({
+                                            allowOutsideClick: false,
+                                            allowEscapeKey: false,
+                                            closeOnClickOutside: false,
+                                            confirmButtonColor: "#545B62",
+                                            backdrop: true,
+                                            title: 'Success!',
+                                            text: 'Import has been successful.',
+                                            icon: 'success',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                        $('#btnImportHistoriaRecordsLabel').html("On");
+                                        $('#btnImportHistoriaRecords').prop('checked', true);
+                                    } else {
+                                        Swal.fire({
+                                            allowOutsideClick: false,
+                                            allowEscapeKey: false,
+                                            closeOnClickOutside: false,
+                                            backdrop: true,
+                                            confirmButtonColor: "#545B62",
+                                            title: 'Error!',
+                                            text: result.error,
+                                            icon: 'error',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                        $('#btnImportHistoriaRecordsLabel').html("Off");
+                                        $('#btnImportHistoriaRecords').prop('checked', false);
+                                    }
+                                    resolve();
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) { // Added fail callback
+                                    Swal.fire({
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false,
+                                        closeOnClickOutside: false,
+                                        backdrop: true,
+                                        confirmButtonColor: "#545B62",
+                                        title: 'Error!',
+                                        text: 'An error occurred while importing records: ' + textStatus,
+                                        icon: 'error',
+                                        confirmButtonText: 'Ok'
+                                    });
+                                    reject();
+                                },
+                                complete: function () {
+                                    // This function runs after done or fail callbacks
+                                }
+                            });
+                        });
+                    } catch (error) {
+                        // Handle the error if needed
+                    }
+
+                    // Returning false to prevent further action until AJAX request completes
+                    return false; // Ensure the function does not proceed until AJAX request completes
+                } else if (result.isDenied) {
+                    return false; // Added to handle the case where the action is denied
+                } else {
+                    // do nothing if the dialog is dismissed
+                }
+            });
 
 
+
+
+
+
+        $('#btnEnabledIpfsApi').on('click', function (e) {
+
+                if ($('#btnEnabledIpfsApiLabel').html() === "On") {
+                    Swal.fire({
+                        title: 'Disable IPFS API Server?',
+                        html: 'Are you sure you want to disable the IPFS server? You will not be able to Create and submit.' +
+                            '<br>',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: 'Ok',
+                        denyButtonText: 'Cancel',
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', null, function (data) {
+                            $.get('@Url.Action("ToggleIpfsApiValue", "Home", new { Area = "Home" })', null, function (data) {
                                 if (data.value == 0) {
-                                    $('#btnImportHistoriaRecordsLabel').html("Off");
-                                    $('#btnImportHistoriaRecords').prop('checked', false);
+                                    $('#btnEnabledIpfsApiLabel').html("Off");
+                                    $('#btnEnabledIpfsApi').prop('checked', false);
                                 } else {
-                                    $('#btnImportHistoriaRecordsLabel').html("On");
-                                    $('#btnImportHistoriaRecords').prop('checked', true);
+                                    $('#btnEnabledIpfsApiLabel').html("On");
+                                    $('#btnEnabledIpfsApi').prop('checked', true);
                                 }
                             });
                         }
@@ -309,107 +3049,41 @@
                     return false;
                 }
 
-                var IPFSGateway = "@Model.IPFSHost";
-                if (typeof IPFSGateway === "undefined" || IPFSGateway === "") {
+                const isChecked = e.target.checked;
+                $('#btnEnabledIpfsApiLabel').html(isChecked ? "On" : "Off");
+                if (isChecked || !isChecked) {  // Weird workaround on a bug concerning the btnEnabledIpfsApiLabel checkbox
                     Swal.fire({
-                        title: 'IPFS Gateway not found',
-                        html: 'Please set a IPFS Host and IPFS Port, and hit the Save button before attemping to import.' +
-                            '<br>',
+                        title: 'Enable IPFS API Server?',
+                        html: 'This will open a separate command line prompt window. Do not shut the window until you close the app.<br>',
                         icon: 'warning',
                         showConfirmButton: true,
-                        showCancelButton: false,
+                        showCancelButton: true,
                         confirmButtonText: 'Ok',
-                        denyButtonText: 'Cancel',
-
+                        cancelButtonText: 'Cancel',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.get('@Url.Action("ToggleIpfsApiValue", "Home", new { Area = "Home" })', null, function (data) {
+                                $('#btnEnabledIpfsApiLabel').html(data.value == 0 ? "Off" : "On");
+                                $('#btnEnabledIpfsApi').prop('checked', data.value != 0);
+                            });
+                        }
                     });
                     return false;
                 }
 
-                Swal.fire({
-                    title: 'Import all records?',
-                    html: 'This will import all proposals and records into your local database. This will take awhile.' +
-                        '<br>',
-                    icon: 'warning',
-                    confirmButtonText: 'Ok',
-                    showCancelButton: true,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: "/Home/ImportHistoriaClientRecords",
-                            type: 'GET',
-                            contentType: false,
-                            processData: false,
-                            beforeSend: function () {
-                                Swal.fire({
-                                    showConfirmButton: false,
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    closeOnClickOutside: false,
-                                    backdrop: true,
-                                    title: 'Importing',
-                                    html:
-                                        'Attempting to import all records into the local database.' +
-                                        '<br>' +
-                                        '<br>Do not leave this page until you receive success or failure message!',
-
-                                    didOpen: () => {
-                                        const content = Swal.getHtmlContainer()
-                                        const $ = content.querySelector.bind(content)
-                                        Swal.showLoading()
-                                    }
-                                })
-                            },
-                            complete: function (data) {
-                            }
-
-                        }).done(function (result) {
-                            swal.close();
-                            if (result.success) {
-                                Swal.fire({
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    closeOnClickOutside: false,
-                                    confirmButtonColor: "#545B62",
-                                    backdrop: true,
-                                    title: 'Success!',
-                                    text: 'Import has been succesful.',
-                                    type: 'success',
-                                    confirmButtonText: 'Ok'
-                                });
-                                $('#btnImportHistoriaRecordsLabel').html("On");
-                                $('#btnImportHistoriaRecords').prop('checked', true);
-                            }
-                            else {
-                                Swal.fire({
-                                    allowOutsideClick: false,
-                                    allowEscapeKey: false,
-                                    closeOnClickOutside: false,
-                                    backdrop: true,
-                                    confirmButtonColor: "#545B62",
-                                    title: 'Error!',
-                                    text: result.error,
-                                    type: 'error',
-                                    confirmButtonText: 'Ok'
-                                });
-                                $('#btnImportHistoriaRecordsLabel').html("Off");
-                                $('#btnImportHistoriaRecords').prop('checked', false);
-                            }
-                        }).always(function (result) {
-
-                        });
-                        return false;
-
-                    } else if (result.isDenied) {
-                        return false;
-                    } else {
-                        // do nothing if the dialog is dismissed
-                    }
-                });
-
-            }
-
-
-            document.getElementById('btnSaveSettings').onclick = (e) => {
+                var IPFSApiHost = "@Model.IPFSApiHost";
+                if (typeof IPFSApiHost === "undefined" || IPFSApiHost === "") {
+                    Swal.fire({
+                        title: 'IPFS API Server settings not found',
+                        html: 'Please set an IPFS Host and IPFS Port, and hit the Save button before attempting to import.<br>',
+                        icon: 'warning',
+                        confirmButtonText: 'Ok',
+                    });
+                    return false;
+                }
+            });
+        
+         $('#btnSaveSettings').on('click', function (e) {
                 var data = {
                     IPFSHost: $('#IPFSHost').val(),
                     IPFSPort: $('#IPFSPort').val(),
@@ -420,6 +3094,7 @@
                     HistoriaRPCUserName: $('#HistoriaRPCUserName').val(),
                     HistoriaRPCPassword: $('#HistoriaRPCPassword').val(),
                 };
+
                 $.ajax({
                     url: "/Home/Settings",
                     type: "POST",
@@ -431,19 +3106,18 @@
                             Swal.fire({
                                 title: 'Settings Saved!',
                                 text: 'Your settings have been saved!',
-                                type: 'success',
+                                icon: 'success',
                                 confirmButtonText: 'Ok'
                             }).then((result) => {
                                 if (result.isConfirmed) {
                                     location.reload();
                                 }
                             });
-                        }
-                        else {
+                        } else {
                             Swal.fire({
                                 title: 'Error!',
                                 text: 'Please check all fields and try again',
-                                type: 'error',
+                                icon: 'error',
                                 confirmButtonText: 'Ok'
                             });
                         }
@@ -452,8 +3126,10 @@
                         alert(error);
                     }
                 });
-            };
             });
+
+
+    });
     </script>
 
     <partial name="_ValidationScriptsPartial" />

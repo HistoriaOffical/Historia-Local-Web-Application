@@ -36,7 +36,7 @@ using System.Drawing;
 using HistWeb.Helpers;
 using Microsoft.AspNetCore.Identity;
 using OpenGraphNet;
-using Ganss.XSS;
+using Ganss.Xss;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Data;
 using HistWeb.Home.Views;
@@ -45,8 +45,16 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Microsoft.Data.Sqlite;
 using SQLitePCL;
-
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.IO;
+using static Google.Protobuf.Reflection.FieldOptions.Types;
+using System.Security.Policy;
+using System.Text.RegularExpressions;
+using HistWeb.Areas.Proposals.Models;
+using System.Reflection.Metadata;
+
+
 
 namespace HistWeb.Controllers
 {
@@ -119,53 +127,8 @@ namespace HistWeb.Controllers
 			ToggleDeepSearch();
 			try
 			{
-				string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
-				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
-				webRequest.Credentials = new NetworkCredential(_userName, _password);
-				webRequest.ContentType = "application/json-rpc";
-				webRequest.Method = "POST";
-				webRequest.Timeout = 5000;
-				string jsonstring = "";
-				jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"all\"] }}");
+                RecurringJobService.ImportHistoriaClientRecords(_configuration);
 
-				// serialize json for the request
-				byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-				webRequest.ContentLength = byteArray.Length;
-				Stream dataStream = webRequest.GetRequestStream();
-				dataStream.Write(byteArray, 0, byteArray.Length);
-				dataStream.Close();
-				WebResponse webResponse = webRequest.GetResponse();
-				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-				string getResp = sr.ReadToEnd();
-				if (!String.IsNullOrEmpty(getResp))
-				{
-					dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
-					foreach (var record in response.result)
-					{
-
-						//Get Datastring Info
-						var ds = record.Value.DataString;
-						string p1 = ds;
-						dynamic proposal1 = JObject.Parse(p1);
-						string hash = "";
-						hash = record.Value.Hash;
-						string hostname = _ipfsUrl;
-						string cidtype;
-						if (proposal1.ipfscidtype != null && !string.IsNullOrEmpty(proposal1.ipfscidtype.ToString()))
-						{
-							cidtype = proposal1.ipfscidtype.ToString();
-						} else
-						{
-							cidtype = "0";
-						}
-
-						string payment_amount =  proposal1.payment_amount.ToString();
-						string payment_address =  proposal1.payment_address.ToString();
-						string dateadded = proposal1.start_epoch.ToString();
-						GetHtmlSourceAsync(HttpUtility.HtmlEncode(proposal1.summary.name.ToString()), HttpUtility.HtmlEncode(proposal1.summary.description.ToString()), "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html", proposal1.ipfscid.ToString(), hash, proposal1.ipfspid.ToString(), cidtype, payment_amount, payment_address, dateadded);
-
-					}
-				}
 
 				var rep = new { Success = true, toggle = GetDeepSearch() };
 				return Json(rep);
@@ -181,7 +144,8 @@ namespace HistWeb.Controllers
 		private int ToggleDeepSearch()
 		{
 			int toggleValue = 0;
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				try
 				{
@@ -219,10 +183,55 @@ namespace HistWeb.Controllers
 		}
 
 		[HttpGet]
+		public JsonResult ToggleIpfsApiValue()
+		{
+			int toggleValue = 0;
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "UPDATE basexConfiguration SET IpfsApi = NOT IpfsApi WHERE Id = 1";
+						cmd.ExecuteNonQuery();
+					}
+
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT IpfsApi FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							}
+						}
+					}
+
+
+					var rep = new { Success = true, value = toggleValue };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = toggleValue };
+					return Json(rep);
+				}
+			}
+		}
+
+		[HttpGet]
 		public JsonResult ToggleDeepValue()
 		{
 			int toggleValue = 0;
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				try
 				{
@@ -265,7 +274,8 @@ namespace HistWeb.Controllers
 		public JsonResult GetDeepValue()
 		{
 			int toggleValue = 0;
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				try
 				{
@@ -295,10 +305,48 @@ namespace HistWeb.Controllers
 				}
 			}
 		}
-		private static int GetDeepSearch()
+
+		[HttpGet]
+		public JsonResult GetIpfsApiValue()
 		{
 			int toggleValue = 0;
-			using (var conn = new SqliteConnection("Data Source=basex.db"))
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
+			{
+				try
+				{
+					using (var cmd = conn.CreateCommand())
+					{
+
+						conn.Open();
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT IpfsApi FROM basexConfiguration where Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								toggleValue = rdr.GetInt32(rdr.GetOrdinal("IpfsApi"));
+							}
+						}
+					}
+
+
+					var rep = new { Success = true, value = toggleValue };
+					return Json(rep);
+				}
+				catch (Exception ex)
+				{
+					var rep = new { Success = false, value = 0 };
+					return Json(rep);
+				}
+			}
+		}
+		
+		public static int GetDeepSearch()
+		{
+			int toggleValue = 0;
+			string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
 			{
 				try
 				{
@@ -327,299 +375,473 @@ namespace HistWeb.Controllers
 			}
 		}
 
-		[DllImport("sqlite3.dll", EntryPoint = "sqlite3_load_extension")]
-		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
 
-		[HttpGet]
-		public JsonResult LoadRecords(string recordType, int pageIndex, string query, int numberToLoad = 5)
+		private static Dictionary<string, string> ReadHistoriaConfig(string filePath)
 		{
+			var config = new Dictionary<string, string>();
 
-			int? dbRecordType = null;
-			switch (recordType)
+			using (StreamReader reader = new StreamReader(filePath))
 			{
-				case "proposals": dbRecordType = 1; break;
-				case "records": dbRecordType = 4; break;
-				case "tree": dbRecordType = 4; break;
-
-			}
-			if (recordType == "tree")
-			{
-				recordType = "records";
-			}
-			int toggle = GetDeepSearch();
-			List<ProposalRecordModel> records = new List<ProposalRecordModel>();
-
-			try
-			{
-				string rpcServerUrl = "http://" + ApplicationSettings.HistoriaClientIPAddress + ":" + ApplicationSettings.HistoriaRPCPort;
-
-				HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
-				webRequest.Credentials = new NetworkCredential(_userName, _password);
-				webRequest.ContentType = "application/json-rpc";
-				webRequest.Method = "POST";
-				webRequest.Timeout = 5000;
-				string jsonstring = "";
-				if (!string.IsNullOrEmpty(query))
+				string line;
+				while ((line = reader.ReadLine()) != null)
 				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", "all", (pageIndex * 5) + 1, (pageIndex + 1) * 5);
-				}
-				else
-				{
-					jsonstring = String.Format("{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{0}\", \"{1}\", \"{2}\"] }}", recordType, (pageIndex * 5) + 1, (pageIndex + 1) * numberToLoad);
-				}
-
-				// serialize json for the request
-				byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
-				webRequest.ContentLength = byteArray.Length;
-				Stream dataStream = webRequest.GetRequestStream();
-				dataStream.Write(byteArray, 0, byteArray.Length);
-				dataStream.Close();
-				WebResponse webResponse = webRequest.GetResponse();
-				StreamReader sr = new StreamReader(webResponse.GetResponseStream());
-				string getResp = sr.ReadToEnd();
-				if (!String.IsNullOrEmpty(getResp))
-				{
-					dynamic response = Newtonsoft.Json.JsonConvert.DeserializeObject(getResp);
-					foreach (var record in response.result)
+					// Ignore comments and empty lines
+					if (!string.IsNullOrEmpty(line) && !line.Trim().StartsWith("#"))
 					{
-
-						ProposalRecordModel pm = new ProposalRecordModel();
-
-						//Get Datastring Info
-						var ds = record.Value.DataString;
-						string p1 = ds;
-						dynamic proposal1 = JObject.Parse(p1);
-
-						string hostname = _ipfsUrl;
-						pm.DataString = record.Value.DataString;
-						pm.Hostname = hostname;
-						pm.IPFSUrl = _ipfsUrl;
-						
-						pm.IPFSWebPort = _ipfsWebPort;
-						pm.Hash = record.Value.Hash;
-
-						pm.ProposalName = HttpUtility.HtmlEncode(proposal1.summary.name.ToString());
-						pm.ProposalSummary = HttpUtility.HtmlEncode(proposal1.summary.description.ToString());
-						var en = new System.Globalization.CultureInfo("en-US");
-
-						if (!string.IsNullOrEmpty(query) && toggle == 0)
+						string[] parts = line.Split('=');
+						if (parts.Length == 2)
 						{
-
-							// This is terribly ugly code. This was required as there were weird values that were not being found, even if the string value was exactly the same. Something to do with unicode values, but haven't solved it completely yet.
-							//This code needs to be refactored, but it works currently.
-							int compareLinguisticName = String.Compare(query, pm.ProposalName, en, System.Globalization.CompareOptions.IgnoreCase);
-							int compareOrdinalName = String.Compare(query, pm.ProposalName, StringComparison.OrdinalIgnoreCase);
-							int compareLinguisticSummary = String.Compare(query, pm.ProposalSummary, en, System.Globalization.CompareOptions.IgnoreCase);
-							int compareOrdinalSummary = String.Compare(query, pm.ProposalSummary, StringComparison.OrdinalIgnoreCase);
-
-							if (compareLinguisticName == 0)
-							{
-								goto run;
-							}
-
-							if (compareOrdinalName == 0)
-							{
-								goto run;
-							}
-
-							if (compareLinguisticSummary == 0)
-							{
-								goto run;
-							}
-
-							if (compareOrdinalSummary == 0)
-							{
-								goto run;
-							}
-
-							if (!pm.ProposalName.Contains(query, StringComparison.OrdinalIgnoreCase) || !pm.ProposalSummary.Contains(query, StringComparison.OrdinalIgnoreCase))
-							{
-								continue;
-							}
+							string key = parts[0].Trim();
+							string value = parts[1].Trim();
+							config[key] = value;  // Add or update dictionary entry
 						}
-						else if (!string.IsNullOrEmpty(query) && toggle == 1)
-						{
-
-							try
-							{
-								using (var conn = new SqliteConnection("Data Source=basex.db;"))
-								{
-
-									using (var cmd = conn.CreateCommand())
-									{
-										conn.Open();
-										cmd.CommandType = System.Data.CommandType.Text;
-										cmd.CommandText = "SELECT ipfscid FROM items_fts WHERE ipfscid = @ipfscid AND (name MATCH @query OR summary MATCH @query OR html MATCH @query)";
-										cmd.Parameters.AddWithValue("@ipfscid", proposal1.ipfscid.ToString());
-										cmd.Parameters.AddWithValue("@query", query);
-										using (SqliteDataReader rdr = cmd.ExecuteReader())
-										{
-											if (rdr.Read())
-											{
-												goto run;
-											}
-											else
-											{
-												continue;
-											}
-										}
-									}
-								}
-							}
-							catch (Exception ex)
-							{
-								Console.WriteLine(ex.Message);
-
-							}
-						}
-
-					run:
-
-						pm.ProposalDescriptionUrl = proposal1.ipfscid.ToString();
-						pm.PaymentAddress = proposal1.payment_address.ToString();
-						pm.YesCount = long.Parse(record.Value.YesCount.ToString());
-						pm.NoCount = long.Parse(record.Value.NoCount.ToString());
-						pm.AbstainCount = long.Parse(record.Value.AbstainCount.ToString());
-						pm.CachedLocked = bool.Parse(record.Value.fCachedLocked.ToString());
-
-						pm.CachedFunding = bool.Parse(record.Value.fCachedFunding.ToString());
-						pm.PaymentAmount = decimal.Parse(proposal1.payment_amount.ToString());
-						pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposal1.start_epoch.ToString())).ToString("MM/dd/yyyy");
-						DateTime EndDateTemp = UnixTimeStampToDateTime(double.Parse(proposal1.end_epoch.ToString()));
-						pm.PaymentEndDate = EndDateTemp.AddDays(-2);
-						pm.ProposalDate = pm.PaymentDate;
-
-						pm.PermLocked = bool.Parse(record.Value.fPermLocked.ToString());
-
-						pm.ProposalDescriptionUrlRazor = "https://" + hostname + "/ipfs/" + proposal1.ipfscid.ToString() + "/index.html";
-						pm.Type = proposal1.type.ToString();
-						string OGUrl = "";
-						if (pm.Type == "4")
-						{
-							string jsonString = CallAPI("https://historia.network/home/rogai?ipfs=" + proposal1.ipfscid.ToString()).GetAwaiter().GetResult();
-							OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
-							if (data.isArchive == "1")
-							{
-								pm.Type = "5";
-								OGUrl = data.OGUrl;
-							}
-						}
-
-						if (pm.PermLocked)
-						{
-							pm.PastSuperBlock = 1;
-						}
-						else
-						{
-							pm.PastSuperBlock = 0;
-						}
-						pm.ParentIPFSCID = string.IsNullOrEmpty(proposal1.ipfspid.ToString()) ? "" : proposal1.ipfspid.ToString();
-						if (!string.IsNullOrEmpty(pm.ParentIPFSCID))
-						{
-
-							if (string.IsNullOrEmpty(proposal1.ipfscidtype?.ToString()))
-							{
-								pm.cidtype = "0";
-							}
-							else
-							{
-								pm.cidtype = proposal1.ipfscidtype.ToString();
-							}
-
-							if (pm.PermLocked)
-							{
-								pm.IsUpdate = "0";
-							}
-							else
-							{
-								pm.IsUpdate = "1";
-							}
-						}
-						else
-						{
-							pm.cidtype = "1";
-							pm.IsUpdate = "0";
-						}
-						if (!string.IsNullOrEmpty(OGUrl))
-						{
-							pm.oglinksid = OG(OGUrl, proposal1.ipfscid.ToString());
-							try
-							{
-								if (pm.oglinksid != 0)
-								{
-									using (var conn = new SqliteConnection("Data Source=basex.db"))
-									{
-										using (var cmd = conn.CreateCommand())
-										{
-											conn.Open();
-											cmd.CommandType = System.Data.CommandType.Text;
-											cmd.CommandText = "SELECT * FROM oglinks where Id = @Oid";
-											cmd.Parameters.AddWithValue("@Oid", pm.oglinksid);
-											using (SqliteDataReader rdr = cmd.ExecuteReader())
-											{
-												if (rdr.Read())
-												{
-													pm.oglinksimageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
-													pm.oglinkstitle = rdr.GetString(rdr.GetOrdinal("title"));
-													pm.oglinksurl = rdr.GetString(rdr.GetOrdinal("url"));
-													pm.oglinkssitename = rdr.GetString(rdr.GetOrdinal("sitename"));
-													pm.oglinksdescription = rdr.GetString(rdr.GetOrdinal("description"));
-												}
-											}
-										}
-									}
-								}
-							}
-							catch (Exception ex)
-							{
-								Console.WriteLine(ex.Message);
-							}
-
-						}
-						using (var conn = new SqliteConnection("Data Source=basex.db"))
-						{
-							using (var cmd = conn.CreateCommand())
-							{
-								conn.Open();
-								cmd.CommandType = System.Data.CommandType.Text;
-								cmd.CommandText = "SELECT id FROM items where proposalhash = @proposalhash";
-								cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
-								using (SqliteDataReader rdr = cmd.ExecuteReader())
-								{
-									if (rdr.Read())
-									{
-										pm.Id = rdr.GetInt32(rdr.GetOrdinal("id"));
-									}
-								}
-							}
-						}
-						
-						if (toggle == 1)
-						{
-							GetHtmlSourceAsync(pm.ProposalName, pm.ProposalSummary, pm.ProposalDescriptionUrlRazor, proposal1.ipfscid.ToString(), pm.Hash, pm.ParentIPFSCID, pm.cidtype, pm.PaymentAmount.ToString(), pm.PaymentAddress, proposal1.start_epoch.ToString());
-						}
-
-
-
-						records.Add(pm);
 					}
 				}
 			}
-			catch (Exception ex)
-			{
-				_logger.LogCritical("ProposalDescription Error: " + ex.ToString());
-			}
 
-			//sort descending based on DataString.name
-			List<ProposalRecordModel> sortedRecords = records.OrderByDescending(o => ((dynamic)JObject.Parse(o.DataString)).name).ToList();
-
-			var rep = new { Success = true, Records = sortedRecords };
-			return Json(rep);
+			return config;
 		}
 
-		public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded)
+
+
+		static string[] GetCommandsBasedOnOS()
 		{
-			int toggle = GetDeepSearch();
+			string ipfsDir = GetWorkingDirectoryBasedOnOS();
+			string ipfsExecutable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "ipfs.exe" : "./ipfs";
+			string ipfsPath = System.IO.Path.Combine(ipfsDir, ipfsExecutable);
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return new string[]
+				{
+					$"{ipfsPath} init",
+					$"{ipfsPath} bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
+					$"{ipfsPath} bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
+					$"{ipfsPath} bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
+					$"{ipfsPath} bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
+					$"{ipfsPath} bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
+					$"{ipfsPath} bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+					$"{ipfsPath} config --json Datastore.StorageMax \"50GB\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers \"[\\\"X-Requested-With\\\", \\\"Access-Control-Expose-Headers\\\", \\\"Range\\\", \\\"Authorization\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods \"[\\\"POST\\\", \\\"GET\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin \"[\\\"*\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers \"[\\\"Location\\\", \\\"Ipfs-Hash\\\"]\"",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.X-Special-Header \"[\\\"Access-Control-Expose-Headers: Ipfs-Hash\\\"]\"",
+					$"{ipfsPath} config --json Gateway.NoFetch \"false\"",
+					$"{ipfsPath} config --json Swarm.ConnMgr.HighWater \"500\"",
+					$"{ipfsPath} config --json Swarm.ConnMgr.LowWater \"200\"",
+					$"{ipfsPath} config --json Datastore.StorageMax \"50GB\"",
+					$"{ipfsPath} config --json Gateway.Writable true",
+				};
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+
+				string scriptPath = "/Applications/Historia-Qt.app/Contents/Resources/ipfs/startipfs.sh";
+                string createScriptCommand = $"/bin/bash -c 'printf \"#!/bin/bash\\n/Applications/Historia-Qt.app/Contents/Resources/ipfs/ipfs daemon\\nexec bash\\n\" > {scriptPath} && chmod +x {scriptPath}'";
+
+                // Run the command to create the script
+                Process createScriptProcess = new Process
+				{
+					StartInfo = new ProcessStartInfo
+					{
+						FileName = "/bin/bash",
+						Arguments = $"-c \"{createScriptCommand.Replace("\"", "\\\"")}\"",
+						RedirectStandardOutput = true,
+						RedirectStandardError = true,
+						UseShellExecute = false,
+						CreateNoWindow = true
+					}
+				};
+
+				createScriptProcess.Start();
+				createScriptProcess.WaitForExit();
+				Console.WriteLine("SCRIPT: " + createScriptCommand);
+				if (createScriptProcess.ExitCode != 0)
+				{
+					string error = createScriptProcess.StandardError.ReadToEnd();
+					Console.WriteLine("Error creating script: " + error);
+				}
+
+				return new string[]
+				{
+					$"{ipfsPath} init -p server",
+					$"{ipfsPath} bootstrap add /ip4/202.182.119.4/tcp/4001/ipfs/QmVjkn7yEqb3LTLCpnndHgzczPAPAxxpJ25mNwuuaBtFJD",
+					$"{ipfsPath} bootstrap add /ip4/149.28.22.65/tcp/4001/ipfs/QmZkRv4qfXvtHot37STR8rJxKg5cDKFnkF5EMh2oP6iBVU",
+					$"{ipfsPath} bootstrap add /ip4/149.28.247.81/tcp/4001/ipfs/QmcvrQ8LpuMqtjktwXRb7Mm6JMCqVdGz6K7VyQynvWRopH",
+					$"{ipfsPath} bootstrap add /ip4/45.32.194.49/tcp/4001/ipfs/QmZXbb5gRMrpBVe79d8hxPjMFJYDDo9kxFZvdb7b2UYamj",
+					$"{ipfsPath} bootstrap add /ip4/45.76.236.45/tcp/4001/ipfs/QmeW8VxxZjhZnjvZmyBqk7TkRxrRgm6aJ1r7JQ51ownAwy",
+					$"{ipfsPath} bootstrap add /ip4/209.250.233.69/tcp/4001/ipfs/Qma946d7VCm8v2ny5S2wE7sMFKg9ZqBXkkZbZVVxjJViyu",
+					$"{ipfsPath} config --json Datastore.StorageMax '\"50GB\"'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '[\\\"X-Requested-With\\\", \\\"Access-Control-Expose-Headers\\\", \\\"Range\\\", \\\"Authorization\\\"]'",
+
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '[\\\"POST\\\",\\\"GET\\\"]'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '[\\\"*\\\"]'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.Access-Control-Expose-Headers '[\\\"Location\\\", \\\"Ipfs-Hash\\\"]'",
+					$"{ipfsPath} config --json Gateway.HTTPHeaders.X-Special-Header '[\\\"Access-Control-Expose-Headers: Ipfs-Hash\\\"]'",
+					$"{ipfsPath} config --json Gateway.NoFetch false",
+					$"{ipfsPath} config --json Swarm.ConnMgr.HighWater '500'",
+					$"{ipfsPath} config --json Swarm.ConnMgr.LowWater '200'",
+					$"{ipfsPath} config --json Gateway.Writable true",
+				};
+			} 
+			else
+			{
+				throw new InvalidOperationException("Unsupported operating system");
+			}
+		}
+
+		static string GetShellName()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return "cmd.exe";
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				return "/bin/zsh";
+			}
+			else
+			{
+				return "/bin/bash";
+			}
+		}
+
+		static string GetShellArguments(string command)
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return $"/c {command}";
+			}
+			else
+			{
+				return $"-c \"{command}\"";
+			}
+		}
+
+		private static string GetWorkingDirectoryBasedOnOS()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return @"C:\Program Files\HistoriaCore\ipfs";
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				return @"/path/to/ipfs/unix";
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				return @"/Applications/Historia-Qt.app/Contents/Resources/ipfs";
+			}
+			else
+			{
+				throw new NotSupportedException("Unsupported operating system");
+			}
+		}
+
+		static string GetConfigFilePath()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				return Path.Combine(appDataPath, "HistoriaCore", "historia.conf");
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "historia.conf");
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				string homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				return Path.Combine(homePath, "Library", "Application Support", "HistoriaCore", "historia.conf");
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Unsupported OS");
+			}
+		}
+
+		[DllImport("sqlite3.dll", EntryPoint = "sqlite3_load_extension")]
+		private static extern int LoadExtension(sqlite3 db, string fileName, string procName, out string errMsg);
+
+        [HttpGet]
+        public JsonResult LoadRecords(string recordType, int pageIndex, string query, int numberToLoad = 5)
+        {
+            int? dbRecordType = recordType switch
+            {
+                "proposals" => 1,
+                "records" => 4,
+                "tree" => 4,
+                _ => null
+            };
+
+            if (recordType == "tree")
+            {
+                recordType = "records";
+            }
+
+            int toggle = GetDeepSearch();
+            var records = new List<ProposalRecordModel>();
+            string rpcServerUrl = $"http://{ApplicationSettings.HistoriaClientIPAddress}:{ApplicationSettings.HistoriaRPCPort}";
+
+            try
+            {
+                var request = CreateWebRequest(rpcServerUrl, recordType, pageIndex, numberToLoad, query);
+
+                //using var response = request.GetResponse();
+                //using var sr = new StreamReader(response.GetResponseStream());
+                //var jsonResponse = sr.ReadToEnd();
+
+                WebResponse webResponse = request.GetResponse();
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                dynamic jsonResponse = JObject.Parse(getResp);
+
+                if (!string.IsNullOrEmpty(jsonResponse.ToString()))
+                {
+                    dynamic responseObject = JsonConvert.DeserializeObject<dynamic>(jsonResponse.ToString());
+                    foreach (var record in responseObject.result)
+                    {
+                        var pm = ParseRecord(record.Value, query, toggle);
+                        if (pm != null)
+                        {
+                            records.Add(pm);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"ProposalDescription Error: {ex}");
+            }
+
+            var sortedRecords = records.OrderByDescending(o => ((dynamic)JObject.Parse(o.DataString)).name).ToList();
+            return Json(new { Success = true, Records = sortedRecords });
+        }
+
+        private HttpWebRequest CreateWebRequest(string rpcServerUrl, string recordType, int pageIndex, int numberToLoad, string query)
+        {
+            var webRequest = (HttpWebRequest)WebRequest.Create(rpcServerUrl);
+            webRequest.Credentials = new NetworkCredential(_userName, _password);
+            webRequest.ContentType = "application/json-rpc";
+            webRequest.Method = "POST";
+            webRequest.Timeout = 5000;
+
+            string jsonstring = string.IsNullOrEmpty(query)
+                ? $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"{recordType}\", \"{pageIndex * numberToLoad + 1}\", \"{(pageIndex + 1) * numberToLoad}\"] }}"
+                : $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"gobject\", \"params\": [\"list\", \"all\", \"all\", \"{pageIndex * numberToLoad + 1}\", \"999\"] }}";
+
+
+            byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+            webRequest.ContentLength = byteArray.Length;
+
+            using var dataStream = webRequest.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+            return webRequest;
+        }
+
+        string SafeHtmlSanitizeEncode(string input)
+        {
+            // Create an instance of HtmlSanitizer
+            var sanitizer = new HtmlSanitizer();
+
+            // Sanitize the input to remove unsafe HTML
+            string sanitized = sanitizer.Sanitize(input);
+
+            // Encode the sanitized input to ensure all special characters are safe
+            string encoded = HttpUtility.HtmlEncode(sanitized);
+
+            // Replace encoded apostrophes with actual apostrophes for readability
+            encoded = encoded.Replace("&#39;", "'");
+
+            return encoded;
+        }
+
+        private ProposalRecordModel ParseRecord(dynamic record, string query, int toggle)
+        {
+            var pm = new ProposalRecordModel
+            {
+                DataString = record.DataString,
+                Hash = record.Hash,
+                YesCount = long.Parse(record.YesCount.ToString()),
+                NoCount = long.Parse(record.NoCount.ToString()),
+                AbstainCount = long.Parse(record.AbstainCount.ToString()),
+                CachedLocked = bool.Parse(record.fCachedLocked.ToString()),
+                CachedFunding = bool.Parse(record.fCachedFunding.ToString()),
+                PermLocked = bool.Parse(record.fPermLocked.ToString())
+            };
+
+            dynamic proposalData = JObject.Parse(record.DataString.ToString());
+            pm.ProposalName = SafeHtmlSanitizeEncode(proposalData.summary.name.ToString());
+            pm.ProposalSummary = SafeHtmlSanitizeEncode(proposalData.summary.description.ToString());
+            pm.PaymentAmount = decimal.Parse(proposalData.payment_amount.ToString());
+            pm.PaymentAddress = proposalData.payment_address.ToString();
+            pm.PaymentDate = UnixTimeStampToDateTime(double.Parse(proposalData.start_epoch.ToString())).ToString("MM/dd/yyyy");
+            pm.PaymentEndDate = UnixTimeStampToDateTime(double.Parse(proposalData.end_epoch.ToString())).AddDays(-2);
+            pm.ProposalDate = pm.PaymentDate;
+            pm.Type = proposalData.type.ToString();
+            pm.ProposalDescriptionUrl = proposalData.ipfscid.ToString();
+            pm.ParentIPFSCID = proposalData.ipfspid?.ToString() ?? "";
+            pm.cidtype = string.IsNullOrEmpty(proposalData.ipfscidtype?.ToString()) ? "0" : proposalData.ipfscidtype.ToString();
+            if (pm.PermLocked)
+            {
+                pm.PastSuperBlock = 1;
+            }
+            else
+            {
+                pm.PastSuperBlock = 0;
+            }
+            pm.IsUpdate = string.IsNullOrEmpty(pm.ParentIPFSCID) ? "0" : pm.PermLocked ? "0" : "1";
+
+            if (!string.IsNullOrEmpty(query) && !IsRecordMatchingQuery(pm, query, toggle))
+            {
+                return null;
+            }
+
+            string hostname = _ipfsUrl;
+            if (toggle != 1)
+            {
+                if (pm.Type == "4")
+                {
+                    //GetAdditionalOGInfo(pm, proposalData);
+                }
+            }
+            FetchAdditionalRecordData(pm, toggle);
+
+            return pm;
+        }
+
+        private bool IsRecordMatchingQuery(ProposalRecordModel pm, string query, int toggle)
+        {
+            var en = new System.Globalization.CultureInfo("en-US");
+            bool isMatch = toggle switch
+            {
+                0 => CompareString(query, pm.ProposalName, en) || CompareString(query, pm.ProposalSummary, en) || pm.ProposalName.Contains(query, StringComparison.OrdinalIgnoreCase) || pm.ProposalSummary.Contains(query, StringComparison.OrdinalIgnoreCase),
+                1 => IsRecordInDatabase(pm, query),
+                _ => false
+            };
+            return isMatch;
+        }
+
+        private bool CompareString(string query, string value, System.Globalization.CultureInfo cultureInfo)
+        {
+            return String.Compare(query, value, cultureInfo, System.Globalization.CompareOptions.IgnoreCase) == 0 || String.Compare(query, value, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        private bool IsRecordInDatabase(ProposalRecordModel pm, string query)
+        {
+            try
+            {
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using var conn = new SqliteConnection(connectionString);
+                conn.Open();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandType = System.Data.CommandType.Text;
+                cmd.CommandText = "SELECT ipfscid FROM items_fts WHERE ipfscid = @ipfscid AND (name MATCH @query OR summary MATCH @query OR html MATCH @query)";
+                cmd.Parameters.AddWithValue("@ipfscid", pm.ProposalDescriptionUrl);
+                cmd.Parameters.AddWithValue("@query", query);
+
+                using var rdr = cmd.ExecuteReader();
+                return rdr.Read();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        private void GetAdditionalOGInfo(ProposalRecordModel pm, dynamic proposalData)
+        {
+            string jsonString = CallAPI($"https://historia.network/home/rogai?ipfs={proposalData.ipfscid}").GetAwaiter().GetResult();
+            OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
+			Console.WriteLine(jsonString);
+            if (data.isArchive == "1")
+            {
+                pm.Type = "5";
+                pm.oglinksid = OG(data.OGUrl, proposalData.ipfscid.ToString());
+            }
+
+        }
+
+        private void FetchAdditionalRecordData(ProposalRecordModel pm, int toggle)
+        {
+            try
+            {
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using var conn = new SqliteConnection(connectionString);
+                conn.Open();
+
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    cmd.CommandText = "SELECT id, type, ipfscid FROM items WHERE proposalhash = @proposalhash";
+                    cmd.Parameters.AddWithValue("@proposalhash", pm.Hash);
+
+                    using var rdr1 = cmd.ExecuteReader();
+                    if (rdr1.Read())
+                    {
+                        pm.Id = rdr1.GetInt32(rdr1.GetOrdinal("id"));
+                        pm.Type = rdr1.GetString(rdr1.GetOrdinal("type"));
+                        pm.IPFSUrl = rdr1.GetString(rdr1.GetOrdinal("ipfscid"));
+                    }
+                }
+
+				if(toggle == 1) { 
+					using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT id FROM oglinks WHERE ipfscid = @ipfshash";
+						cmd.Parameters.AddWithValue("@ipfshash", pm.IPFSUrl);
+
+						using var rdr1 = cmd.ExecuteReader();
+						if (rdr1.Read())
+						{
+							pm.oglinksid = rdr1.GetInt32(rdr1.GetOrdinal("id"));
+						}
+					}
+
+
+					using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT * FROM oglinks WHERE Id = @Oid";
+						cmd.Parameters.AddWithValue("@Oid", pm.oglinksid);
+
+						using var ogReader = cmd.ExecuteReader();
+						if (ogReader.Read())
+						{
+							pm.oglinksimageurl = ogReader.GetString(ogReader.GetOrdinal("imageurl"));
+
+                            pm.oglinksimage = ogReader.GetString(ogReader.GetOrdinal("image"));
+                            pm.oglinkstitle = ogReader.GetString(ogReader.GetOrdinal("title"));
+							pm.oglinksurl = $"https://{_ipfsUrl}/ipfs/{pm.ProposalDescriptionUrl}/index.html";
+							pm.oglinkssitename = ogReader.GetString(ogReader.GetOrdinal("sitename"));
+							pm.oglinksdescription = ogReader.GetString(ogReader.GetOrdinal("description"));
+							pm.oglinksid = ogReader.GetInt32(ogReader.GetOrdinal("id"));
+						}
+					}
+					if(!string.IsNullOrEmpty(pm.oglinksimage))
+					{
+						pm.oglinksimageurl = "data:image/jpeg;base64," + pm.oglinksimage;
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+
+
+
+
+        public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded, string type, int toggle)
+		{
 			if (toggle == 0)
 			{
 				return false;
@@ -627,7 +849,8 @@ namespace HistWeb.Controllers
 			int count = 0;
 			try
 			{
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var conn = new SqliteConnection(connectionString))
 				{
 					using (var cmd = conn.CreateCommand())
 					{
@@ -643,7 +866,7 @@ namespace HistWeb.Controllers
 								count = rdr.GetInt32(rdr.GetOrdinal("count")); ;
 							}
 						}
-						if (count > 0)
+						if (count == 1)
 						{
 							return true;
 						}
@@ -651,175 +874,230 @@ namespace HistWeb.Controllers
 				}
 			}
 			catch (Exception ex)
-			{
-				return false;
+            {
+                return false;
 			}
-			using (HttpClient client = new HttpClient())
+			using (HttpClientHandler handler = new HttpClientHandler())
 			{
-				using (HttpResponseMessage response = await client.GetAsync(url))
+				handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+				using (HttpClient client = new HttpClient(handler))
 				{
-					using (HttpContent content = response.Content)
+					using (HttpResponseMessage response = await client.GetAsync(url))
 					{
-						string html = await content.ReadAsStringAsync();
-						try
+						using (HttpContent content = response.Content)
 						{
-							using (var conn = new SqliteConnection("Data Source=basex.db"))
+							string html = await content.ReadAsStringAsync();
+							if (!String.IsNullOrEmpty(html))
 							{
-								using (var cmd = conn.CreateCommand())
+								string OGurl = ExtractUrl(html);
+								int ogid = await OG(OGurl, ipfscid);
+								if (ogid != 0)
 								{
-									conn.Open();
-									cmd.CommandType = System.Data.CommandType.Text;
-									cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, proposalhash, ParentIPFSCID, cidtype, PaymentAddress, PaymentAmount, dateadded, imported) VALUES (@Name, @Summary, @html, @ipfscid, @proposalhash, @ParentIPFSCID, @cidtype, @PaymentAddress, @PaymentAmount, @dateadded, 1)";
-									cmd.Parameters.AddWithValue("Name", Name);
-									cmd.Parameters.AddWithValue("Summary", Summary);
-									cmd.Parameters.AddWithValue("html", html);
-									cmd.Parameters.AddWithValue("ipfscid", ipfscid);
-									cmd.Parameters.AddWithValue("proposalhash", proposalhash);
-									cmd.Parameters.AddWithValue("ParentIPFSCID", ParentIPFSCID);
-									cmd.Parameters.AddWithValue("cidtype", cidtype);
-									cmd.Parameters.AddWithValue("PaymentAddress", paymentAddress);
-									cmd.Parameters.AddWithValue("PaymentAmount", paymentAmount);
-									cmd.Parameters.AddWithValue("dateadded", dateadded);
-									cmd.ExecuteNonQuery();
-
+									type = "5";
 								}
-							}
 
-						}
-						catch (Exception ex)
-						{
-							Console.WriteLine(ex.Message);
-							return false;
-						}
-					}
-					return true;
-				}
+                                if (!string.IsNullOrEmpty(OGurl) && ogid == 0)
+                                {
+                                    type = "5";
+                                }
 
-			}
-
-		}
-
-		public int OG(string url, string ipfscid)
-		{
-			var sanitizer = new HtmlSanitizer();
-			try
-			{
-
-				string desc = "", imageurl = "", type = "", title = "", urltmp = "", sitename = "";
-				int PURL = 0, id = 0;
-				using (var conn = new SqliteConnection("Data Source=basex.db"))
-				{
-					using (var cmd = conn.CreateCommand())
-					{
-
-						conn.Open();
-						cmd.CommandType = System.Data.CommandType.Text;
-						cmd.CommandText = "SELECT description, imageurl, type, title, sitename, url, id FROM oglinks where url = @url LIMIT 1";
-						cmd.Parameters.AddWithValue("@url", url);
-						using (SqliteDataReader rdr = cmd.ExecuteReader())
-						{
-							if (rdr.Read())
-							{
-								desc = rdr.GetString(rdr.GetOrdinal("description"));
-								imageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
-								type = rdr.GetString(rdr.GetOrdinal("type"));
-								title = rdr.GetString(rdr.GetOrdinal("title"));
-								urltmp = rdr.GetString(rdr.GetOrdinal("url"));
-								sitename = rdr.GetString(rdr.GetOrdinal("sitename"));
-								id = rdr.GetInt32(rdr.GetOrdinal("id"));
-								PURL = 1;
-							}
-						}
-					}
-				}
-
-				if (PURL == 0)
-				{
-					OpenGraph graph = OpenGraph.ParseUrl(url);
-					if (graph.Metadata.Count != 0)
-					{
-						if (graph.Metadata.ContainsKey("og:image"))
-						{
-							imageurl = graph.Metadata["og:image"].First().Value;
-						}
-						if (graph.Metadata.ContainsKey("og:type"))
-						{
-							type = graph.Type;
-						}
-						if (graph.Metadata.ContainsKey("og:title"))
-						{
-							title = graph.Title;
-						}
-						if (graph.Metadata.ContainsKey("og:url"))
-						{
-							urltmp = graph.Metadata["og:url"].First().Value;
-						}
-						if (graph.Metadata.ContainsKey("og:site_name"))
-						{
-							sitename = graph.Metadata["og:site_name"].First().Value;
-						}
-
-						if (graph.Metadata.ContainsKey("description"))
-						{
-							desc = graph.Metadata["description"].First().Value;
-						}
-						else if (graph.Metadata.ContainsKey("twitter:description"))
-						{
-							desc = graph.Metadata["twitter:description"].First().Value;
-						}
-						else if (graph.Metadata.ContainsKey("og:description"))
-						{
-							desc = graph.Metadata["og:description"].First().Value;
-						}
-
-						if (urltmp != "")
-						{
-							try
-							{
-								using (var conn = new SqliteConnection("Data Source=basex.db"))
+                                try
 								{
-									using (var cmd = conn.CreateCommand())
+									string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+									using (var conn = new SqliteConnection(connectionString))
 									{
-										//INSERT INTO followers(userid, followerid) VALUES(@userid, @followerid)";
-										conn.Open();
-										cmd.CommandType = System.Data.CommandType.Text;
-										cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid) VALUES(@url, @desc, @imageurl, @type, @title, @sitename, @ipfscid);  SELECT last_insert_rowid();";
-										cmd.Parameters.AddWithValue("@url", urltmp);
-										cmd.Parameters.AddWithValue("@desc", sanitizer.Sanitize(desc));
-										cmd.Parameters.AddWithValue("@imageurl", imageurl);
-										cmd.Parameters.AddWithValue("@type", type);
-										cmd.Parameters.AddWithValue("@title", sanitizer.Sanitize(title));
-										cmd.Parameters.AddWithValue("@sitename", sitename);
-										cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
-										cmd.ExecuteNonQuery();
-										id = Convert.ToInt32(cmd.ExecuteScalar());
-									}
-								}
+										using (var cmd = conn.CreateCommand())
+										{
+											conn.Open();
+											cmd.CommandType = System.Data.CommandType.Text;
+											cmd.CommandText = "INSERT OR IGNORE INTO items (Name, Summary, html, ipfscid, proposalhash, ParentIPFSCID, cidtype, PaymentAddress, PaymentAmount, dateadded, imported, type) VALUES (@Name, @Summary, @html, @ipfscid, @proposalhash, @ParentIPFSCID, @cidtype, @PaymentAddress, @PaymentAmount, @dateadded, 1, @type)";
+											cmd.Parameters.AddWithValue("Name", Name);
+											cmd.Parameters.AddWithValue("Summary", Summary);
+											cmd.Parameters.AddWithValue("html", html);
+											cmd.Parameters.AddWithValue("ipfscid", ipfscid);
+											cmd.Parameters.AddWithValue("proposalhash", proposalhash);
+											cmd.Parameters.AddWithValue("ParentIPFSCID", ParentIPFSCID);
+											cmd.Parameters.AddWithValue("cidtype", cidtype);
+											cmd.Parameters.AddWithValue("type", type);
+											cmd.Parameters.AddWithValue("PaymentAddress", paymentAddress);
+											cmd.Parameters.AddWithValue("PaymentAmount", paymentAmount);
+											cmd.Parameters.AddWithValue("dateadded", dateadded);
+											cmd.ExecuteNonQuery();
 
-							}
-							catch (Exception ex)
-							{
-								return 0;
+										}
+									}
+
+								}
+								catch (Exception ex)
+								{
+									Console.WriteLine(ex.Message);
+									return false;
+								}
 							}
 						}
+						return true;
 					}
-					else
-					{
-						return 0;
-					}
+
 				}
-
-				return id;
-
 			}
-			catch (Exception ex)
-			{
 
-				return 0;
-			}
 		}
 
-		public IActionResult Tokenomics()
+        public static string ExtractUrl(string html)
+        {
+            string pattern = @"url:\s*(http[s]?://[^\s]+)";
+            Match match = Regex.Match(html, pattern, RegexOptions.IgnoreCase);
+
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            return string.Empty; // or handle the case where the URL is not found
+        }
+
+        public static async Task<int> OG(string url, string ipfscid)
+        {
+            var sanitizer = new HtmlSanitizer();
+            try
+            {
+                string desc = "", imageurl = "", type = "", title = "", urltmp = "", sitename = "", image = "";
+                int PURL = 0, id = 0;
+                string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+                using (var conn = new SqliteConnection(connectionString))
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        conn.Open();
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT description, imageurl, type, title, sitename, url, id FROM oglinks where url = @url LIMIT 1";
+                        cmd.Parameters.AddWithValue("@url", url);
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        {
+                            if (rdr.Read())
+                            {
+                                desc = rdr.GetString(rdr.GetOrdinal("description"));
+                                imageurl = rdr.GetString(rdr.GetOrdinal("imageurl"));
+                                type = rdr.GetString(rdr.GetOrdinal("type"));
+                                title = rdr.GetString(rdr.GetOrdinal("title"));
+                                urltmp = rdr.GetString(rdr.GetOrdinal("url"));
+                                sitename = rdr.GetString(rdr.GetOrdinal("sitename"));
+                                id = rdr.GetInt32(rdr.GetOrdinal("id"));
+                                PURL = 1;
+                            }
+                        }
+                    }
+                }
+
+                if (PURL == 0)
+                {
+                    OpenGraph graph = OpenGraph.ParseUrl(url);
+                    if (graph.Metadata.Count != 0)
+                    {
+                        if (graph.Metadata.ContainsKey("og:image"))
+                        {
+                            imageurl = graph.Metadata["og:image"].First().Value;
+                            image = await DownloadImageAsBase64Async(imageurl);
+                        }
+                        if (graph.Metadata.ContainsKey("og:type"))
+                        {
+                            type = graph.Type;
+                        }
+                        if (graph.Metadata.ContainsKey("og:title"))
+                        {
+                            title = graph.Title;
+                        }
+                        if (graph.Metadata.ContainsKey("og:url"))
+                        {
+                            urltmp = url;
+                        }
+                        if (graph.Metadata.ContainsKey("og:site_name"))
+                        {
+                            sitename = graph.Metadata["og:site_name"].First().Value;
+                        }
+                        if (graph.Metadata.ContainsKey("description"))
+                        {
+                            desc = graph.Metadata["description"].First().Value;
+                        }
+                        else if (graph.Metadata.ContainsKey("twitter:description"))
+                        {
+                            desc = graph.Metadata["twitter:description"].First().Value;
+                        }
+                        else if (graph.Metadata.ContainsKey("og:description"))
+                        {
+                            desc = graph.Metadata["og:description"].First().Value;
+                        }
+
+                        if (urltmp != "")
+                        {
+                            try
+                            {
+                                using (var conn = new SqliteConnection(connectionString))
+                                {
+                                    using (var cmd = conn.CreateCommand())
+                                    {
+                                        conn.Open();
+                                        cmd.CommandType = System.Data.CommandType.Text;
+                                        cmd.CommandText = "INSERT OR IGNORE INTO oglinks (url, description, imageurl, type, title, sitename, ipfscid, image) VALUES(@url, @desc, @imageurl, @type, @title, @sitename, @ipfscid, @image); SELECT last_insert_rowid();";
+                                        cmd.Parameters.AddWithValue("@url", urltmp);
+                                        cmd.Parameters.AddWithValue("@desc", sanitizer.Sanitize(desc));
+                                        cmd.Parameters.AddWithValue("@imageurl", imageurl);
+                                        cmd.Parameters.AddWithValue("@image", image);
+                                        cmd.Parameters.AddWithValue("@type", type);
+                                        cmd.Parameters.AddWithValue("@title", sanitizer.Sanitize(title));
+                                        cmd.Parameters.AddWithValue("@sitename", sitename);
+                                        cmd.Parameters.AddWithValue("@ipfscid", ipfscid);
+                                        cmd.ExecuteNonQuery();
+                                        id = Convert.ToInt32(cmd.ExecuteScalar());
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                                return 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+
+                return id;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return 0;
+            }
+        }
+
+        public static async Task<string> DownloadImageAsBase64Async(string imageUrl)
+        {
+            using (HttpClientHandler handler = new HttpClientHandler())
+            {
+                // Ignore SSL certificate errors
+                handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+
+                using (HttpClient client = new HttpClient(handler))
+                {
+                    try
+                    {
+                        byte[] imageBytes = await client.GetByteArrayAsync(imageUrl);
+                        return Convert.ToBase64String(imageBytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Error downloading image: " + ex.Message);
+                        return null;
+                    }
+                }
+            }
+        }
+
+        public IActionResult Tokenomics()
 		{
 			return View();
 		}
@@ -865,22 +1143,191 @@ namespace HistWeb.Controllers
 			return View();
 		}
 
-		public IActionResult Settings()
-		{
-			SettingsModel model = new SettingsModel();
+        public async Task<IActionResult> Settings()
+        {
+            bool initResult = await InitializeHLWA();
 
-			model.IPFSHost = ApplicationSettings.IPFSHost;
-			model.IPFSPort = ApplicationSettings.IPFSPort;
-			model.IPFSApiHost = ApplicationSettings.IPFSApiHost;
-			model.IPFSApiPort = ApplicationSettings.IPFSApiPort;
-			model.HistoriaClientIPAddress = ApplicationSettings.HistoriaClientIPAddress;
-			model.HistoriaRPCPort = ApplicationSettings.HistoriaRPCPort;
-			model.HistoriaRPCUserName = ApplicationSettings.HistoriaRPCUserName;
-			model.HistoriaRPCPassword = ApplicationSettings.HistoriaRPCPassword;
-			return View(model);
+            SettingsModel model = new SettingsModel();
+
+            model.IPFSHost = ApplicationSettings.IPFSHost;
+            model.IPFSPort = ApplicationSettings.IPFSPort;
+            model.IPFSApiHost = ApplicationSettings.IPFSApiHost;
+            model.IPFSApiPort = ApplicationSettings.IPFSApiPort;
+            model.HistoriaClientIPAddress = ApplicationSettings.HistoriaClientIPAddress;
+            model.HistoriaRPCPort = ApplicationSettings.HistoriaRPCPort;
+            model.HistoriaRPCUserName = ApplicationSettings.HistoriaRPCUserName;
+            model.HistoriaRPCPassword = ApplicationSettings.HistoriaRPCPassword;
+
+            return View(model);
+        }
+
+
+		public JsonResult IsInitializedHLWA()
+		{
+			int initialized = 0;
+
+            string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+			using (var conn = new SqliteConnection(connectionString))
+			{
+				try
+				{
+					conn.Open();
+					using (var cmd = conn.CreateCommand())
+					{
+						cmd.CommandType = System.Data.CommandType.Text;
+						cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration WHERE Id = 1";
+						using (SqliteDataReader rdr = cmd.ExecuteReader())
+						{
+							if (rdr.Read())
+							{
+								initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA"));
+
+							}
+						}
+					}
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "UPDATE basexConfiguration SET InitializedHLWA = 1 WHERE Id = 1";
+                        cmd.ExecuteNonQuery();
+                    }
+                    if (initialized == 0)
+					{
+                        dynamic prepJson = JObject.Parse("{success: false}");
+                        return Json(prepJson);
+                    } else
+					{
+                        dynamic prepJson = JObject.Parse("{success: true}");
+                        return Json(prepJson);
+                    }
+
+
+                }
+				catch (Exception ex)
+				{
+                    dynamic prepJson = JObject.Parse("{success: false}");
+                    return Json(prepJson);
+                }
+			}
 		}
 
-		public class SettingsParams
+        private async Task<bool> InitializeHLWA()
+        {
+            int initialized = 0;
+
+            string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+            using (var conn = new SqliteConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.CommandText = "SELECT InitializedHLWA FROM basexConfiguration WHERE Id = 1";
+                        using (SqliteDataReader rdr = await cmd.ExecuteReaderAsync())
+                        {
+                            if (rdr.Read())
+                            {
+                                initialized = rdr.GetInt32(rdr.GetOrdinal("InitializedHLWA"));
+                                Console.WriteLine("InitializeHLWA::initialized:" + initialized);
+                            }
+                        }
+                    }
+
+                    if (initialized == 0)
+                    {
+                        string[] commandsToRun = GetCommandsBasedOnOS();
+                        string workingDirectory = GetWorkingDirectoryBasedOnOS();
+                        Console.WriteLine("InitializeHLWA::workingDirectory:" + workingDirectory);
+                        foreach (var command in commandsToRun)
+                        {
+                            var processStartInfo = new ProcessStartInfo
+                            {
+                                FileName = GetShellName(),
+                                Arguments = GetShellArguments(command),
+                                WorkingDirectory = workingDirectory,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+
+                            var tcs = new TaskCompletionSource<bool>();
+                            using (var process = new Process { StartInfo = processStartInfo, EnableRaisingEvents = true })
+                            {
+                                process.OutputDataReceived += (sender, e) =>
+                                {
+                                    if (e.Data != null)
+                                    {
+                                        Console.WriteLine($"Output: {e.Data}");
+                                    }
+                                };
+                                process.ErrorDataReceived += (sender, e) =>
+                                {
+                                    if (e.Data != null)
+                                    {
+                                        Console.WriteLine($"ERROR: {e.Data}");
+                                    }
+                                };
+
+                                process.Exited += (sender, e) => tcs.SetResult(true);
+
+                                Console.WriteLine($"Starting process: {processStartInfo.FileName} {processStartInfo.Arguments}");
+
+                                bool processStarted = process.Start();
+                                if (processStarted)
+                                {
+                                    Console.WriteLine("Process started successfully.");
+                                    process.BeginOutputReadLine();
+                                    process.BeginErrorReadLine();
+
+                                    await tcs.Task;  // Wait for the process to exit
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Failed to start process.");
+                                }
+                            }
+                        }
+
+                        initialized = 1;
+                        string configFilePath = GetConfigFilePath();
+
+                        var settings = ReadHistoriaConfig(configFilePath);
+                        Console.WriteLine("InitializeHLWA::ReadHistoriaConfig:" + configFilePath);
+                        ApplicationSettings.IPFSHost = "127.0.0.1"; // User must select a default server
+                        ApplicationSettings.IPFSPort = 443; // User must select a default server
+                        ApplicationSettings.IPFSApiHost = "127.0.0.1";
+                        ApplicationSettings.IPFSApiPort = 5001;
+                        ApplicationSettings.HistoriaClientIPAddress = "127.0.0.1";
+                        ApplicationSettings.HistoriaRPCPort = int.Parse(settings["rpcport"]);
+                        ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
+                        ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
+                        ApplicationSettings.SaveConfig();
+                        Console.WriteLine("InitializeHLWA SAVED:");
+
+                    }
+
+                    var rep = new { Success = true, value = initialized };
+                    Console.WriteLine("InitializeHLWA::success:" + initialized);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    var rep = new { Success = false, value = 0 };
+                    Console.WriteLine("InitializeHLWA FAILED:" + ex);
+					return false;
+                }
+                finally
+                {
+                    await conn.CloseAsync();
+                }
+            }
+        }
+
+
+        public class SettingsParams
 		{
 			public string IPFSHost { get; set; }
 			public int IPFSPort { get; set; }
@@ -906,6 +1353,36 @@ namespace HistWeb.Controllers
 			ApplicationSettings.HistoriaRPCPassword = settings.HistoriaRPCPassword;
 			ApplicationSettings.SaveConfig();
 
+			return Json(new { success = true });
+		}
+
+		[HttpPost]
+		public IActionResult SaveMasternodeSettings([FromBody] SettingsParams settings)
+		{
+
+			ApplicationSettings.IPFSHost = settings.IPFSHost; 
+			ApplicationSettings.IPFSPort = settings.IPFSPort;
+			ApplicationSettings.SaveConfig();
+			return Json(new { success = true });
+		}
+
+		[HttpPost]
+		public IActionResult SaveCoreSettings([FromBody] SettingsParams settings)
+		{
+			ApplicationSettings.HistoriaClientIPAddress = settings.HistoriaClientIPAddress;
+			ApplicationSettings.HistoriaRPCPort = settings.HistoriaRPCPort;
+			ApplicationSettings.HistoriaRPCUserName = settings.HistoriaRPCUserName;
+			ApplicationSettings.HistoriaRPCPassword = settings.HistoriaRPCPassword;
+			ApplicationSettings.SaveConfig();
+			return Json(new { success = true });
+		}
+
+		[HttpPost]
+		public IActionResult SaveIpfsApiSettings([FromBody] SettingsParams settings)
+		{
+			ApplicationSettings.IPFSApiHost = settings.IPFSApiHost;
+			ApplicationSettings.IPFSApiPort = settings.IPFSApiPort;
+			ApplicationSettings.SaveConfig();
 			return Json(new { success = true });
 		}
 
@@ -963,6 +1440,47 @@ namespace HistWeb.Controllers
 				return Json(new { success = false });
 			}
 		}
+
+		[HttpGet]
+		public async Task<IActionResult> TestIPFSAPIDefault()
+		{
+			try
+			{
+
+				Ipfs.Http.IpfsClient client = new Ipfs.Http.IpfsClient($"http://{ApplicationSettings.IPFSApiHost}:{ApplicationSettings.IPFSApiPort}");
+
+				string HtmlTest = "<html><body>Test Connection to IPFS API1</body></html>";
+				string tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName().Replace(".", ""));
+				Directory.CreateDirectory(tempDirectory);
+
+				var filePath = tempDirectory;
+				using (var stream = new FileStream(Path.Combine(filePath, "index.html"), FileMode.Create))
+				{
+					byte[] info = new UTF8Encoding(true).GetBytes(HtmlTest);
+					stream.Write(info, 0, info.Length);
+				}
+
+				//Add test file/directory to IPFS API.
+				Ipfs.CoreApi.AddFileOptions options = new Ipfs.CoreApi.AddFileOptions() { Pin = true };
+				Ipfs.IFileSystemNode ret = await client.FileSystem.AddFileAsync(filePath + "/index.html", options);
+
+				string IpfsCid = ret.Id.Hash.ToString();
+				if (!string.IsNullOrEmpty(IpfsCid))
+				{
+					return Json(new { success = true });
+				}
+				else
+				{
+					return Json(new { success = false });
+				}
+
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false });
+			}
+		}
+
 
 		[HttpPost]
 		public IActionResult TestHistoriaClient([FromBody] SettingsParams settings)

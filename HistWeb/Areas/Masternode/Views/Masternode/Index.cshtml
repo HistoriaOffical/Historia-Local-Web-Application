@@ -2,7 +2,7 @@
     ViewData["Title"] = "Masternodes";
 }
 
-    <div class="text-center" style="margin-top:50px;">
+<div class="text-center" style="margin-top:50px; margin-bottom:50px;">
         <div class="card">
             <div class="card-header">
                 <h3>Masternodes</h3>
@@ -59,7 +59,6 @@
         });
 
 		$.getJSON( '@Url.Action("GetMasterNodes", "Masternode", new { Area = "Masternode" })', function( tableData ) {
-            console.log('masternode data: ' + JSON.stringify(JSON.parse(tableData)));
             Swal.close();
 			var jsonRet = [];
 			for (var prop in tableData.result) {

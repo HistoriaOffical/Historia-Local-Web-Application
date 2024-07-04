@@ -71,8 +71,6 @@
         $(document).ready(function () {
 
             $.getJSON('@Url.Action("GetDrafts", "Create", new { Area = "Create" })', function (tableData) {
-                console.log('draft data: ' + JSON.stringify(tableData));
-
                 var draftsTable = $('#draftsTable').DataTable({
                     data: tableData,
                     info: false,
@@ -227,7 +225,6 @@
 
                         const fileInput = $('#fileInput');
 
-
                         fileInput.click();
 
                         fileInput.on('change', function () {
@@ -236,7 +233,7 @@
                             if (files.length > 0) {
                                 const file = files[0];
                                 const fileSize = file.size;
-                                const maxSizeInBytes = 10485760;
+                                const maxSizeInBytes = 20487232;
 
                                 if (fileSize > maxSizeInBytes) {
                                     Swal.fire({

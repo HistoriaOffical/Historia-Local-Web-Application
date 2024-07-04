@@ -16,6 +16,12 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 using reCAPTCHA.AspNetCore;
 using Microsoft.Data.Sqlite;
+using System.Runtime.InteropServices;
+using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Diagnostics;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace HistWeb
 {
@@ -44,12 +50,192 @@ namespace HistWeb
 		public static string HistoriaRPCUserName { get; set; }
 		public static string HistoriaRPCPassword { get; set; }
 
-		private static void CreateConfig()
+		public static string DatabasePath { get; set; }
+
+		public static string MediaPath { get; set; }
+
+        public static string OGImagesPath { get; set; }
+        private static void GetDatabasePath()
+		{
+			string databaseFileName = "basex.db";
+			string basePath;
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HistoriaCore"); // %Appdata%\Roaming\HistoriaCore
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				//basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "HistoriaCore");
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HistoriaCore");
+
+                // /Users/<USERNAME>/Library/Application Support/HistoriaCore
+            }
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				basePath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".historiacore"); // /home/<USERNAME>/.historiacore
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Operating system not supported");
+			}
+
+            if (!Directory.Exists(basePath))
+            {
+                Directory.CreateDirectory(basePath);
+            }
+
+            DatabasePath = Path.Combine(basePath, databaseFileName);
+			Console.WriteLine("DATABASE PATH:" + DatabasePath);
+		}
+
+		public static void CreateMediaDirectoryIfNotExists(string path)
 		{
 			try
 			{
+				// Check if the directory exists
+				if (!Directory.Exists(path))
+				{
+					// Create the directory
+					Directory.CreateDirectory(path);
+					Console.WriteLine($"Directory created: {path}");
+				}
+				else
+				{
+					Console.WriteLine($"Directory already exists: {path}");
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"An error occurred while creating the directory: {ex.Message}");
+			}
+		}
 
-				using (var connection = new SqliteConnection("Data Source=basex.db"))
+        public static void CreateOGImagesDirectoryIfNotExists(string path)
+        {
+            try
+            {
+                // Check if the directory exists
+                if (!Directory.Exists(path))
+                {
+                    // Create the directory
+                    Directory.CreateDirectory(path);
+                    Console.WriteLine($"Directory created: {path}");
+                }
+                else
+                {
+                    Console.WriteLine($"Directory already exists: {path}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while creating the directory: {ex.Message}");
+            }
+        }
+
+
+        private static void GetMediaPath()
+		{
+			string basePath;
+
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HistoriaCore"); // %Appdata%\Roaming\HistoriaCore
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				//Users/<USERNAME>/Library/Application Support/HistoriaCore
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "HistoriaCore");
+            }
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				basePath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".historiacore"); // /home/<USERNAME>/.historiacore
+			}
+			else
+			{
+				throw new PlatformNotSupportedException("Operating system not supported");
+			}
+
+			MediaPath = Path.Combine(basePath, "media");
+            OGImagesPath = Path.Combine(basePath, "media", "ogimages");
+            CreateMediaDirectoryIfNotExists(MediaPath);
+            CreateOGImagesDirectoryIfNotExists(OGImagesPath);
+            SetDirectoryPermissions(MediaPath);
+            SetDirectoryPermissions(OGImagesPath);
+
+		}
+
+		private static void SetDirectoryPermissions(string path)
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				// Set directory permissions on Windows
+				DirectoryInfo dirInfo = new DirectoryInfo(path);
+				DirectorySecurity security = dirInfo.GetAccessControl();
+				security.AddAccessRule(new FileSystemAccessRule(
+					new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+					FileSystemRights.FullControl,
+					InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+					PropagationFlags.None,
+					AccessControlType.Allow));
+
+				dirInfo.SetAccessControl(security);
+				Console.WriteLine($"Permissions set successfully for directory: {path}");
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				// Set directory permissions on Unix-based systems
+				try
+				{
+					string command = $"chmod -R 777 \"{path}\"";
+					Process process = new Process
+					{
+						StartInfo = new ProcessStartInfo
+						{
+							FileName = "/bin/bash",
+                            Arguments = $"-c \"{command.Replace("\"", "\\\"")}\"",
+                            RedirectStandardOutput = true,
+							RedirectStandardError = true,
+							UseShellExecute = false,
+							CreateNoWindow = true
+						}
+					};
+
+
+					process.Start();
+					string output = process.StandardOutput.ReadToEnd();
+					string error = process.StandardError.ReadToEnd();
+					process.WaitForExit();
+
+					if (process.ExitCode == 0)
+					{
+						Console.WriteLine($"Permissions set successfully for directory: {path}");
+					}
+					else
+					{
+						Console.WriteLine($"Error setting permissions: {error}");
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"An error occurred while setting directory permissions: {ex.Message}");
+				}
+			}
+			else
+			{
+				throw new InvalidOperationException("Unsupported operating system");
+			}
+		}
+	
+
+
+	private static void CreateConfig()
+		{
+			try
+			{
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var connection = new SqliteConnection(connectionString))
+
 				{
 					connection.Open();
 
@@ -65,8 +251,17 @@ namespace HistWeb
                                                     HistoriaRPCPort INTEGER NOT NULL,
                                                     HistoriaRPCUserName TEXT NOT NULL,
                                                     HistoriaRPCPassword TEXT NOT NULL,
-													DeepSearch INTEGER DEFAULT 0
+													DeepSearch INTEGER DEFAULT 0,
+													InitializedHLWA INTEGER DEFAULT 0,
+													InitializedIPFS INTEGER DEFAULT 0,
+													IpfsApi INTEGER DEFAULT 0,
+													IpfsApiStarted INTEGER DEFAULT 0
                                                 );";
+						createCmd.CommandType = System.Data.CommandType.Text;
+						createCmd.ExecuteNonQuery();
+
+
+						createCmd.CommandText = @"UPDATE basexConfiguration SET IpfsApiStarted = 0 WHERE Id = 1;";
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
 
@@ -80,20 +275,72 @@ namespace HistWeb
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
 
+
 						createCmd.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS idx_proposalmatrix_url ON proposalmatrix(url);";
 						createCmd.ExecuteNonQuery();
 
 						createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS masternodeprivatekeys (
                                                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+													ProTXHash TEXT  NOT NULL,
                                                     collateralIndex TEXT  NOT NULL,
                                                     collateralHash TEXT NOT NULL,
                                                     masternodeName TEXT NOT NULL,
-                                                    EncryptedPrivateKey TEXT
+                                                    feeSourceAddress TEXT,
+													EncryptedPrivateKey TEXT,
+													blsprivkey TEXT,
+													blspublickey TEXT,
+													alert INT,
+													UNIQUE (collateralIndex, masternodeName, collateralHash, EncryptedPrivateKey, ProTXHash)
                                                 );";
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
 
-						createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS items (
+                        createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS masternodesetupqueue (
+                                                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+													ProTXHash TEXT,
+                                                    collateralIndex TEXT,
+                                                    collateralHash TEXT,
+                                                    masternodeName TEXT,
+													collateralAddr TEXT,
+													ownerKeyAddr TEXT,
+													votingKeyAddr TEXT,
+													payoutAddress TEXT,
+													feeSourceAddress TEXT,
+                                                    EncryptedPrivateKey TEXT,
+													blsprivkey TEXT,
+													blspublickey TEXT,
+													randomIdentity TEXT,
+													register_prepare_TXID TEXT,
+													register_prepare_SignMessage TEXT,
+													SignMessage_signature TEXT,
+													register_submit_TXID TEXT,
+													masternodeprivkey TEXT,
+													sshAddr TEXT,
+													sshUsername TEXT,
+													sshPassword TEXT,
+													sshPort INT,
+													MN_DNS TEXT,
+													MN_ipfs TEXT,
+													queue_step INT,
+													block0 INT,
+													block1 INT,
+													nodeType INT
+                                                );";
+                        createCmd.CommandType = System.Data.CommandType.Text;
+                        createCmd.ExecuteNonQuery();
+
+                        createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS logs (
+                                                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+													timestamp TEXT,
+													logType TEXT,
+													logSource TEXT,
+                                                    log TEXT
+
+                                                );";
+                        createCmd.CommandType = System.Data.CommandType.Text;
+                        createCmd.ExecuteNonQuery();
+
+                        createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS items (
                                                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                     Name TEXT  NOT NULL,
                                                     Summary TEXT NOT NULL,
@@ -150,6 +397,7 @@ namespace HistWeb
                                                   url TEXT UNIQUE,
                                                   description TEXT,
                                                   imageurl TEXT,
+												  image TEXT,
                                                   type TEXT,
                                                   title TEXT,
                                                   sitename TEXT,
@@ -216,7 +464,8 @@ namespace HistWeb
 		{
 			try
 			{
-				using (var connection = new SqliteConnection("Data Source=basex.db"))
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var connection = new SqliteConnection(connectionString))
 				{
 					connection.Open();
 
@@ -251,8 +500,12 @@ namespace HistWeb
 		{
 			try
 			{
+				GetDatabasePath();
+				GetMediaPath();
 				CreateConfig();
-				using (var connection = new SqliteConnection("Data Source=basex.db"))
+				
+				string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
+				using (var connection = new SqliteConnection(connectionString))
 				{
 					connection.Open();
 
@@ -300,9 +553,15 @@ namespace HistWeb
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			//services.AddControllers(options => options.EnableEndpointRouting = false);
+            //services.AddControllers(options => options.EnableEndpointRouting = false);
+            services.AddHttpClient();
+            services.Configure<KestrelServerOptions>(options =>
+            {
+                options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(60);
+                options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(60);
+            });
 
-			services.Configure<CookiePolicyOptions>(options =>
+            services.Configure<CookiePolicyOptions>(options =>
 			{
 				// This lambda determines whether user consent for non-essential cookies is needed for a given request.
 				options.CheckConsentNeeded = context => true;

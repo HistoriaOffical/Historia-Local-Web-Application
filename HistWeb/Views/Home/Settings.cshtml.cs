@@ -24,6 +24,7 @@ namespace HistWeb.Home.Views
 
         public string IPFSHost { get; set; }
         public int IPFSPort { get; set; }
+        public string IPFSApiHostName { get; set; }
         public string IPFSApiHost { get; set; }
         public int IPFSApiPort { get; set; }
         public string HistoriaClientIPAddress { get; set; }

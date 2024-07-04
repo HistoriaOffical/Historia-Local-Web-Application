@@ -1937,17 +1937,6 @@
                 success: function (response) {
                     Swal.close(); // Ensure the Swal is closed in success path
 
-                    // Check if the server reported a failure
-                    if (!response.success) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Initialization Complete!',
-                            text: 'Since this was the first time HLWA has run, we had to initialize some things. Before you can use HLWA you must restart Historia Core Wallet, HLWA, and make sure Historia is fully synced',
-                            confirmButtonText: 'OK'
-                        });
-                        return;
-                    }
-
                     // If success, process the data
                     var jsonRet = [];
                     response.data.forEach(function (item) {  // Assuming response.data is an array of objects
@@ -2127,67 +2116,67 @@
             },
         });
 
-        $.ajax({
-            url: '@Url.Action("IsInitializedHLWA", "Home", new { Area = "Home" })',
-            type: 'GET',
-            dataType: 'json',
-            timeout: 10000,
-            success: function (response) {
-                Swal.close();
-                if (!response.success) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Initialization Complete!',
-                        html: 'Are you on a high-speed internet connection?<br>This will provide a better experience and is recommend, but does require more bandwidth. If you are on slow internet connection, click no.',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes',
-                        cancelButtonText: 'No',
-                        reverseButtons: false
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', function (data) {
-                                if (data.value == 0) {
-                                    $('#btnImportHistoriaRecordsLabel').html("Off");
-                                    $('#btnImportHistoriaRecords').prop('checked', false);
-                                } else {
-                                    $('#btnImportHistoriaRecordsLabel').html("On");
-                                    $('#btnImportHistoriaRecords').prop('checked', true);
-                                }
-                                Swal.fire({
-                                    icon: 'info',
-                                    title: 'High Speed Internet Confirmed!',
-                                    text: 'This will download all records and archives to your local machine in the background. Give it a few minutes and go back to the main page.',
-                                    confirmButtonText: 'Ok',
-                                });
+            $.ajax({
+                url: '@Url.Action("IsInitializedHLWA", "Home", new { Area = "Home" })',
+                type: 'GET',
+                dataType: 'json',
+                timeout: 10000,
+                success: function (response) {
+                    Swal.close();
+                    if (!response.success) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Initialization Complete!',
+                            html: 'Are you on a high-speed internet connection?<br>This will provide a better experience and is recommend, but does require more bandwidth. If you are on slow internet connection, click no.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes',
+                            cancelButtonText: 'No',
+                            reverseButtons: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                $.get('@Url.Action("ToggleDeepValue", "Home", new { Area = "Home" })', function (data) {
+                                    if (data.value == 0) {
+                                        $('#btnImportHistoriaRecordsLabel').html("Off");
+                                        $('#btnImportHistoriaRecords').prop('checked', false);
+                                    } else {
+                                        $('#btnImportHistoriaRecordsLabel').html("On");
+                                        $('#btnImportHistoriaRecords').prop('checked', true);
+                                    }
                                     Swal.fire({
                                         icon: 'info',
-                                        title: 'Please choose a Content Disstribution Masternode Server!',
-                                        text: 'Because Historia Network is a distributed network, you have to choose a Content Distribution Masternode server to connect for you to receive content.',
+                                        title: 'High Speed Internet Confirmed!',
+                                        text: 'This will download all records and archives to your local machine in the background. Give it a few minutes and go back to the main page.',
                                         confirmButtonText: 'Ok',
+                                    }).then(() => {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'Please choose a Content Distribution Masternode Server!',
+                                            text: 'Because Historia Network is a distributed network, you have to choose a Content Distribution Masternode server to connect to receive content.',
+                                            confirmButtonText: 'Ok',
+                                        }).then(() => {
+                                            getMasterNodesSetup();
+                                        });
                                     });
-
-                            }).always(() => {
+                                });
+                            } else {
                                 getMasterNodesSetup();
-                            });
-                        } else {
-                            getMasterNodesSetup();
-                        }
+                            }
+                        });
+                    } else {
+                        getMasterNodesSetup();
+                    }
+                },
+                error: function (xhr, textStatus, error) {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Could not initialize HLWA. Please try again later.',
+                        confirmButtonText: 'OK'
                     });
-                } else {
-                    getMasterNodesSetup();
+                    console.error('AJAX error:', textStatus, error);
                 }
-            },
-            error: function (xhr, textStatus, error) {
-                Swal.close();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Could not initialize HLWA. Please try again later.',
-                    confirmButtonText: 'OK'
-                });
-                console.error('AJAX error:', textStatus, error);
-            }
-        });
+            });
 
  
 
@@ -2891,8 +2880,8 @@
             $('#btnImportHistoriaRecords').on('click', async function (e) {
                 if ($('#btnImportHistoriaRecordsLabel').html() === "On") {
                     const result = await Swal.fire({
-                        title: 'Deep Search',
-                        html: 'Are you sure you want to disable Deep Search?' +
+                        title: 'High Speed Internet',
+                        html: 'Are you sure you want to disable High Speed Internet? This is not recommended unless you are on a slow internet connection.' +
                             '<br>',
                         icon: 'warning',
                         showConfirmButton: true,

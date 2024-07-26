@@ -664,8 +664,11 @@ namespace HistWeb.Controllers
                 var prepRespJson = new { success = false, error = "Wallet is Not Unlocked" };
                 return Json(prepRespJson);
             }
+
+
             string blsprivkey = "", ProTXHash = "", feeSourceAddress = "", masternodeName = "";
             string collateralHash = model.CollateralHash;
+
             try
             {
                 string connectionString = $"Data Source={ApplicationSettings.DatabasePath}";
@@ -698,9 +701,10 @@ namespace HistWeb.Controllers
                 webRequest.Method = "POST";
                 webRequest.Timeout = 5000;
 
-                //string jsonstring = $"{{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"protx\", \"params\": [\"update_service\", \"{collateralHash}\", \"{ipAndPort}\",  \"{blsprivkey}\"] }}";
-                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"protx\", \"params\": [\"update_service\", \"" + ProTXHash + "\", \"" + ipAndPort + ":10101" + "\", \"" + blsprivkey + "\"] }";
-                //string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"protx\", \"params\": [\"revoke\", \"" + ProTXHash + "\", \"" + blsprivkey + "\", \"0\", \"" + feeSourceAddress + "\"] }";
+                string EmptyPlaceHolder = ""; // This is needed for command format.
+
+                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"protx\", \"params\": [\"update_service\", \"" + ProTXHash + "\", \"" + ipAndPort + ":10101" + "\", \"" + blsprivkey + "\", \"" + EmptyPlaceHolder + "\", \"" + feeSourceAddress + "\"]   }";
+
                 Console.WriteLine(jsonstring);
                 byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
                 webRequest.ContentLength = byteArray.Length;
@@ -2101,7 +2105,6 @@ namespace HistWeb.Controllers
             var commands = new[]
             {
                 "sudo ufw allow 10101/tcp",
-                "sudo ufw allow 10100/tcp",
                 "sudo ufw allow 4001/tcp",
                 "sudo ufw allow 443/tcp",
                 "sudo ufw allow 80/tcp"
@@ -2651,7 +2654,7 @@ namespace HistWeb.Controllers
             {
                 Logger.Instance.Log("InstallDependencies", "Running OS Update commands...", "MASTERNODE");
                 RunCommand(client, "sudo apt update && sudo apt upgrade -y");
-                RunCommand(client, "sudo apt install -y python3 virtualenv git unzip pv golang-go snapd");
+                RunCommand(client, "sudo apt install -y python3 virtualenv git unzip pv golang-go snapd ufw");
                 Logger.Instance.Log("InstallDependencies", "Update all patches and installed dependencies executed successfully.", "MASTERNODE");
                 return true;
             }
@@ -2697,15 +2700,15 @@ namespace HistWeb.Controllers
 
                 Logger.Instance.Log("InstallHistoria", "Historia is not installed. Proceeding with installation.", "MASTERNODE");
 
-                RunCommand(client, "cd /tmp && wget https://github.com/HistoriaOffical/historia/releases/download/0.17.2.0/historiacore-0.17.2-x86_64-linux-gnu.tar.gz");
+                RunCommand(client, "cd /tmp && wget https://github.com/HistoriaOffical/historia/releases/download/0.17.3.0/historiacore-0.17.3-x86_64-linux-gnu.tar.gz");
                 RunCommand(client, "mkdir -p ~/.historiacore");
                 RunCommand(client, "mkdir -p /tmp/historiacore");
-                RunCommand(client, "tar xfvz /tmp/historiacore-0.17.2-x86_64-linux-gnu.tar.gz -C /tmp/historiacore");
-                RunCommand(client, "cp /tmp/historiacore/historiacore-0.17.2/bin/historia-cli ~/.historiacore");
-                RunCommand(client, "cp /tmp/historiacore/historiacore-0.17.2/bin/historiad ~/.historiacore");
+                RunCommand(client, "tar xfvz /tmp/historiacore-0.17.3-x86_64-linux-gnu.tar.gz -C /tmp/historiacore");
+                RunCommand(client, "cp /tmp/historiacore/historiacore-0.17.3/bin/historia-cli ~/.historiacore");
+                RunCommand(client, "cp /tmp/historiacore/historiacore-0.17.3/bin/historiad ~/.historiacore");
                 RunCommand(client, "chmod 755 ~/.historiacore/historia*");
-                RunCommand(client, "rm -rf /tmp/historiacore-0.17.2-x86_64-linux-gnu.tar.gz");
-                RunCommand(client, "rm -rf /tmp/historiacore");
+                //RunCommand(client, "sudo rm -rf /tmp/historiacore-0.17.3-x86_64-linux-gnu.tar.gz");
+                //RunCommand(client, "sudo rm -rf /tmp/historiacore");
                 var rpcuser = Guid.NewGuid().ToString();
                 var rpcpassword = Guid.NewGuid().ToString();
                 var publicIp = RunCommandWithOutput(client, "curl -s ifconfig.me").Trim();
@@ -2838,7 +2841,6 @@ addnode=104.156.233.45:10101
                 }
                 RunCommand(client, "(crontab -l ; echo \"* * * * * cd ~/.historiacore/sentinel && ./venv/bin/python bin/sentinel.py 2>&1 >> sentinel-cron.log\") | crontab -");
                 RunCommand(client, "(crontab -l ; echo \"* * * * * pidof historiad || ~/.historiacore/historiad\") | crontab -");
-                RunCommand(client, "(crontab -l ; echo \"* * * * * pidof historiad || ~/.historiacore/historiad\") | crontab -");
                 RunCommand(client, "sudo sh -c '(crontab -l ; echo \"0 0 */4 * * /sbin/reboot\") | crontab -'");
 
 
@@ -2908,8 +2910,8 @@ addnode=104.156.233.45:10101
                 Logger.Instance.Log("StopHistoria", "Attempting To Stop Historia", "MASTERNODE");
                 Logger.Instance.Log("StopHistoria", "Stopping historia daemon.", "MASTERNODE");
                 RunCommand(client, "~/.historiacore/historia-cli stop");
-                Logger.Instance.Log("StopHistoria", "Waiting for 15 seconds to ensure historia daemon has stopped.", "MASTERNODE");
-                System.Threading.Thread.Sleep(15000);
+                Logger.Instance.Log("StopHistoria", "Waiting for 45 seconds to ensure historia daemon has stopped.", "MASTERNODE");
+                System.Threading.Thread.Sleep(45000);
                 Logger.Instance.Log("StopHistoria", "Historia daemon stopped.", "MASTERNODE");
                 return true;
             }

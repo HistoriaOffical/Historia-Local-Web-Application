@@ -602,10 +602,15 @@ namespace HistWeb.Controllers
                     dynamic responseObject = JsonConvert.DeserializeObject<dynamic>(jsonResponse.ToString());
                     foreach (var record in responseObject.result)
                     {
-                        var pm = ParseRecord(record.Value, query, toggle);
-                        if (pm != null)
+                        dynamic dataString = JsonConvert.DeserializeObject<dynamic>(record.Value.DataString.ToString());
+
+                        if (dataString.type == 4 || dataString.type == 1 || dataString.type == 5)
                         {
-                            records.Add(pm);
+                            var pm = ParseRecord(record.Value, query, toggle);
+                            if (pm != null)
+                            {
+                                records.Add(pm);
+                            }
                         }
                     }
                 }

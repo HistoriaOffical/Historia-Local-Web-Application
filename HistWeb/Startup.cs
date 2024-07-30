@@ -366,15 +366,15 @@ namespace HistWeb
 						createCmd.CommandType = System.Data.CommandType.Text;
 						createCmd.ExecuteNonQuery();
 
-						createCmd.CommandText = @"CREATE TRIGGER items_fts_insert AFTER INSERT ON items
-													BEGIN
-														INSERT INTO items_fts(rowid, Name, Summary, html, ipfscid)
-														VALUES(new.Id, new.Name, new.Summary, new.html, new.ipfscid);
-													END;";
-						createCmd.CommandType = System.Data.CommandType.Text;
-						createCmd.ExecuteNonQuery();
+                        createCmd.CommandText = @"CREATE TRIGGER IF NOT EXISTS items_fts_insert AFTER INSERT ON items
+                            BEGIN
+                                INSERT OR IGNORE INTO items_fts(rowid, Name, Summary, html, ipfscid)
+                                VALUES(new.Id, new.Name, new.Summary, new.html, new.ipfscid);
+                            END;";
+                        createCmd.CommandType = System.Data.CommandType.Text;
+                        createCmd.ExecuteNonQuery();
 
-						createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS templates (
+                        createCmd.CommandText = @"CREATE TABLE IF NOT EXISTS templates (
                                                     Name TEXT PRIMARY KEY NOT NULL,
                                                     html TEXT NOT NULL,
                                                     css TEXT NOT NULL

@@ -839,6 +839,7 @@
         }
 
         function startSetup() {
+            UnlockWalletMasternode();
             var ipAddress = $('#SSHipAddress').val();
             var port = $('#SSHport').val();
             var username = createdUsername || $('#SSHusername').val();
@@ -1023,11 +1024,11 @@
                             data: null,
                             render: function (data, type, full, meta) {
                                 if (data.identity == "VOTER") {
-                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="RevokeVoterBtn" class="fas fa-times-circle icon-button" title="Revoke Voter" onClick="RevokeVoterNode(\'' + data.collateralHash + '\');"></i>';
+                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="RevokeVoterBtn" class="fas fa-times-circle icon-button" title="Revoke Voter" onClick="RevokeVoterNode(\'' + data.collateralHash + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>';
 
                                 } else {
                                     var DNS = data.identity.replace(/^https?:\/\//, '');
-                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="ToolsBtn" class="fas fa-tools icon-button" title="Diagnosis" onClick="GetTools(\'' + data.collateralHash + '\', \'' + data.ipAddress + '\', \'' + DNS + '\');"></i>&nbsp<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasterNode(\'' + data.collateralHash + '\');"></i>';
+                                    return '<i id="InfoBtn" class="fas fa-info-circle icon-button" title="Information" onClick="GetInfo(\'' + data.collateralHash + '\');"></i>&nbsp<i id="ToolsBtn" class="fas fa-tools icon-button" title="Diagnosis" onClick="GetTools(\'' + data.collateralHash + '\', \'' + data.ipAddress + '\', \'' + DNS + '\');"></i>&nbsp<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasternode(\'' + data.collateralHash + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>';
 
                                 }
                             }
@@ -1454,8 +1455,21 @@
 
 
 
-        function RevokeVoterNode(collateralHash) {
+        function RevokeVoterNode(collateralHash, blsprivkeyBool, blspublickeyBool, feeSourceAddressBool) {
+            console.log('Values:', collateralHash, blsprivkeyBool, blspublickeyBool, feeSourceAddressBool);
+            console.log('Types:', typeof blsprivkeyBool, typeof blspublickeyBool, typeof feeSourceAddressBool);
 
+            // Ensure values are treated as numbers and explicitly convert to boolean
+            const blsprivkeyBoolBool = !!Number(blsprivkeyBool);
+            const blspublickeyBoolBool = !!Number(blspublickeyBool);
+            const feeSourceAddressBoolBool = !!Number(feeSourceAddressBool);
+
+            console.log('Converted Values:', blsprivkeyBoolBool, blspublickeyBoolBool, feeSourceAddressBoolBool);
+
+            if (!blsprivkeyBoolBool || !blspublickeyBoolBool || !feeSourceAddressBoolBool) {
+                Swal.fire('Error', 'Masternode not setup for management. Click on the Information icon.', 'error');
+                return;
+            }
             Swal.fire({
                 title: "Revoke Voter Node?",
                 html:
@@ -1545,11 +1559,21 @@
          }
 
 
-        function RevokeMasternoderNode(collateralHash) {
+        function RevokeMasternode(collateralHash, blsprivkeyBool, blspublickeyBool, feeSourceAddressBool) {
+            const blsprivkeyBoolBool = !!Number(blsprivkeyBool);
+            const blspublickeyBoolBool = !!Number(blspublickeyBool);
+            const feeSourceAddressBoolBool = !!Number(feeSourceAddressBool);
+
+            console.log('Converted Values:', blsprivkeyBoolBool, blspublickeyBoolBool, feeSourceAddressBoolBool);
+
+            if (!blsprivkeyBoolBool || !blspublickeyBoolBool || !feeSourceAddressBoolBool) {
+                Swal.fire('Error', 'Masternode not setup for management. Click on the Information icon.', 'error');
+                return;
+            }
             Swal.fire({
-                title: "Revoke Voter Node?",
+                title: "Revoke Masternode Node?",
                 html:
-                    'Are you sure you want to revoke your voting privileges for this node? You must enter your Historia Core wallet passphrase. <input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
+                    'Are you sure you want to revoke your masternode and lose voting privileges for this node? You must enter your Historia Core wallet passphrase. <br> <input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase">`',
                 type: "warning",
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -1557,7 +1581,7 @@
                 backdrop: true,
                 showCancelButton: true,
                 confirmButtonClass: "btn-danger",
-                confirmButtonText: "Yes, revoke this node!",
+                confirmButtonText: "Yes, revoke these keyst!",
                 cancelButtonText: "No, cancel it!",
                 closeOnConfirm: true,
                 closeOnCancel: true,
@@ -1571,7 +1595,7 @@
                     $.ajax({
                         type: 'POST',
                         url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
-                        data: JSON.stringify({ passphrase: passphrase, time: "60" }),
+                        data: JSON.stringify({ passphrase: passphrase, time: "600" }),
                         contentType: 'application/json; charset=utf-8',
                         dataType: 'json',
                         success: function (response) {
@@ -1590,10 +1614,18 @@
                                 $.ajax({
                                     type: 'POST',
                                     url: '@Url.Action("RevokeNode", "Masternode", new { Area = "Masternode" })',
-                                    success: function (tableData) {
+                                    data: JSON.stringify({ collateralHash: collateralHash }),
+                                    contentType: 'application/json; charset=utf-8',
+                                    dataType: 'json',
+                                    success: function (result) {
                                         try {
-
                                             Swal.close();
+                                            Swal.fire({
+                                                icon: 'alert',
+                                                title: 'Masternode Has Been Revoked!',
+                                                text: 'You can move the coins associated with that masternode node now.',
+                                                confirmButtonText: 'OK'
+                                            });
                                         } catch (e) {
                                             console.error("Error processing data:", e);
                                         }
@@ -1626,9 +1658,13 @@
             });
         }
 
-
         function RestartNode(collateralHash, VotingPrivateKeyBool, blsprivkeyBool, blspublickeyBool, feeSourceAddressBool) {
-            if (!VotingPrivateKeyBool || !blsprivkeyBool || !blspublickeyBool || !feeSourceAddressBool) {
+            const VotingPrivateKeyBoolBool = !!Number(VotingPrivateKeyBool);
+            const blsprivkeyBoolBool = !!Number(blsprivkeyBool);
+            const blspublickeyBoolBool = !!Number(blspublickeyBool);
+            const feeSourceAddressBoolBool = !!Number(feeSourceAddressBool);
+
+            if (!VotingPrivateKeyBoolBool || !blsprivkeyBoolBool || !blspublickeyBoolBool || !feeSourceAddressBoolBool) {
                 Swal.fire('Error', 'Masternode not setup for management. Click on the Information icon.', 'error');
                 return;
             }
@@ -1816,9 +1852,9 @@
                                                         data: null,
                                                         render: function (data, type, full, meta) {
                                                             if (data.identity == "VOTER") {
-                                                                return '<i id="RevokeVoterBtn" class="fas fa-times-circle icon-button" title="Revoke Voter" onClick="RevokeVoterNode(' + data.collateralHash + ');"></i>';
+                                                                return '<i id="RevokeVoterBtn" class="fas fa-times-circle icon-button" title="Revoke Voter" onClick="RevokeVoterNode(\'' + data.collateralHash + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>';
                                                             } else {
-                                                                return '<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasterNode(' + data.collateralHash + ');"></i>';
+                                                                return '<i id="RestartBtn" class="fas fa-sync icon-button" title="Restart Masternode" onClick="RestartNode(\'' + data.collateralHash + '\',\'' + data.votingPrivateKey + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>&nbsp;&nbsp;<i id="RevokeBtn" class="fas fa-times-circle icon-button" title="Revoke Masternode" onClick="RevokeMasternode(\'' + data.collateralHash + '\',\'' + data.blsprivkey + '\',\'' + data.blspublickey + '\', \'' + data.feeSourceAddress + '\');"></i>';
                                                             }
                                                         }
                                                     },
@@ -1926,6 +1962,122 @@
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function UnlockWalletVotingNode() {
+
+            Swal.fire({
+                title: "Unlock Wallet",
+                html:
+                    '<p>To complete your Voting node setup, please enter your Historia Core wallet passphrase below:</p>' +
+                    '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
+                icon: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Unlock Wallet",
+                cancelButtonText: "No, cancel it!",
+                preConfirm: () => {
+                    const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                    if (!passphrase) {
+                        Swal.showValidationMessage(`Please enter a passphrase`);
+                    }
+                    return passphrase;
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+
+                    const passphrase = result.value;
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Wallet Unlocked',
+                                    text: 'You can leave this page now, and setup will continue.',
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok',
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Could not unlock wallet',
+                                    text: response.error
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function UnlockWalletMasternode() {
+
+            Swal.fire({
+                title: "Unlock Wallet",
+                html:
+                    '<p>To complete your Masternode setup, please unlock your wallet by entering the passphrase below:</p>' +
+                    '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
+                icon: "warning",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showCancelButton: true,
+                confirmButtonText: "Unlock Wallet",
+                cancelButtonText: "No, cancel it!",
+                preConfirm: () => {
+                    const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                    if (!passphrase) {
+                        Swal.showValidationMessage(`Please enter a passphrase`);
+                    }
+                    return passphrase;
+                }
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    const passphrase = result.value;
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                        data: JSON.stringify({ passphrase: passphrase, time: "600000" }),
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Wallet Unlocked',
+                                    text: 'You can leave this page now, and setup will continue.',
+                                    icon: 'success',
+                                    confirmButtonText: 'Ok',
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Could not unlock wallet',
+                                    text: response.error
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'An unexpected error occurred.'
+                            });
+                        }
+                    });
+                }
+            });
         }
 
         function getMasterNodesSetup() {
@@ -2116,7 +2268,7 @@
             },
         });
 
-            $.ajax({
+        $.ajax({
                 url: '@Url.Action("IsInitializedHLWA", "Home", new { Area = "Home" })',
                 type: 'GET',
                 dataType: 'json',
@@ -2181,120 +2333,13 @@
  
 
         $('#btnUnlockWalletVoting').on('click', function () {
-
-            Swal.fire({
-                title: "Unlock Wallet",
-                html:
-                    '<p>To complete your voting node setup, please enter your Historia Core wallet passphrase below:</p>' +
-                    '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
-                icon: "warning",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showCancelButton: true,
-                confirmButtonClass: "btn-danger",
-                confirmButtonText: "Unlock Wallet",
-                cancelButtonText: "No, cancel it!",
-                preConfirm: () => {
-                    const passphrase = Swal.getPopup().querySelector('#passphrase').value;
-                    if (!passphrase) {
-                        Swal.showValidationMessage(`Please enter a passphrase`);
-                    }
-                    return passphrase;
-                }
-            }).then(function (result) {
-                if (result.isConfirmed) {
-
-                    const passphrase = result.value;
-                    $.ajax({
-                        type: 'POST',
-                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
-                        data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
-                        contentType: 'application/json; charset=utf-8',
-                        dataType: 'json',
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    title: 'Wallet Unlocked',
-                                    text: 'You can leave this page now, and setup will continue.',
-                                    icon: 'success',
-                                    confirmButtonText: 'Ok',
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Could not unlock wallet',
-                                    text: response.error
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'An unexpected error occurred.'
-                            });
-                        }
-                    });
-                }
-            });
+            UnlockWalletVotingNode();
         });
            
 
         $('#btnUnlockWalletMasternode').on('click', function () {
-                Swal.fire({
-                    title: "Unlock Wallet",
-                    html:
-                        '<p>To complete your Masternode setup, please unlock your wallet by entering the passphrase below:</p>' +
-                        '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
-                    icon: "warning",
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    showCancelButton: true,
-                    confirmButtonText: "Unlock Wallet",
-                    cancelButtonText: "No, cancel it!",
-                    preConfirm: () => {
-                        const passphrase = Swal.getPopup().querySelector('#passphrase').value;
-                        if (!passphrase) {
-                            Swal.showValidationMessage(`Please enter a passphrase`);
-                        }
-                        return passphrase;
-                    }
-                }).then(function (result) {
-                    if (result.isConfirmed) {
-                        const passphrase = result.value;
-                        $.ajax({
-                            type: 'POST',
-                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
-                            data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
-                            contentType: 'application/json; charset=utf-8',
-                            dataType: 'json',
-                            success: function (response) {
-                                if (response.success) {
-                                    Swal.fire({
-                                        title: 'Wallet Unlocked',
-                                        text: 'You can leave this page now, and setup will continue.',
-                                        icon: 'success',
-                                        confirmButtonText: 'Ok',
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Could not unlock wallet',
-                                        text: response.error
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'An unexpected error occurred.'
-                                });
-                            }
-                        });
-                    }
-                });
-            });
+            UnlockWalletMasternode();
+        });
         
         $('#btnDeleteVotingSetupAttempt').on('click', function (e) {
             Swal.fire({

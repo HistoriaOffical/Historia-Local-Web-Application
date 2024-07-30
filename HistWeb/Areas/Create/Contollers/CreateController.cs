@@ -1371,7 +1371,12 @@ namespace HistWeb.Controllers
 			{
 				isArchive = true;
 			}
-			string SummaryName = sanitizer.Sanitize(formCollection["Name"]);
+            bool isMedia = false;
+            if (sanitizer.Sanitize(formCollection["isMedia"]) == "1")
+            {
+                isMedia = true;
+            }
+            string SummaryName = sanitizer.Sanitize(formCollection["Name"]);
 			string Summary = sanitizer.Sanitize(formCollection["Summary"]);
 			string PaymentAddress = sanitizer.Sanitize(formCollection["PaymentAddress"]);
 			string PaymentAmount = sanitizer.Sanitize(formCollection["PaymentAmount"]);
@@ -1422,7 +1427,7 @@ namespace HistWeb.Controllers
 				}
 			}
 			string endEpoch = CalcEndEpoch(PaymentDate);
-			string HtmlFinal = GenerateHTMLForIpfs(html, css, SummaryName, Summary, isArchive);
+			string HtmlFinal = GenerateHTMLForIpfs(html, css, SummaryName, Summary, isArchive, isMedia);
 			string IpfsCid;
 
 
@@ -1645,7 +1650,7 @@ namespace HistWeb.Controllers
 			return endEpoch;
 		}
 
-        private string GenerateHTMLForIpfs(string html, string css, string title, string description, bool isArchive)
+        private string GenerateHTMLForIpfs(string html, string css, string title, string description, bool isArchive, bool isMedia)
         {
             string htmlRet;
 
@@ -1659,12 +1664,21 @@ namespace HistWeb.Controllers
 
             if (isArchive)
             {
-                htmlRet =
-                "<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
-                "<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive\" />" +
-                "<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
-                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
-                "content=\"IE=edge\" ></head>" + html + "</html>";
+				if(isMedia) {
+                    htmlRet =
+					"<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
+                    "<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive, HTAMedia\" />" +
+					"<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
+					"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
+					"content=\"IE=edge\" ></head>" + html + "</html>";
+                } else { 
+					htmlRet =
+					"<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
+					"<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive\" />" +
+					"<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
+					"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
+					"content=\"IE=edge\" ></head>" + html + "</html>";
+                }
             }
             else
             {
@@ -2014,9 +2028,16 @@ namespace HistWeb.Controllers
 				webRequest.ContentType = "application/json-rpc";
 				webRequest.Method = "POST";
 				webRequest.Timeout = 5000;
+				if(Type == "5")
+				{
+					Type = "4";
+                } else if (Type == "4.1")
+				{
+                    Type = "4";
+                }
 
 				string proposalJson = string.Format(@"{{""end_epoch"":{0},""name"":""{1}"",""payment_address"":""{2}"",""payment_amount"":{3},""start_epoch"":{4},""type"":{5},""ipfscid"":""{6}"",""ipfscidtype"":""{7}"",""ipfspid"":""{8}"",""summary"":{{""name"":""{9}"", ""description"":""{10}""}}}}",
-	EndEpoch, name, PaymentAddress, PaymentAmount, name, (Type == "5" ? "4" : Type), IpfsCID, cidType, ipfsPID, ProposalSummaryName, ProposalSummary.Length > 255 ? HttpUtility.JavaScriptStringEncode(ProposalSummary.Substring(0, 254)) : HttpUtility.JavaScriptStringEncode(ProposalSummary));
+	EndEpoch, name, PaymentAddress, PaymentAmount, name, Type, IpfsCID, cidType, ipfsPID, ProposalSummaryName, ProposalSummary.Length > 255 ? HttpUtility.JavaScriptStringEncode(ProposalSummary.Substring(0, 254)) : HttpUtility.JavaScriptStringEncode(ProposalSummary));
 				byte[] proposalBytes = Encoding.Default.GetBytes(proposalJson);
 				hexString = BitConverter.ToString(proposalBytes);
 				hexString = hexString.Replace("-", "");

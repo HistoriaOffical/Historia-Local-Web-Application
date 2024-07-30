@@ -43,6 +43,7 @@ namespace HistWeb.Areas.Masternode.Models
     public class CollateralHashModel
     {
         public string CollateralHash { get; set; }
+        public string operatorPayoutAddress { get; set; }
     }
 
     public class SaveFieldsModel

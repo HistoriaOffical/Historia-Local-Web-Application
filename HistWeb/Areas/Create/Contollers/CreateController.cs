@@ -1371,7 +1371,12 @@ namespace HistWeb.Controllers
 			{
 				isArchive = true;
 			}
-			string SummaryName = sanitizer.Sanitize(formCollection["Name"]);
+            bool isMedia = false;
+            if (sanitizer.Sanitize(formCollection["isMedia"]) == "1")
+            {
+                isMedia = true;
+            }
+            string SummaryName = sanitizer.Sanitize(formCollection["Name"]);
 			string Summary = sanitizer.Sanitize(formCollection["Summary"]);
 			string PaymentAddress = sanitizer.Sanitize(formCollection["PaymentAddress"]);
 			string PaymentAmount = sanitizer.Sanitize(formCollection["PaymentAmount"]);
@@ -1422,7 +1427,7 @@ namespace HistWeb.Controllers
 				}
 			}
 			string endEpoch = CalcEndEpoch(PaymentDate);
-			string HtmlFinal = GenerateHTMLForIpfs(html, css, SummaryName, Summary, isArchive);
+			string HtmlFinal = GenerateHTMLForIpfs(html, css, SummaryName, Summary, isArchive, isMedia);
 			string IpfsCid;
 
 
@@ -1645,7 +1650,7 @@ namespace HistWeb.Controllers
 			return endEpoch;
 		}
 
-        private string GenerateHTMLForIpfs(string html, string css, string title, string description, bool isArchive)
+        private string GenerateHTMLForIpfs(string html, string css, string title, string description, bool isArchive, bool isMedia)
         {
             string htmlRet;
 
@@ -1659,12 +1664,21 @@ namespace HistWeb.Controllers
 
             if (isArchive)
             {
-                htmlRet =
-                "<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
-                "<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive\" />" +
-                "<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
-                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
-                "content=\"IE=edge\" ></head>" + html + "</html>";
+				if(isMedia) {
+                    htmlRet =
+					"<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
+                    "<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive, HTAMedia\" />" +
+					"<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
+					"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
+					"content=\"IE=edge\" ></head>" + html + "</html>";
+                } else { 
+					htmlRet =
+					"<!DOCTYPE html><html lang=\"en-US\"><head><title>" + title + "</title><meta name=\"description\" content=\"" + description + "\" />" +
+					"<meta name=\"keywords\" content=\"Historia, History, blockchain, cryptocurrency, HTA, HTAArchive\" />" +
+					"<meta name=\"robots\" content=\"index, follow\" ><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />" +
+					"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /><meta http-equiv=\"X-UA-Compatible\" " +
+					"content=\"IE=edge\" ></head>" + html + "</html>";
+                }
             }
             else
             {

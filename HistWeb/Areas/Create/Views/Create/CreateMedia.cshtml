@@ -350,136 +350,14 @@
 
 
                 if (result.id == 0) {
-                    grapesjs.plugins.add('tweet-plugin', (editor, options) => {
-                        editor.BlockManager.add('tweet-block', {
-                            label: 'Import Tweet',
-                            category: 'Social',
-                            content: '<div data-gjs-type="tweet-block"></div>',
-                            attributes: { class: 'fab fa-twitter' },
-                            onClick: function () {
-                                Swal.fire({
-                                    title: "Import Post (Tweet).",
-                                    text: "Drag this on to the canvas to use.",
-                                    showCancelButton: false,
-                                    confirmButtonText: 'OK',
-                                    confirmButtonColor: "#48B5C4",
-
-                                });
-                            },
-                        });
-
-                        // Define the component type 'tweet-block'
-                        editor.DomComponents.addType('tweet-block', {
-                            model: {
-                                defaults: {
-                                    tagName: 'div',
-                                    classes: ['tweet-block'],
-                                },
-                            },
-                        });
-
-                        // Handle the drop event when the tweet block is dropped onto the canvas
-                        editor.on('block:drag:stop', (block) => {
-                            if (block.get('type') === 'tweet-block') {
-                                // Open a SweetAlert dialog for the user to enter the tweet URL
-                                Swal.fire({
-                                    title: 'Enter the Post (Tweet) URL:',
-                                    text: "This is an expertimental feature. It will not import 'Extended' Posts (Tweets) URL. If it doesn't work properly, you can always just do this process manually via taking a screen shot of the Post (Tweet) and importing it as an image .",
-                                    input: 'text',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Submit',
-                                    confirmButtonColor: "#48B5C4",
-                                    showLoaderOnConfirm: true,
-                                    preConfirm: (tweetUrl) => {
-                                        if (tweetUrl) {
-                                            // Send the tweet URL to your C# function via AJAX
-                                            sendTweetUrlToCsharp(tweetUrl);
-                                        }
-                                    }
-                                });
-                            }
-                        });
-
-                        function sendTweetUrlToCsharp(tweetUrl) {
-                            // Show the "Processing... Please wait" message
-                            Swal.fire({
-                                title: "Processing...",
-                                text: "Attempting to import the Post (Tweet) screenshot",
-                                showConfirmButton: false,
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
-                            // Perform an AJAX request to your C# function
-                            $.getJSON('@Url.Action("ImportTweet", "Create", new { area = "Create" })', { tweetUrl: tweetUrl })
-                                .done(function(result) {
-                                    // Hide the "Processing... Please wait" message
-                                    Swal.close();
-
-                                    if (result.success === false) {
-                                        // Handle error case
-                                        Swal.fire({
-                                            icon: "error",
-                                            title: "Error",
-                                            confirmButtonColor: "#48B5C4",
-                                            text: "Failed to import the Post (Tweet). Please try again later."
-                                        });
-                                    } else {
-                                        const tweetContents = JSON.parse(result);
-                                        insertTweetContents(tweetContents, tweetUrl);
-                                    }
-                                })
-                                .fail(function(jqXHR, textStatus, errorThrown) {
-                                    console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
-                                    Swal.close();
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Error",
-                                        confirmButtonColor: "#48B5C4",
-                                        text: "Failed to import the Post (Tweet). Please try again later."
-                                    });
-                                });
-                        }
-
-                        // Function to insert the tweet contents into the GrapeJS editor
-                        function insertTweetContents(tweetImage, tweetUrl) {
-                            const imageComponent = editor.DomComponents.addComponent({
-                                tagName: 'img',
-                                attributes: {
-                                    src: `data:image/png;base64, ${tweetImage}`,
-                                    style: 'border: 1px solid black;', // Add a border to the image
-                                },
-                            });
-
-                            const linkComponent = editor.DomComponents.addComponent({
-                                tagName: 'a',
-                                attributes: {
-                                    href: tweetUrl,
-                                    target: '_blank',
-                                },
-                                components: [imageComponent], // Set the image component as a child of the link component
-                            });
-
-                            // Append the image component to the canvas
-                            editor.getWrapper().appendChild(linkComponent);
-
-                            // Refresh the editor to update the view
-                            editor.refresh();
-                        }
-                    });
 
                     editor = grapesjs.init({
                         blocks: true,
                         container: '#gjs',
-                        plugins: ['gjs-preset-webpage', 'tweet-plugin'],
+                        plugins: ['gjs-preset-webpage'],
                         pluginsOpts: {
                             'gjs-preset-webpage': {
                                 // options for the 'gjs-preset-webpage' plugin
-                            },
-                            'tweet-plugin': {
-                                // options for the 'tweet-plugin' plugin
                             },
                         },
                         fromElement: false,
@@ -490,136 +368,13 @@
                     return false;
                 } else {
 
-                      grapesjs.plugins.add('tweet-plugin', (editor, options) => {
-                        editor.BlockManager.add('tweet-block', {
-                            label: 'Import Tweet',
-                            category: 'Social',
-                            content: '<div data-gjs-type="tweet-block"></div>',
-                            attributes: { class: 'fab fa-twitter' },
-                            onClick: function () {
-                                Swal.fire({
-                                    title: "Import Post (Tweet).",
-                                    text: "Drag this on to the canvas to use.",
-                                    showCancelButton: false,
-                                    confirmButtonText: 'OK',
-                                    confirmButtonColor: "#48B5C4",
-
-                                });
-                            },
-                        });
-
-                        // Define the component type 'tweet-block'
-                        editor.DomComponents.addType('tweet-block', {
-                            model: {
-                                defaults: {
-                                    tagName: 'div',
-                                    classes: ['tweet-block'],
-                                },
-                            },
-                        });
-
-                        // Handle the drop event when the tweet block is dropped onto the canvas
-                        editor.on('block:drag:stop', (block) => {
-                            if (block.get('type') === 'tweet-block') {
-                                // Open a SweetAlert dialog for the user to enter the tweet URL
-                                Swal.fire({
-                                    title: 'Enter the Post (Tweet) URL:',
-                                    text: "This is an expertimental feature. It will not import 'Extended' Posts (Tweets) URL. If it doesn't work properly, you can always just do this process manually via taking a screen shot of the Post (Tweet) and importing it as an image .",
-                                    input: 'text',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Submit',
-                                    confirmButtonColor: "#48B5C4",
-                                    showLoaderOnConfirm: true,
-                                    preConfirm: (tweetUrl) => {
-                                        if (tweetUrl) {
-                                            // Send the tweet URL to your C# function via AJAX
-                                            sendTweetUrlToCsharp(tweetUrl);
-                                        }
-                                    }
-                                });
-                            }
-                        });
-
-                        function sendTweetUrlToCsharp(tweetUrl) {
-                            // Show the "Processing... Please wait" message
-                            Swal.fire({
-                                title: "Processing...",
-                                text: "Attempting to import the Post (Tweet) screenshot",
-                                showConfirmButton: false,
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
-                            // Perform an AJAX request to your C# function
-                            $.getJSON('@Url.Action("ImportTweet", "Create", new { area = "Create" })', { tweetUrl: tweetUrl })
-                                .done(function(result) {
-                                    // Hide the "Processing... Please wait" message
-                                    Swal.close();
-
-                                    if (result.success === false) {
-                                        // Handle error case
-                                        Swal.fire({
-                                            icon: "error",
-                                            title: "Error",
-                                            confirmButtonColor: "#48B5C4",
-                                            text: "Failed to import the Post (Tweet). Please try again later."
-                                        });
-                                    } else {
-                                        const tweetContents = JSON.parse(result);
-                                        insertTweetContents(tweetContents, tweetUrl);
-                                    }
-                                })
-                                .fail(function(jqXHR, textStatus, errorThrown) {
-                                    console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
-                                    Swal.close();
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Error",
-                                        confirmButtonColor: "#48B5C4",
-                                        text: "Failed to import the Post (Tweet). Please try again later."
-                                    });
-                                });
-                        }
-
-                        // Function to insert the tweet contents into the GrapeJS editor
-                        function insertTweetContents(tweetImage, tweetUrl) {
-                            const imageComponent = editor.DomComponents.addComponent({
-                                tagName: 'img',
-                                attributes: {
-                                    src: `data:image/png;base64, ${tweetImage}`,
-                                    style: 'border: 1px solid black;', // Add a border to the image
-                                },
-                            });
-
-                            const linkComponent = editor.DomComponents.addComponent({
-                                tagName: 'a',
-                                attributes: {
-                                    href: tweetUrl,
-                                    target: '_blank',
-                                },
-                                components: [imageComponent], // Set the image component as a child of the link component
-                            });
-
-                            // Append the image component to the canvas
-                            editor.getWrapper().appendChild(linkComponent);
-
-                            // Refresh the editor to update the view
-                            editor.refresh();
-                        }
-                    });
-
                     editor = grapesjs.init({
                         blocks: true,
                         container: '#gjs',
-                        plugins: ['gjs-preset-webpage', 'tweet-plugin'],
+                        plugins: ['gjs-preset-webpage'],
                         pluginsOpts: {
                             'gjs-preset-webpage': {
                                 // options for the 'gjs-preset-webpage' plugin
-                            },
-                            'tweet-plugin': {
-                                // options for the 'tweet-plugin' plugin
                             },
                         },
                         fromElement: false,
@@ -643,9 +398,6 @@
                             pluginsOpts: {
                                 'gjs-preset-webpage': {
                                     // options for the 'gjs-preset-webpage' plugin
-                                },
-                                'tweet-plugin': {
-                                    // options for the 'tweet-plugin' plugin
                                 },
                             },
                         },
@@ -709,126 +461,6 @@
 
 
             }).done(function (result) {
-                 grapesjs.plugins.add('tweet-plugin', (editor, options) => {
-                        editor.BlockManager.add('tweet-block', {
-                            label: 'Import Tweet',
-                            category: 'Social',
-                            content: '<div data-gjs-type="tweet-block"></div>',
-                            attributes: { class: 'fab fa-twitter' },
-                            onClick: function () {
-                                Swal.fire({
-                                    title: "Import Post (Tweet).",
-                                    text: "Drag this on to the canvas to use.",
-                                    showCancelButton: false,
-                                    confirmButtonText: 'OK',
-                                    confirmButtonColor: "#48B5C4",
-
-                                });
-                            },
-                        });
-
-                        // Define the component type 'tweet-block'
-                        editor.DomComponents.addType('tweet-block', {
-                            model: {
-                                defaults: {
-                                    tagName: 'div',
-                                    classes: ['tweet-block'],
-                                },
-                            },
-                        });
-
-                        // Handle the drop event when the tweet block is dropped onto the canvas
-                        editor.on('block:drag:stop', (block) => {
-                            if (block.get('type') === 'tweet-block') {
-                                // Open a SweetAlert dialog for the user to enter the tweet URL
-                                Swal.fire({
-                                    title: 'Enter the Post (Tweet) URL:',
-                                    text: "This is an expertimental feature. It will not import 'Extended' Posts (Tweets) URL. If it doesn't work properly, you can always just do this process manually via taking a screen shot of the Post (Tweet) and importing it as an image .",
-                                    input: 'text',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Submit',
-                                    confirmButtonColor: "#48B5C4",
-                                    showLoaderOnConfirm: true,
-                                    preConfirm: (tweetUrl) => {
-                                        if (tweetUrl) {
-                                            // Send the tweet URL to your C# function via AJAX
-                                            sendTweetUrlToCsharp(tweetUrl);
-                                        }
-                                    }
-                                });
-                            }
-                        });
-
-                        function sendTweetUrlToCsharp(tweetUrl) {
-                            // Show the "Processing... Please wait" message
-                            Swal.fire({
-                                title: "Processing...",
-                                text: "Attempting to import the Post (Tweet) screenshot",
-                                showConfirmButton: false,
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
-                            // Perform an AJAX request to your C# function
-                            $.getJSON('@Url.Action("ImportTweet", "Create", new { area = "Create" })', { tweetUrl: tweetUrl })
-                                .done(function(result) {
-                                    // Hide the "Processing... Please wait" message
-                                    Swal.close();
-
-                                    if (result.success === false) {
-                                        // Handle error case
-                                        Swal.fire({
-                                            icon: "error",
-                                            title: "Error",
-                                            confirmButtonColor: "#48B5C4",
-                                            text: "Failed to import the Post (Tweet). Please try again later."
-                                        });
-                                    } else {
-                                        const tweetContents = JSON.parse(result);
-                                        insertTweetContents(tweetContents, tweetUrl);
-                                    }
-                                })
-                                .fail(function(jqXHR, textStatus, errorThrown) {
-                                    console.log("error: " + textStatus + ", " + errorThrown + ", " + jqXHR);
-                                    Swal.close();
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Error",
-                                        confirmButtonColor: "#48B5C4",
-                                        text: "Failed to import the Post (Tweet). Please try again later."
-                                    });
-                                });
-                        }
-
-                        // Function to insert the tweet contents into the GrapeJS editor
-                        function insertTweetContents(tweetImage, tweetUrl) {
-                            const imageComponent = editor.DomComponents.addComponent({
-                                tagName: 'img',
-                                attributes: {
-                                    src: `data:image/png;base64, ${tweetImage}`,
-                                    style: 'border: 1px solid black;', // Add a border to the image
-                                },
-                            });
-
-                            const linkComponent = editor.DomComponents.addComponent({
-                                tagName: 'a',
-                                attributes: {
-                                    href: tweetUrl,
-                                    target: '_blank',
-                                },
-                                components: [imageComponent], // Set the image component as a child of the link component
-                            });
-
-                            // Append the image component to the canvas
-                            editor.getWrapper().appendChild(linkComponent);
-
-                            // Refresh the editor to update the view
-                            editor.refresh();
-                        }
-                    });
-
 
                 LandingPage = {
                     html: result[0].html,
@@ -840,13 +472,10 @@
                 editor = grapesjs.init({
                     blocks: true,
                     container: '#gjs',
-                    plugins: ['gjs-preset-webpage', 'tweet-plugin'],
+                    plugins: ['gjs-preset-webpage'],
                     pluginsOpts: {
                         'gjs-preset-webpage': {
                             // options
-                        },
-                        'tweet-plugin': {
-                            // options for the 'tweet-plugin' plugin
                         },
                     },
                     fromElement: false,

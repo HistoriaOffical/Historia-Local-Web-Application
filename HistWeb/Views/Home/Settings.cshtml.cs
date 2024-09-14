@@ -27,6 +27,7 @@ namespace HistWeb.Home.Views
         public string IPFSApiHostName { get; set; }
         public string IPFSApiHost { get; set; }
         public int IPFSApiPort { get; set; }
+        public string SporkKey { get; set; }
         public string HistoriaClientIPAddress { get; set; }
         public int HistoriaRPCPort { get; set; }
         public string HistoriaRPCUserName { get; set; }

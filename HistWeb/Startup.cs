@@ -50,7 +50,8 @@ namespace HistWeb
 		public static string HistoriaRPCUserName { get; set; }
 		public static string HistoriaRPCPassword { get; set; }
 
-		public static string DatabasePath { get; set; }
+        public static string sporkkey { get; set; }
+        public static string DatabasePath { get; set; }
 
 		public static string MediaPath { get; set; }
 
@@ -251,6 +252,7 @@ namespace HistWeb
                                                     HistoriaRPCPort INTEGER NOT NULL,
                                                     HistoriaRPCUserName TEXT NOT NULL,
                                                     HistoriaRPCPassword TEXT NOT NULL,
+													sporkkey TEXT DEFAULT 0,
 													DeepSearch INTEGER DEFAULT 0,
 													InitializedHLWA INTEGER DEFAULT 0,
 													InitializedIPFS INTEGER DEFAULT 0,
@@ -471,11 +473,11 @@ namespace HistWeb
 
 					using (var cmd = connection.CreateCommand())
 					{
-						cmd.CommandText = "INSERT INTO basexConfiguration (Id, IPFSHost, IPFSPort, IPFSAPIPort, IPFSAPIHost, HistoriaClientIPAddress, HistoriaRPCPort, HistoriaRPCUserName, HistoriaRPCPassword)" +
-"VALUES(1, @IPFSHost, @IPFSPort, @IPFSApiHost, @IPFSApiPort, @HistoriaClientIPAddress, @HistoriaRPCPort, @HistoriaRPCUserName, @HistoriaRPCPassword)" +
+						cmd.CommandText = "INSERT INTO basexConfiguration (Id, IPFSHost, IPFSPort, IPFSAPIPort, IPFSAPIHost, HistoriaClientIPAddress, HistoriaRPCPort, HistoriaRPCUserName, HistoriaRPCPassword, sporkkey)" +
+"VALUES(1, @IPFSHost, @IPFSPort, @IPFSApiHost, @IPFSApiPort, @HistoriaClientIPAddress, @HistoriaRPCPort, @HistoriaRPCUserName, @HistoriaRPCPassword, 0)" +
 "ON CONFLICT(Id) DO UPDATE SET " +
 "Id = 1, IPFSHost = @IPFSHost, IPFSPort = @IPFSPort, IPFSApiHost = @IPFSApiHost, IPFSApiPort = @IPFSApiPort, HistoriaClientIPAddress = @HistoriaClientIPAddress, " +
-"HistoriaRPCPort = @HistoriaRPCPort, HistoriaRPCUserName = @HistoriaRPCUserName, HistoriaRPCPassword = @HistoriaRPCPassword";
+"HistoriaRPCPort = @HistoriaRPCPort, HistoriaRPCUserName = @HistoriaRPCUserName, HistoriaRPCPassword = @HistoriaRPCPassword, sporkkey = @sporkkey";
 						cmd.CommandType = System.Data.CommandType.Text;
 						cmd.Parameters.AddWithValue("IPFSHost", IPFSHost);
 						cmd.Parameters.AddWithValue("IPFSPort", IPFSPort);
@@ -485,8 +487,9 @@ namespace HistWeb
 						cmd.Parameters.AddWithValue("HistoriaRPCPort", HistoriaRPCPort);
 						cmd.Parameters.AddWithValue("HistoriaRPCUserName", HistoriaRPCUserName);
 						cmd.Parameters.AddWithValue("HistoriaRPCPassword", HistoriaRPCPassword);
+                        cmd.Parameters.AddWithValue("sporkkey", sporkkey ?? "0");
 
-						cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();
 					}
 				}
 			}
@@ -528,7 +531,8 @@ namespace HistWeb
 								HistoriaRPCPort = rdr.GetInt32(rdr.GetOrdinal("HistoriaRPCPort"));
 								HistoriaRPCUserName = rdr.GetString(rdr.GetOrdinal("HistoriaRPCUserName"));
 								HistoriaRPCPassword = rdr.GetString(rdr.GetOrdinal("HistoriaRPCPassword"));
-							}
+                                sporkkey = rdr.GetString(rdr.GetOrdinal("sporkkey"));
+                            }
 						}
 					}
 				}

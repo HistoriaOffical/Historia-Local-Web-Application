@@ -130,8 +130,7 @@
                         <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
                             <li class="nav-item"><a id="gatewayTab" href="#gateway" data-target="#gateway" data-toggle="tab" role="tab" class="nav-link small text-uppercase active tab-select" onclick="">Masternode Gateway</a></li>
                             <li class="nav-item"><a id="coreTab" href="#core" data-target="#core" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Historia Core Setup</a></li>
-                            <li class="nav-item"><a id="masternodesTab" href="#masternodes" data-target="#masternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="Loading(); sleep(1000); fillMasternodes();">Manage Masternodes & Voting Nodes</a></li>
-                            <li class="nav-item"><a id="setupvotingnodesTab" href="#setupvotingnodes" data-target="#setupvotingnodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="fillMasternodes(); NodeQueue(100); checkVotingNodeSetupFlag(); ">Setup Voting Nodes</a></li>
+                            <li class="nav-item"><a id="masternodesTab" href="#masternodes" data-target="#masternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="Loading(); sleep(1000); fillMasternodes();">Manage Masternodes</a></li>
                             <li class="nav-item"><a id="setupmasternodesTab" href="#setupmasternodes" data-target="#setupmasternodes" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="fillMasternodes(); NodeQueue(5000); checkMasternodeSetupFlag(); ">Setup Masternodes</a></li>
                             <li class="nav-item"><a id="ipfsapiTab" href="#ipfsapi" data-target="#ipfsapi" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Advanced Settings</a></li>
                         </ul>
@@ -283,87 +282,6 @@
                                             </div>
                                         </div>
                                     </div>
-
-
-                                    <div id="setupvotingnodes" class="tab-pane fade show">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <h5 style="text-align: left;">Setup Voting Nodes</h5>
-
-                                            </div>
-                                            <div class="col-6">
-                                                <h5 style="text-align: left;">Why setup a voting node?</h5>
-                                            </div>
-                                           
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <p style="text-align: left;">
-                                                    To setup a voting node, hit the Setup Voting Node button.
-
-                                                </p>
-                                                <h6 style="text-align: left;">Documentation</h6>
-                                                <p style="text-align: left;">If you would like to vote, you can setup your own voting node. Please see the technical documentation site: <a href="https://docs.historia.network/en/latest/votingnodes/index.html" style="text-decoration:underline" target="_blank">Voting Node Setup</a></p>
-                                                <h6 style="text-align: left;">Requirements</h6>
-                                                <ul style="text-align: left;">
-                                                    <li style="text-align: left;">100 HTA Required plus some extra in transaction fees</li>
-
-                                                </ul>
-                                            </div>
-                                            <div class="col-6">
-                                                <ul style="text-align: left;">
-                                                    <li >You have the authority to determine which content is permanently stored on the blockchain.</li>
-                                                    <li>Your contribution plays a pivotal role in shaping the content and direction of the Historia Network.</li>
-                                                    <li>Participating in voting contributes to the overall well-being of the network!</li>
-                                                    <li>By locking 100 HTA for the voting node, you aid in maintaining price stability.</li>
-
-                                                </ul>
-                                                
-                                                <div class="form-group">
-                                                    <button id="btnSetupVotingNode" type="button" class="btn btn-secondary btn-sm">Setup Voting Node</button><br />
-                                                    <small>(You can revoke your voting node and unlock your coins at anytime)</small>
-                                                </div>
-                                                <p></p>
-                                                <p id="VNProcessingVoting" style="text-align: center; display: none">Voting Node is being setup, please wait before voting.</p>
-                                                <div class="form-group">
-                                                    <p id="VPWalletLockedVoting" style="text-align: center; display: none">Setup paused, please enter your Historia Core Wallet passphrase again to continue.</p>
-                                                    <button id="btnUnlockWalletVoting" style="text-align: center; display: none" type="button" class="btn btn-secondary btn-sm">Unlock Wallet</button>
-                                                    <button id="btnDeleteVotingSetupAttempt" style="text-align: center; display: none" type="button" class="btn btn-secondary btn-sm">Delete Current Setup Attemptp</button>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <ul id="tabsJustified" class="nav nav-tabs" style="background:#fff">
-                                                    <li class="nav-item"><a id="vnlogsTab" href="#votingnodesetuplogs" data-target="#votingnodesetuplogs" data-toggle="tab" role="tab" class="nav-link small text-uppercase tab-select" onclick="">Voting Node Setup Logs</a></li>
-                                                </ul>
-                                                <br />
-                                                <div class="tab-content">
-                                                    <div id="votingnodesetuplogs" class="tab-pane fade show active">
-                                                        <div class="row">
-                                                            <div class="col-12">
-                                                                <div class="row">
-                                                                    <div class="col-12">
-                                                                        <div id="logs" class="container" style="text-align: left; max-height: 300px; overflow-y: auto">
-                                                                            <div id="log-content">
-
-                                                                            </div>
-                                                                        </div>
-                                                                        <br />
-                                                                        <div class="form-group float-right">
-                                                                            <button id="btnClearVotingLogs" type="button" class="btn btn-secondary btn-sm">Clear Logs</button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                     </div>       
 
                                     <div id="setupmasternodes" class="tab-pane fade show">
                                         <div class="row">
@@ -541,6 +459,35 @@
                                         <hr />
                                         <div class="row">
                                             <div class="col-5">
+                                                <h6 style="text-align: left !important;">Enter Spork Key</h6>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <p style="text-align: left !important;">
+                                                    If you want to use the Create process, you must enter the spork key. This will allow for the spork key owner to submit objects using the create process.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group">
+                                                    <h6 id="SporkKeyLabel" style="text-align: left !important;">Spork Key Address</h6>
+                                                    <input asp-for="SporkKey" class="form-control" value="@Model.SporkKey" />
+                                                </div>
+                                                <br />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-7">
+                                                <div class="form-group float-right">
+                                                    <button id="btnSporkKey" type="button" class="btn btn-secondary btn-sm">Test & Save Spork Key</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <div class="row">
+                                            <div class="col-5">
                                                 <h6 style="text-align: left !important;">Enable High Speed Connection</h6>
                                             </div>
                                             <div class="col-2">
@@ -596,39 +543,6 @@
     <script type="text/javascript">
         var createdUsername = null;
         var createdPassword = null;
-
-        function clearVotingLogs() {
-            $.ajax({
-                url: '@Url.Action("DeleteLogEntries", "Masternode", new { Area = "Masternode" })',
-                type: 'GET',
-                data: { filter: 'VOTINGNODE' },
-                success: function (data) {
-                    if (data.success) {
-                        Swal.fire({
-                            title: 'Success',
-                            text: 'Voting logs have been cleared.',
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'Error',
-                            text: 'An error occurred while clearing the logs.',
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'An error occurred while clearing the logs.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
-        }
 
         function clearDiagLogs() {
             $.ajax({
@@ -942,13 +856,10 @@
                     } else if (nodetype == "5000") {
                         $('#VNProcessingMasternode').show();
                     }
-                    $('#btnSetupVotingNode').prop('disabled', true);
                     $('#btntestSshConnection').prop('disabled', true);
                     $.get('@Url.Action("IsUnlockWallet", "Masternode", new { Area = "Masternode" })', null, function (data) {
                         if (!data.success) {
                             if (nodetype == "100") {
-                                $('#VPWalletLockedVoting').show();
-                                $('#btnUnlockWalletVoting').show();
                                 $('#btnDeleteMasternodeSetupAttempt').show();
                             } else if (nodetype == "5000") {
                                 $('#VPWalletLockedMasternode').show();
@@ -957,9 +868,7 @@
                             }
 
                         } else {
-                            $('#VPWalletLockedVoting').hide();
                             $('#VPWalletLockedMasternode').hide();
-                            $('#btnUnlockWalletVoting').hide();
                             $('#btnUnlockWalletMasternode').hide();
                             $('#btnRestartVotingSetup').hide();
                             $('#btnDeleteMasternodeSetupAttempt').hide();
@@ -1964,64 +1873,70 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        function UnlockWalletVotingNode() {
-
-            Swal.fire({
-                title: "Unlock Wallet",
-                html:
-                    '<p>To complete your Voting node setup, please enter your Historia Core wallet passphrase below:</p>' +
-                    '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
-                icon: "warning",
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showCancelButton: true,
-                confirmButtonClass: "btn-danger",
-                confirmButtonText: "Unlock Wallet",
-                cancelButtonText: "No, cancel it!",
-                preConfirm: () => {
-                    const passphrase = Swal.getPopup().querySelector('#passphrase').value;
-                    if (!passphrase) {
-                        Swal.showValidationMessage(`Please enter a passphrase`);
+        function UnlockWalletSpork() {
+            return new Promise((resolve, reject) => {
+                Swal.fire({
+                    title: "Unlock Wallet",
+                    html:
+                        '<p>Please unlock your wallet by entering the passphrase below:</p>' +
+                        '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br><p>If you have not encrypted your wallet this process will fail. Hit cancel and do that first.</p>',
+                    icon: "warning",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Unlock Wallet",
+                    cancelButtonText: "No, cancel it!",
+                    preConfirm: () => {
+                        const passphrase = Swal.getPopup().querySelector('#passphrase').value;
+                        if (!passphrase) {
+                            Swal.showValidationMessage(`Please enter a passphrase`);
+                        }
+                        return passphrase;
                     }
-                    return passphrase;
-                }
-            }).then(function (result) {
-                if (result.isConfirmed) {
-
-                    const passphrase = result.value;
-                    $.ajax({
-                        type: 'POST',
-                        url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
-                        data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
-                        contentType: 'application/json; charset=utf-8',
-                        dataType: 'json',
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    title: 'Wallet Unlocked',
-                                    text: 'You can leave this page now, and setup will continue.',
-                                    icon: 'success',
-                                    confirmButtonText: 'Ok',
-                                });
-                            } else {
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        const passphrase = result.value;
+                        $.ajax({
+                            type: 'POST',
+                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
+                            data: JSON.stringify({ passphrase: passphrase, time: "60" }),
+                            contentType: 'application/json; charset=utf-8',
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        title: 'Wallet Unlocked',
+                                        text: 'Click OK to attempt Spork Key Verification.',
+                                        icon: 'success',
+                                        confirmButtonText: 'Ok',
+                                    }).then(() => {
+                                        resolve();  
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Could not unlock wallet',
+                                        text: response.error
+                                    });
+                                    reject(response.error);  
+                                }
+                            },
+                            error: function (xhr, status, error) {
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Could not unlock wallet',
-                                    text: response.error
+                                    title: 'Error',
+                                    text: 'An unexpected error occurred.'
                                 });
+                                reject(error);  
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'An unexpected error occurred.'
-                            });
-                        }
-                    });
-                }
+                        });
+                    } else {
+                        reject('User canceled unlocking');  
+                    }
+                });
             });
         }
+
 
         function UnlockWalletMasternode() {
 
@@ -2135,10 +2050,6 @@
                 }
             });
 
-            $('#btnClearVotingLogs').on('click', function() {
-                clearVotingLogs();
-            });
-
             $('#btnClearMasternodeLogs').on('click', function () {
                 clearMasternodeLogs();
             });
@@ -2200,9 +2111,7 @@
             // Tab shown event handler
             $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
                 var target = $(e.target).attr("href");
-                if (target === '#setupvotingnodes') {
-                    startPolling(fetchLogEntries);
-                } else if (target === '#setupmasternodes' || target === '#sshlogs') {
+                if (target === '#setupmasternodes' || target === '#sshlogs') {
                     startPolling(fetchSshLogEntries);
                 } else {
                     stopPolling();
@@ -2211,9 +2120,7 @@
 
             // Initial check if the tab is already active on page load
 
-            if ($('#setupvotingnodes').hasClass('show active')) {
-                startPolling(fetchLogEntries);
-            } else if ($('#setupmasternodes').hasClass('show active') || $('#sshlogs').hasClass('show active')) {
+            if ($('#setupmasternodes').hasClass('show active') || $('#sshlogs').hasClass('show active')) {
                 startPolling(fetchSshLogEntries);
             } else {
                 stopPolling();
@@ -2330,64 +2237,11 @@
                 }
             });
 
- 
-
-        $('#btnUnlockWalletVoting').on('click', function () {
-            UnlockWalletVotingNode();
-        });
-           
 
         $('#btnUnlockWalletMasternode').on('click', function () {
             UnlockWalletMasternode();
         });
         
-        $('#btnDeleteVotingSetupAttempt').on('click', function (e) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Are you sure you want to cancel the setup process of the voting node?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No, cancel!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '@Url.Action("DeleteNodeQueue", "Masternode", new { Area = "Masternode" })',
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function (response) {
-                            if (response.success) {
-                                Swal.fire({
-                                    title: 'Deleted!',
-                                    text: 'The setup process has been canceled.',
-                                    icon: 'success',
-                                    confirmButtonText: 'Ok'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        location.reload();
-                                    }
-                                });
-                            } else {
-                                Swal.fire({
-                                    title: 'Error!',
-                                    text: 'There was an error deleting the node queue: ' + response.error,
-                                    icon: 'error',
-                                    confirmButtonText: 'Ok'
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: 'An unexpected error occurred.',
-                                icon: 'error',
-                                confirmButtonText: 'Ok'
-                            });
-                        }
-                    });
-                }
-            });
-        });
         $('#btnDeleteMasternodeSetupAttempt').on('click', function (e) {
                 Swal.fire({
                     title: 'Are you sure?',
@@ -2530,6 +2384,135 @@
                 });
             });
         });
+
+
+
+        $('#btnSporkKey').on('click', async function (e) {
+            e.preventDefault();  
+            try {
+                await UnlockWalletSpork();
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to unlock wallet spork: ' + error,
+                    icon: 'error',
+                    confirmButtonText: 'Ok'
+                });
+                return;
+            }
+
+            var data = {
+                SporkKey: $('#SporkKey').val(),
+            };
+
+            // Show loading Swal
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we test the Spork Key.',
+                allowOutsideClick: false,
+                onOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: "/Home/TestSporkKey",
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(data),
+                success: function (resp) {
+                    // Close the loading Swal
+                    Swal.close();
+
+                    if (resp.success) {
+                        Swal.fire({
+                            title: 'Spork Key Successfully Tested!',
+                            text: 'Do you want to save the settings?',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Save',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Show loading Swal for save operation
+                                Swal.fire({
+                                    title: 'Processing...',
+                                    text: 'Saving your settings...',
+                                    allowOutsideClick: false,
+                                    onOpen: () => {
+                                        Swal.showLoading();
+                                    }
+                                });
+
+                                $.ajax({
+                                    url: "/Home/SaveSporkKey",
+                                    type: "POST",
+                                    contentType: "application/json; charset=utf-8",
+                                    dataType: "json",
+                                    data: JSON.stringify(data),
+                                    success: function (saveResp) {
+                                        // Close the loading Swal
+                                        Swal.close();
+
+                                        if (saveResp.success) {
+                                            Swal.fire({
+                                                title: 'SporkKey Settings Saved!',
+                                                text: 'Your settings have been updated!',
+                                                icon: 'success',
+                                                confirmButtonText: 'Ok'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error!',
+                                                text: 'Failed to save Core Wallet settings.',
+                                                icon: 'error',
+                                                confirmButtonText: 'Ok'
+                                            });
+                                        }
+                                    },
+                                    error: function (req, status, error) {
+                                        // Close the loading Swal
+                                        Swal.close();
+
+                                        Swal.fire({
+                                            title: 'Error!',
+                                            text: 'Failed to save Core Wallet settings: ' + error,
+                                            icon: 'error',
+                                            confirmButtonText: 'Ok'
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Invalid Spork Key',
+                            icon: 'error',
+                            confirmButtonText: 'Ok'
+                        });
+                    }
+                },
+                error: function (req, status, error) {
+                    // Close the loading Swal
+                    Swal.close();
+
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to test Spork Key: ' + error,
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            });
+        });
+
+
 
         $('#btnTestIPFSApi').on('click', function (e) {
             var data = {
@@ -2692,136 +2675,6 @@
                 }
             });
         });
-
-        $('#btnSetupVotingNode').on('click', function (e) {
-                Swal.fire({
-                    title: "Setup Voting Node",
-                    html:
-                        '<h5>Are you sure you want to continue?</h5>' +
-                        '<ul style="list-style-position: inside; text-align: left; padding-left: 0;" ><li>You must have at least 101 HTA in your wallet.</li> ' +
-                        '<li>Small Transaction fees to register will occur.</li>' +
-                        '<li>This process can take up to one hour. </li>' +
-                        '<li>Do not leave this page until it is finished.</li></ul>' +
-                        'Enter your Historia Core wallet passphrase below:' +
-                        '<input type="password" id="passphrase" class="swal2-input" placeholder="Passphrase"><br>',
-                    icon: "warning",
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, setup now!",
-                    cancelButtonText: "No, cancel it!",
-                    preConfirm: () => {
-                        const passphrase = Swal.getPopup().querySelector('#passphrase').value;
-                        if (!passphrase) {
-                            Swal.showValidationMessage(`Please enter a passphrase`);
-                        }
-                        return passphrase;
-                    }
-                }).then(function (confirm) {
-                    if (confirm.value) {
-                        const passphrase = confirm.value;
-                        $.ajax({
-                            type: 'POST',
-                            url: '@Url.Action("UnlockWallet", "Masternode", new { Area = "Masternode" })',
-                            data: JSON.stringify({ passphrase: passphrase, time: "6000" }),
-                            contentType: 'application/json; charset=utf-8',
-                            dataType: 'json',
-                            success: function (response) {
-                                if (response.success) {
-                                    Swal.fire({
-                                        title: 'Working...',
-                                        text: 'Please wait. This is going to take awhile. Do not close Historia Wallet or this web page',
-                                        allowOutsideClick: false,
-                                        showConfirmButton: false,
-                                        onBeforeOpen: () => {
-                                            Swal.showLoading();
-                                        },
-                                    });
-                                    $.ajax({
-                                        type: 'POST',
-                                        url: '@Url.Action("GetAvaliableBalance", "Masternode", new { Area = "Masternode" })',
-                                        contentType: 'application/json; charset=utf-8',
-                                        success: function (response) {
-                                            if (response.success) {
-                                                if (response.amount > 100) {
-                                                    $.ajax({
-                                                        type: 'POST',
-                                                        url: '@Url.Action("SetupVotingNodeQueue", "Masternode", new { Area = "Masternode" })',
-                                                        data: JSON.stringify(),
-                                                        contentType: 'application/json; charset=utf-8',
-                                                        dataType: 'json',
-                                                        success: function (response) {
-                                                            if (response.success) {
-                                                                Swal.close();
-                                                                Swal.fire({
-                                                                    icon: 'info',
-                                                                    title: 'Voting Node Has Been Queued for Setup!',
-                                                                    text: 'Your voting node has been queued for setup. You can leave this page, but do not close this Historia Local Web, or close the Historia Core Wallet. This process can take up to 1 hour. You can check progress by coming back to this page.',
-                                                                    confirmButtonText: 'OK'
-                                                                });
-                                                                $('#btnSetupVotingNode').prop('disabled', true);
-                                                            } else {
-                                                                Swal.fire({
-                                                                    icon: 'error',
-                                                                    title: 'Error',
-                                                                    text: response.error
-                                                                });
-                                                                return false;
-                                                            }
-                                                        },
-                                                        error: function (xhr, status, error) {
-                                                            Swal.fire({
-                                                                icon: 'error',
-                                                                title: 'Error',
-                                                                text: 'An unexpected error occurred.'
-                                                            });
-                                                        }
-                                                    });
-                                                } else {
-                                                    Swal.fire({
-                                                        icon: 'error',
-                                                        title: 'You must have at least 101 HTA available in your wallet. The current available amount is ' + response.amount + '. The available amount is of coins not already locked in voting nodes or masternodes.',
-                                                        text: response.error
-                                                    });
-                                                    return false;
-                                                }
-                                            } else {
-                                                Swal.fire({
-                                                    icon: 'error',
-                                                    title: 'Error',
-                                                    text: response.error
-                                                });
-                                                return false;
-                                            }
-                                        },
-                                        error: function (xhr, status, error) {
-                                            Swal.fire({
-                                                icon: 'error',
-                                                title: 'Error',
-                                                text: 'An unexpected error occurred.'
-                                            });
-                                        }
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Could not unlock wallet',
-                                        text: response.error
-                                    });
-                                    return false;
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'An unexpected error occurred.'
-                                });
-                            }
-                        });
-                    }
-                });
-            });
    
         $('#btnSetupMasternode').on('click', function (e) {
                 Swal.fire({
@@ -3138,6 +2991,7 @@
                     HistoriaRPCPort: $('#HistoriaRPCPort').val(),
                     HistoriaRPCUserName: $('#HistoriaRPCUserName').val(),
                     HistoriaRPCPassword: $('#HistoriaRPCPassword').val(),
+                    sporkkey: $('#sporkkey').val(),
                 };
 
                 $.ajax({

@@ -53,6 +53,10 @@ using System.Security.Policy;
 using System.Text.RegularExpressions;
 using HistWeb.Areas.Proposals.Models;
 using System.Reflection.Metadata;
+using Microsoft.AspNetCore.SignalR.Protocol;
+using System.Globalization;
+using Newtonsoft.Json;
+
 
 
 
@@ -758,19 +762,6 @@ namespace HistWeb.Controllers
             }
         }
 
-        private void GetAdditionalOGInfo(ProposalRecordModel pm, dynamic proposalData)
-        {
-            string jsonString = CallAPI($"https://historia.network/home/rogai?ipfs={proposalData.ipfscid}").GetAwaiter().GetResult();
-            OGA data = JsonConvert.DeserializeObject<OGA>(jsonString);
-			Console.WriteLine(jsonString);
-            if (data.isArchive == "1")
-            {
-                pm.Type = "5";
-                pm.oglinksid = OG(data.OGUrl, proposalData.ipfscid.ToString());
-            }
-
-        }
-
         private void FetchAdditionalRecordData(ProposalRecordModel pm, int toggle)
         {
             try
@@ -840,9 +831,6 @@ namespace HistWeb.Controllers
                 Console.WriteLine(ex.Message);
             }
         }
-
-
-
 
 
         public static async Task<bool> GetHtmlSourceAsync(string Name, string Summary, string url, string ipfscid, string proposalhash, string ParentIPFSCID, string cidtype, string paymentAmount, string paymentAddress, string dateadded, string type, int toggle)
@@ -1162,6 +1150,14 @@ namespace HistWeb.Controllers
             model.HistoriaRPCPort = ApplicationSettings.HistoriaRPCPort;
             model.HistoriaRPCUserName = ApplicationSettings.HistoriaRPCUserName;
             model.HistoriaRPCPassword = ApplicationSettings.HistoriaRPCPassword;
+            if (ApplicationSettings.sporkkey == "0" || string.IsNullOrEmpty(ApplicationSettings.sporkkey))
+            {
+                model.SporkKey = string.Empty; 
+            }
+            else
+            {
+                model.SporkKey = "Spork Key has been previously saved"; 
+            }
 
             return View(model);
         }
@@ -1309,6 +1305,7 @@ namespace HistWeb.Controllers
                         ApplicationSettings.HistoriaRPCPort = int.Parse(settings["rpcport"]);
                         ApplicationSettings.HistoriaRPCUserName = settings["rpcuser"];
                         ApplicationSettings.HistoriaRPCPassword = settings["rpcpassword"];
+                        ApplicationSettings.sporkkey = settings["sporkkey"];
                         ApplicationSettings.SaveConfig();
                         Console.WriteLine("InitializeHLWA SAVED:");
 
@@ -1337,7 +1334,8 @@ namespace HistWeb.Controllers
 			public string IPFSHost { get; set; }
 			public int IPFSPort { get; set; }
 			public string IPFSApiHost { get; set; }
-			public int IPFSApiPort { get; set; }
+            public string SporkKey { get; set; }
+            public int IPFSApiPort { get; set; }
 			public string HistoriaClientIPAddress { get; set; }
 			public int HistoriaRPCPort { get; set; }
 			public string HistoriaRPCUserName { get; set; }
@@ -1383,15 +1381,23 @@ namespace HistWeb.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult SaveIpfsApiSettings([FromBody] SettingsParams settings)
+		public IActionResult SaveSporkKey([FromBody] SettingsParams settings)
 		{
-			ApplicationSettings.IPFSApiHost = settings.IPFSApiHost;
-			ApplicationSettings.IPFSApiPort = settings.IPFSApiPort;
+			ApplicationSettings.sporkkey = settings.SporkKey;
 			ApplicationSettings.SaveConfig();
 			return Json(new { success = true });
 		}
 
-		[HttpPost]
+        [HttpPost]
+        public IActionResult SaveIPFSApiSettings([FromBody] SettingsParams settings)
+        {
+            ApplicationSettings.IPFSApiHost = settings.IPFSApiHost;
+            ApplicationSettings.IPFSApiPort = settings.IPFSApiPort;
+            ApplicationSettings.SaveConfig();
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
 		public async Task<IActionResult> TestIPFSAsync([FromBody] SettingsParams settings)
 		{
 			try
@@ -1446,7 +1452,105 @@ namespace HistWeb.Controllers
 			}
 		}
 
-		[HttpGet]
+        public class SporkResponse
+        {
+            public bool ismine { get; set; }
+            // Add other properties as needed
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TestSporkKey([FromBody] SettingsParams settings)
+        {
+            try
+            {
+                // Import Spork key
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+				string blank = "spork";
+                string jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"importprivkey\", \"params\": [\"" + settings.SporkKey + "\", \"" + blank + "\"] }";
+                byte[] byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+                Stream dataStream = webRequest.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+
+                WebResponse webResponse = webRequest.GetResponse();
+
+                StreamReader sr = new StreamReader(webResponse.GetResponseStream());
+                string getResp = sr.ReadToEnd();
+                var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(getResp);
+
+                // Compare Spork keys
+                webRequest = (HttpWebRequest)WebRequest.Create(_rpcServerUrl);
+                webRequest.Credentials = new NetworkCredential(_userName, _password);
+                webRequest.ContentType = "application/json-rpc";
+                webRequest.Method = "POST";
+                string sporkPubKey = "H7h7zVYCJtC4V8mjWJ6NhzfVLzQqFXttZ1";
+                jsonstring = "{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", \"method\": \"validateaddress\", \"params\": [\"" + sporkPubKey + "\"] }";
+                byteArray = Encoding.UTF8.GetBytes(jsonstring);
+                webRequest.ContentLength = byteArray.Length;
+
+                using (dataStream = webRequest.GetRequestStream())
+                {
+                    dataStream.Write(byteArray, 0, byteArray.Length);
+                }
+
+                using (webResponse = webRequest.GetResponse())
+                {
+                    using (sr = new StreamReader(webResponse.GetResponseStream()))
+                    {
+                        getResp = sr.ReadToEnd();
+
+                        // Debugging: Print the entire JSON response
+                        Console.WriteLine("Full JSON Response: " + getResp);
+
+                        // Deserialize the JSON response into a dynamic object
+                        jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(getResp);
+
+                        // Check if the "result" key exists in the response and contains the "ismine" value
+                        if (jsonResponse.ContainsKey("result") && jsonResponse["result"].ContainsKey("ismine"))
+                        {
+                            // Get the value of "ismine"
+                            bool isMine = jsonResponse["result"]["ismine"];
+                            Console.WriteLine("ismine value: " + isMine);
+
+                            // Check the value of "ismine" and return success/failure based on that
+                            if (isMine)
+                            {
+                                Console.WriteLine("The address is mine.");
+                                return Json(new { success = true });
+                            }
+                            else
+                            {
+                                Console.WriteLine("The address is not mine.");
+                                return Json(new { success = false });
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Result not found in the response.");
+                        }
+                    }
+                }
+
+                // If we reach this point, something failed
+                Console.WriteLine("The address is not mine (fallback).");
+                return Json(new { success = false });
+
+
+
+            }
+            catch (Exception ex)
+            {
+                var prepRespJson1 = new { Success = false, Error = ex.ToString() };
+                return Json(new { success = false });
+            }
+        }
+
+
+        [HttpGet]
 		public async Task<IActionResult> TestIPFSAPIDefault()
 		{
 			try
